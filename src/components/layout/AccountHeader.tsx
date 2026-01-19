@@ -47,12 +47,12 @@ export function AccountHeader() {
         : 'border-gray-200 bg-white/50'
     }`}>
       <div className="flex items-start justify-end">
-        <div className="flex items-start gap-3">
-          <div className="flex flex-col gap-1">
+        <div className="flex items-start gap-2">
+          <div className="flex flex-col gap-1 items-end">
             <h3 className={`text-[15px] font-medium transition-colors ${
               theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'
             }`}>
-              John Trader
+              Julia Roberts
             </h3>
 
             <div className="flex items-center gap-2">
@@ -147,46 +147,18 @@ export function AccountHeader() {
                       <h4 className={`font-medium text-sm ${
                         theme === 'dark' ? 'text-white' : 'text-gray-900'
                       }`}>
-                        John Trader
+                        Julia Roberts
                       </h4>
                       <p className={`text-xs ${
                         theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'
                       }`}>
-                        john.trader@example.com
+                        julia.roberts@example.com
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-3 space-y-2">
-                  <div className={`flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
-                    theme === 'dark' ? 'bg-zinc-900/50' : 'bg-gray-50'
-                  }`}>
-                    <div className="flex items-center gap-3">
-                      <span className={`text-sm font-medium ${
-                        theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
-                      }`}>
-                        Account Mode
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => setAccountMode(accountMode === 'demo' ? 'real' : 'demo')}
-                      className={`relative w-14 h-7 rounded-full transition-colors ${
-                        accountMode === 'demo'
-                          ? 'bg-brand-green'
-                          : theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-300'
-                      }`}
-                    >
-                      <div className={`absolute top-1 w-5 h-5 rounded-full bg-white transition-transform duration-200 flex items-center justify-center ${
-                        accountMode === 'demo' ? 'left-1' : 'left-8'
-                      }`}>
-                        <span className="text-[8px] font-bold text-gray-700">
-                          {accountMode === 'demo' ? 'D' : 'R'}
-                        </span>
-                      </div>
-                    </button>
-                  </div>
-
+                <div className="p-3">
                   <div className={`flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
                     theme === 'dark' ? 'bg-zinc-900/50' : 'bg-gray-50'
                   }`}>
