@@ -161,7 +161,13 @@ export function AccountHeader() {
                 <div className="p-3">
                   <button
                     type="button"
-                    onClick={toggleTheme}
+                    onMouseDown={(e) => {
+                      e.stopPropagation();
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleTheme();
+                    }}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
                       theme === 'dark' ? 'bg-zinc-900/50 hover:bg-zinc-900' : 'bg-gray-50 hover:bg-gray-100'
                     }`}
