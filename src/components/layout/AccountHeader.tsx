@@ -159,9 +159,13 @@ export function AccountHeader() {
                 </div>
 
                 <div className="p-3">
-                  <div className={`flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors ${
-                    theme === 'dark' ? 'bg-zinc-900/50' : 'bg-gray-50'
-                  }`}>
+                  <button
+                    type="button"
+                    onClick={toggleTheme}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
+                      theme === 'dark' ? 'bg-zinc-900/50 hover:bg-zinc-900' : 'bg-gray-50 hover:bg-gray-100'
+                    }`}
+                  >
                     <div className="flex items-center gap-3">
                       <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
                         theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-brand-green/10 text-brand-green'
@@ -174,17 +178,16 @@ export function AccountHeader() {
                         {theme === 'dark' ? 'Dark Mode' : 'Light Mode'}
                       </span>
                     </div>
-                    <button
-                      onClick={toggleTheme}
+                    <div
                       className={`relative w-11 h-6 rounded-full transition-colors ${
                         theme === 'dark' ? 'bg-zinc-700' : 'bg-brand-green'
                       }`}
                     >
-                      <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
+                      <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform duration-200 pointer-events-none ${
                         theme === 'dark' ? 'left-1' : 'left-6'
                       }`} />
-                    </button>
-                  </div>
+                    </div>
+                  </button>
                 </div>
               </div>
             )}
