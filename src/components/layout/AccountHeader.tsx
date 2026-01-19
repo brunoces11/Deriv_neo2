@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Sun, Moon } from 'lucide-react';
+import { ChevronDown, Sun, Moon, LayoutGrid } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../store/ThemeContext';
 
 type Period = 'daily' | 'weekly' | 'monthly';
@@ -7,6 +8,7 @@ type AccountMode = 'demo' | 'real';
 
 export function AccountHeader() {
   const { theme, toggleTheme } = useTheme();
+  const navigate = useNavigate();
   const [period, setPeriod] = useState<Period>('daily');
   const [accountMode, setAccountMode] = useState<AccountMode>('demo');
   const [isPeriodOpen, setIsPeriodOpen] = useState(false);
@@ -25,8 +27,8 @@ export function AccountHeader() {
       }
     }
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   const balance = accountMode === 'demo' ? 12987 : 0;
@@ -41,7 +43,7 @@ export function AccountHeader() {
   };
 
   return (
-    <div className={`px-6 py-4 border-b backdrop-blur-sm transition-colors ${
+    <div className={`relative z-30 px-6 py-4 border-b backdrop-blur-sm transition-colors ${
       theme === 'dark'
         ? 'border-zinc-800/50 bg-zinc-900/50'
         : 'border-gray-200 bg-white/50'
@@ -129,50 +131,44 @@ export function AccountHeader() {
             </button>
 
             {isProfileOpen && (
-              <div className={`absolute top-full right-0 mt-2 w-64 rounded-xl shadow-xl border overflow-hidden z-50 ${
+              <div className={`absolute top-full right-0 mt-2 w-56 rounded-xl shadow-xl border z-[100] pointer-events-auto ${
                 theme === 'dark'
                   ? 'bg-zinc-800 border-zinc-700'
                   : 'bg-white border-gray-200'
               }`}>
-                <div className={`px-4 py-3 border-b ${
-                  theme === 'dark' ? 'border-zinc-700' : 'border-gray-200'
-                }`}>
-                  <div className="flex items-center gap-3">
-                    <img
-                      src="https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=200"
-                      alt="Profile"
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
-                    <div>
-                      <h4 className={`font-medium text-sm ${
-                        theme === 'dark' ? 'text-white' : 'text-gray-900'
-                      }`}>
-                        Julia Roberts
-                      </h4>
-                      <p className={`text-xs ${
-                        theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'
-                      }`}>
-                        julia.roberts@example.com
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-3">
+                <div className="p-2 space-y-1">
                   <button
                     type="button"
-                    onMouseDown={(e) => {
-                      e.stopPropagation();
+                    onClick={() => {
+                      setIsProfileOpen(false);
+                      navigate('/cards');
                     }}
-                    onClick={(e) => {
-                      e.stopPropagation();
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer pointer-events-auto ${
+                      theme === 'dark' ? 'hover:bg-zinc-900' : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center pointer-events-none ${
+                      theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-brand-green/10 text-brand-green'
+                    }`}>
+                      <LayoutGrid className="w-3.5 h-3.5" />
+                    </div>
+                    <span className={`text-sm font-medium pointer-events-none ${
+                      theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
+                    }`}>
+                      Cards
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
                       toggleTheme();
                     }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors cursor-pointer pointer-events-auto ${
                       theme === 'dark' ? 'bg-zinc-900/50 hover:bg-zinc-900' : 'bg-gray-50 hover:bg-gray-100'
                     }`}
                   >
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 pointer-events-none">
                       <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
                         theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-brand-green/10 text-brand-green'
                       }`}>
@@ -185,11 +181,11 @@ export function AccountHeader() {
                       </span>
                     </div>
                     <div
-                      className={`relative w-11 h-6 rounded-full transition-colors ${
+                      className={`relative w-11 h-6 rounded-full transition-colors pointer-events-none ${
                         theme === 'dark' ? 'bg-zinc-700' : 'bg-brand-green'
                       }`}
                     >
-                      <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform duration-200 pointer-events-none ${
+                      <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform duration-200 ${
                         theme === 'dark' ? 'left-1' : 'left-6'
                       }`} />
                     </div>

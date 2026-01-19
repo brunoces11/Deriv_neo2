@@ -1,18 +1,31 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ChatProvider } from './store/ChatContext';
 import { ThemeProvider } from './store/ThemeContext';
 import { Sidebar } from './components/layout/Sidebar';
 import { MainArea } from './components/layout/MainArea';
+import { CardsPage } from './pages/CardsPage';
+
+function MainLayout() {
+  return (
+    <div className="h-screen flex overflow-hidden">
+      <Sidebar />
+      <MainArea />
+    </div>
+  );
+}
 
 function App() {
   return (
-    <ThemeProvider>
-      <ChatProvider>
-        <div className="h-screen flex overflow-hidden">
-          <Sidebar />
-          <MainArea />
-        </div>
-      </ChatProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider>
+        <ChatProvider>
+          <Routes>
+            <Route path="/" element={<MainLayout />} />
+            <Route path="/cards" element={<CardsPage />} />
+          </Routes>
+        </ChatProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 

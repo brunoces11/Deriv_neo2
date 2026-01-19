@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Consultar derineo Escopo do Projeto",
+  "description": "Sempre lê o arquivo DERINEO.md antes de responder qualquer pergunta do usuário para entender o escopo principal do projeto de simulação de trading AI-first e garantir que todas as sugestões se adequem ao contexto do simulador.",
+  "version": "1",
+  "when": {
+    "type": "promptSubmit"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "cat DERINEO.md 2>/dev/null || cat .kiro/steering/derineo.md 2>/dev/null || echo \"Arquivo DERINEO.md não encontrado\""
+  }
+}
