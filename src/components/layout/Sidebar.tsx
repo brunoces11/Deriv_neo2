@@ -1,5 +1,5 @@
 import { Star, Archive, ChevronDown, ChevronRight, MessageSquare } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import { SidebarCard } from './SidebarCard';
@@ -7,12 +7,73 @@ import { ChatSessionCard } from './ChatSessionCard';
 import derivNeoDark from '../../assets/deriv_neo_dark_mode.svg';
 import derivNeoLight from '../../assets/deriv_neo_light_mode.svg';
 
+const SIDEBAR_STATE_KEY = 'deriv-neo-sidebar-state';
+
+interface SidebarState {
+  chatsOpen: boolean;
+  favoritesOpen: boolean;
+  archivedOpen: boolean;
+}
+
+const defaultState: SidebarState = {
+  chatsOpen: true,
+  favoritesOpen: false,
+  archivedOpen: false,
+};
+
+function loadSidebarState(): SidebarState {
+  try {
+    const stored = localStorage.getItem(SIDEBAR_STATE_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return defaultState;
+}
+
+function saveSidebarState(state: SidebarState): void {
+  try {
+    localStorage.setItem(SIDEBAR_STATE_KEY, JSON.stringify(state));
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function Sidebar() {
   const { favoriteCards, archivedCards, sessions, resetChat, currentSessionId } = useChat();
   const { theme } = useTheme();
-  const [chatsOpen, setChatsOpen] = useState(true);
-  const [favoritesOpen, setFavoritesOpen] = useState(true);
-  const [archivedOpen, setArchivedOpen] = useState(true);
+  
+  const [sidebarState, setSidebarState] = useState<SidebarState>(loadSidebarState);
+  const { chatsOpen, favoritesOpen, archivedOpen } = sidebarState;
+
+  // Sync state across tabs/windows
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === SIDEBAR_STATE_KEY && e.newValue) {
+        try {
+          setSidebarState(JSON.parse(e.newValue));
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const updateState = useCallback((updates: Partial<SidebarState>) => {
+    setSidebarState(prev => {
+      const newState = { ...prev, ...updates };
+      saveSidebarState(newState);
+      return newState;
+    });
+  }, []);
+
+  const setChatsOpen = (open: boolean) => updateState({ chatsOpen: open });
+  const setFavoritesOpen = (open: boolean) => updateState({ favoritesOpen: open });
+  const setArchivedOpen = (open: boolean) => updateState({ archivedOpen: open });
 
   const activeChats = sessions.filter(s => !s.is_archived && !s.is_favorite);
   const favoriteChats = sessions.filter(s => s.is_favorite && !s.is_archived);
@@ -60,7 +121,7 @@ export function Sidebar() {
             <MessageSquare className="w-4 h-4 text-brand-green" />
             <span className="flex-1 text-left">Chats</span>
             {activeChats.length > 0 && (
-              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors text-brand-green ${
                 theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
               }`}>
                 {activeChats.length}
@@ -106,7 +167,7 @@ export function Sidebar() {
             <Star className="w-4 h-4 text-brand-green" />
             <span className="flex-1 text-left">Favorites</span>
             {(favoriteCards.length + favoriteChats.length) > 0 && (
-              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors text-brand-green ${
                 theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
               }`}>
                 {favoriteCards.length + favoriteChats.length}
@@ -157,7 +218,7 @@ export function Sidebar() {
             <Archive className="w-4 h-4 text-brand-green" />
             <span className="flex-1 text-left">Archived</span>
             {(archivedCards.length + archivedChats.length) > 0 && (
-              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors text-brand-green ${
                 theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
               }`}>
                 {archivedCards.length + archivedChats.length}
