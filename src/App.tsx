@@ -3,6 +3,7 @@ import { ChatProvider } from './store/ChatContext';
 import { ThemeProvider } from './store/ThemeContext';
 import { Sidebar } from './components/layout/Sidebar';
 import { MainArea } from './components/layout/MainArea';
+import { ExecutionsSidebar } from './components/layout/ExecutionsSidebar';
 import { CardsPage } from './pages/CardsPage';
 
 function MainLayout() {
@@ -10,6 +11,7 @@ function MainLayout() {
     <div className="h-screen flex overflow-hidden">
       <Sidebar />
       <MainArea />
+      <ExecutionsSidebar />
     </div>
   );
 }
