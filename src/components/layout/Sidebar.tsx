@@ -4,6 +4,7 @@ import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import { SidebarCard } from './SidebarCard';
 import { ChatSessionCard } from './ChatSessionCard';
+import { UserProfile } from './UserProfile';
 import derivNeoDark from '../../assets/deriv_neo_dark_mode.svg';
 import derivNeoLight from '../../assets/deriv_neo_light_mode.svg';
 
@@ -42,7 +43,7 @@ function saveSidebarState(state: SidebarState): void {
 }
 
 export function Sidebar() {
-  const { favoriteCards, archivedCards, sessions, resetChat, currentSessionId } = useChat();
+  const { favoriteCards, archivedCards, sessions, resetChat } = useChat();
   const { theme } = useTheme();
   
   const [sidebarState, setSidebarState] = useState<SidebarState>(loadSidebarState);
@@ -78,10 +79,6 @@ export function Sidebar() {
   const activeChats = sessions.filter(s => !s.is_archived && !s.is_favorite);
   const favoriteChats = sessions.filter(s => s.is_favorite && !s.is_archived);
   const archivedChats = sessions.filter(s => s.is_archived);
-
-  const hasActiveChat = activeChats.some(s => s.id === currentSessionId);
-  const hasFavoriteActive = favoriteChats.some(s => s.id === currentSessionId);
-  const hasArchivedActive = archivedChats.some(s => s.id === currentSessionId);
 
   return (
     <aside className={`w-72 border-r flex flex-col h-full transition-colors ${
@@ -251,6 +248,9 @@ export function Sidebar() {
           )}
         </div>
       </div>
+
+      {/* User Profile Footer */}
+      <UserProfile />
     </aside>
   );
 }
