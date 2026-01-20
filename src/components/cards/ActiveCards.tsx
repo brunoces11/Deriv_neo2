@@ -3,6 +3,7 @@ import { IntentSummaryCard } from './IntentSummaryCard';
 import { ActionTicketCard } from './ActionTicketCard';
 import { BotCard } from './BotCard';
 import { PortfolioSnapshotCard } from './PortfolioSnapshotCard';
+import { PortfolioTableCard } from './PortfolioTableCard';
 import type { BaseCard } from '../../types';
 
 const cardComponents = {
@@ -10,6 +11,7 @@ const cardComponents = {
   'action-ticket': ActionTicketCard,
   'bot': BotCard,
   'portfolio-snapshot': PortfolioSnapshotCard,
+  'portfolio-table': PortfolioTableCard,
 };
 
 export function ActiveCards() {

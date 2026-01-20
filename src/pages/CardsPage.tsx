@@ -1,9 +1,12 @@
 import { useTheme } from '../store/ThemeContext';
-import { ArrowLeft, FileText, Zap, Bot, Wallet, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Zap, Bot, Wallet, Table, CheckCircle, XCircle } from 'lucide-react';
 import { IntentSummaryCard } from '../components/cards/IntentSummaryCard';
 import { ActionTicketCard } from '../components/cards/ActionTicketCard';
 import { BotCard } from '../components/cards/BotCard';
 import { PortfolioSnapshotCard } from '../components/cards/PortfolioSnapshotCard';
+import { PortfolioTableCard } from '../components/cards/PortfolioTableCard';
+import { PortfolioTableCardExpanded } from '../components/cards/PortfolioTableCardExpanded';
+import { PortfolioTableCardComplete } from '../components/cards/PortfolioTableCardComplete';
 import type { BaseCard } from '../types';
 
 const mockIntentSummaryCard: BaseCard = {
@@ -70,6 +73,25 @@ const mockPortfolioCard: BaseCard = {
   },
 };
 
+const mockPortfolioTableCard: BaseCard = {
+  id: 'demo-portfolio-table-1',
+  type: 'portfolio-table',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {
+    totalValue: '$45,230.00',
+    change24h: '+$1,250.00',
+    changePercent: '+2.84%',
+    assets: [
+      { symbol: 'BTC', name: 'Bitcoin', allocation: 45, value: '$20,353.50', invested: '$18,000.00', change: '+$2,353.50', changePercent: '+13.07%' },
+      { symbol: 'ETH', name: 'Ethereum', allocation: 30, value: '$13,569.00', invested: '$12,500.00', change: '+$1,069.00', changePercent: '+8.55%' },
+      { symbol: 'SOL', name: 'Solana', allocation: 15, value: '$6,784.50', invested: '$7,200.00', change: '-$415.50', changePercent: '-5.77%' },
+      { symbol: 'USDT', name: 'Tether', allocation: 10, value: '$4,523.00', invested: '$4,500.00', change: '+$23.00', changePercent: '+0.51%' },
+    ],
+  },
+};
+
 interface CardInfo {
   name: string;
   type: string;
@@ -78,6 +100,7 @@ interface CardInfo {
   hasLogic: boolean;
   logicDetails: string[];
   component: React.ReactNode;
+  expanded?: boolean;
 }
 
 const cardsInfo: CardInfo[] = [
@@ -141,10 +164,46 @@ const cardsInfo: CardInfo[] = [
     ],
     component: <PortfolioSnapshotCard card={mockPortfolioCard} />,
   },
+  {
+    name: 'Portfolio Snapshot Table',
+    type: 'portfolio-table',
+    icon: Table,
+    description: 'Tabela detalhada do portfólio com valor aportado, variação e ações.',
+    hasLogic: true,
+    logicDetails: [
+      'Tabela com colunas: Asset, Value, Invested, Change, % Portfolio, Actions',
+      'Exibe nome completo e símbolo de cada ativo',
+      'Mostra valor aportado vs valor atual',
+      'Variação em % com ícone de tendência',
+      'Botões de ação Buy/Sell para cada ativo',
+      'Footer com resumo: 24h change e total de assets',
+    ],
+    component: <PortfolioTableCard card={mockPortfolioTableCard} />,
+  },
+  {
+    name: 'Portfolio Snapshot Table (Expanded)',
+    type: 'portfolio-table-expanded',
+    icon: Table,
+    description: 'Versão expandida da tabela de portfólio ocupando toda a largura disponível.',
+    hasLogic: true,
+    logicDetails: [],
+    component: <PortfolioTableCardExpanded card={mockPortfolioTableCard} />,
+    expanded: true,
+  },
+  {
+    name: 'Portfolio Snapshot Table (Complete)',
+    type: 'portfolio-table-complete',
+    icon: Table,
+    description: 'Versão completa combinando barra de alocação visual + tabela detalhada expandida.',
+    hasLogic: true,
+    logicDetails: [],
+    component: <PortfolioTableCardComplete card={mockPortfolioTableCard} />,
+    expanded: true,
+  },
 ];
 
 
-function CardSection({ cardInfo, index }: { cardInfo: CardInfo; index: number }) {
+function CardSection({ cardInfo, displayIndex }: { cardInfo: CardInfo; displayIndex: string }) {
   const { theme } = useTheme();
   const Icon = cardInfo.icon;
 
@@ -168,7 +227,7 @@ function CardSection({ cardInfo, index }: { cardInfo: CardInfo; index: number })
               <h3 className={`font-semibold ${
                 theme === 'dark' ? 'text-white' : 'text-gray-900'
               }`}>
-                {index + 1}. {cardInfo.name}
+                {displayIndex}. {cardInfo.name}
               </h3>
               <code className={`text-xs px-2 py-0.5 rounded ${
                 theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-100 text-gray-600'
@@ -199,36 +258,49 @@ function CardSection({ cardInfo, index }: { cardInfo: CardInfo; index: number })
         </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6 p-6">
-        <div>
+      {cardInfo.expanded ? (
+        <div className="p-6">
           <h4 className={`text-sm font-medium mb-3 ${
             theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
           }`}>
-            Preview do Card
+            Preview do Card (Expanded)
           </h4>
           <div className="pointer-events-none">
             {cardInfo.component}
           </div>
         </div>
+      ) : (
+        <div className="grid md:grid-cols-2 gap-6 p-6">
+          <div>
+            <h4 className={`text-sm font-medium mb-3 ${
+              theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
+            }`}>
+              Preview do Card
+            </h4>
+            <div className="pointer-events-none">
+              {cardInfo.component}
+            </div>
+          </div>
 
-        <div>
-          <h4 className={`text-sm font-medium mb-3 ${
-            theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
-          }`}>
-            Lógica Implementada
-          </h4>
-          <ul className="space-y-2">
-            {cardInfo.logicDetails.map((detail, i) => (
-              <li key={i} className={`flex items-start gap-2 text-sm ${
-                theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'
-              }`}>
-                <span className="text-brand-green mt-1">•</span>
-                {detail}
-              </li>
-            ))}
-          </ul>
+          <div>
+            <h4 className={`text-sm font-medium mb-3 ${
+              theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
+            }`}>
+              Lógica Implementada
+            </h4>
+            <ul className="space-y-2">
+              {cardInfo.logicDetails.map((detail, i) => (
+                <li key={i} className={`flex items-start gap-2 text-sm ${
+                  theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'
+                }`}>
+                  <span className="text-brand-green mt-1">•</span>
+                  {detail}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -295,9 +367,22 @@ export function CardsPage() {
         </div>
 
         <div className="space-y-8">
-          {cardsInfo.map((cardInfo, index) => (
-            <CardSection key={cardInfo.type} cardInfo={cardInfo} index={index} />
-          ))}
+          {cardsInfo.map((cardInfo, index) => {
+            // Calculate display index: expanded items get .1, .2 suffix
+            let displayIndex: string;
+            if (index <= 4) {
+              displayIndex = String(index + 1);
+            } else if (index === 5) {
+              displayIndex = '5.1';
+            } else if (index === 6) {
+              displayIndex = '5.2';
+            } else {
+              displayIndex = String(index + 1);
+            }
+            return (
+              <CardSection key={cardInfo.type} cardInfo={cardInfo} displayIndex={displayIndex} />
+            );
+          })}
         </div>
       </main>
     </div>

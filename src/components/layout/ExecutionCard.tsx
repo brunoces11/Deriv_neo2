@@ -1,4 +1,4 @@
-import { Star, Archive, Zap, Bot, Wallet, FileText } from 'lucide-react';
+import { Star, Archive, Zap, Bot, Wallet, FileText, Table } from 'lucide-react';
 import type { BaseCard } from '../../types';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
@@ -12,6 +12,7 @@ const cardIcons = {
   'action-ticket': Zap,
   'bot': Bot,
   'portfolio-snapshot': Wallet,
+  'portfolio-table': Table,
 };
 
 const cardLabels = {
@@ -19,6 +20,7 @@ const cardLabels = {
   'action-ticket': 'Action',
   'bot': 'Bot',
   'portfolio-snapshot': 'Portfolio',
+  'portfolio-table': 'Portfolio Table',
 };
 
 export function ExecutionCard({ card }: ExecutionCardProps) {
@@ -40,6 +42,9 @@ export function ExecutionCard({ card }: ExecutionCardProps) {
     }
     if (card.type === 'portfolio-snapshot') {
       return 'Portfolio';
+    }
+    if (card.type === 'portfolio-table') {
+      return 'Portfolio Table';
     }
     return label;
   };
