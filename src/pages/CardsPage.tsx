@@ -7,6 +7,10 @@ import { PortfolioSnapshotCard } from '../components/cards/PortfolioSnapshotCard
 import { PortfolioTableCard } from '../components/cards/PortfolioTableCard';
 import { PortfolioTableCardExpanded } from '../components/cards/PortfolioTableCardExpanded';
 import { PortfolioTableCardComplete } from '../components/cards/PortfolioTableCardComplete';
+import { PortfolioSidebarCard } from '../components/cards/PortfolioSidebarCard';
+import { UserProfile } from '../components/layout/UserProfile';
+import derivNeoDark from '../assets/deriv_neo_dark_mode.svg';
+import derivNeoLight from '../assets/deriv_neo_light_mode.svg';
 import type { BaseCard } from '../types';
 
 const mockIntentSummaryCard: BaseCard = {
@@ -179,6 +183,22 @@ const cardsInfo: CardInfo[] = [
       'Footer com resumo: 24h change e total de assets',
     ],
     component: <PortfolioTableCard card={mockPortfolioTableCard} />,
+  },
+  {
+    name: 'Portfolio Sidebar Card',
+    type: 'portfolio-sidebar',
+    icon: Wallet,
+    description: 'Versão ultra compacta do portfólio otimizada para sidebar com botões mínimos.',
+    hasLogic: true,
+    logicDetails: [
+      'Layout ultra compacto para caber no sidebar',
+      'Tabela sem coluna Invested para economizar espaço',
+      'Botões ultra compactos: apenas seta + cor',
+      'Texto reduzido (10px) para máxima densidade',
+      'Header compacto com valor total e variação',
+      'Footer minimalista com 24h change',
+    ],
+    component: <PortfolioSidebarCard card={mockPortfolioTableCard} />,
   },
   {
     name: 'Portfolio Snapshot Table (Expanded)',
@@ -368,14 +388,14 @@ export function CardsPage() {
 
         <div className="space-y-8">
           {cardsInfo.map((cardInfo, index) => {
-            // Calculate display index: expanded items get .1, .2 suffix
+            // Calculate display index: 1-5 normal, 6 for sidebar, 7 for expanded, 7.1 for complete
             let displayIndex: string;
-            if (index <= 4) {
+            if (index <= 5) {
               displayIndex = String(index + 1);
-            } else if (index === 5) {
-              displayIndex = '5.1';
             } else if (index === 6) {
-              displayIndex = '5.2';
+              displayIndex = '7';
+            } else if (index === 7) {
+              displayIndex = '7.1';
             } else {
               displayIndex = String(index + 1);
             }
@@ -385,6 +405,29 @@ export function CardsPage() {
           })}
         </div>
       </main>
+
+      {/* Deriv Neo Logo - Fixed top left */}
+      <div className={`fixed top-0 left-0 w-72 z-20 p-4 border-b border-r ${
+        theme === 'dark' 
+          ? 'bg-zinc-950 border-zinc-800/50' 
+          : 'bg-white border-gray-200'
+      }`}>
+        <div className="flex items-center justify-center">
+          <img
+            src={theme === 'dark' ? derivNeoDark : derivNeoLight}
+            alt="Deriv Neo"
+            className="h-7 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={handleBack}
+          />
+        </div>
+      </div>
+
+      {/* User Profile - Fixed bottom left */}
+      <div className={`fixed bottom-0 left-0 w-72 z-20 ${
+        theme === 'dark' ? 'bg-zinc-950' : 'bg-white'
+      }`}>
+        <UserProfile />
+      </div>
     </div>
   );
 }
