@@ -8,7 +8,7 @@ export function ExecutionsSidebar() {
   const { theme } = useTheme();
 
   return (
-    <aside className={`w-72 border-l flex flex-col h-full transition-colors ${
+    <aside className={`relative z-40 w-72 border-l flex flex-col h-full transition-colors ${
       theme === 'dark'
         ? 'bg-zinc-950 border-zinc-800/50'
         : 'bg-gray-50 border-gray-200'

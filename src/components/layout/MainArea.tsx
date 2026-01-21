@@ -1,7 +1,10 @@
+import { useState } from 'react';
 import { ChatMessages } from '../chat/ChatMessages';
 import { ChatInput } from '../chat/ChatInput';
 import { ActiveCards } from '../cards/ActiveCards';
 import { AccountHeader } from './AccountHeader';
+import { ChartToggle } from '../chart/ChartToggle';
+import { ChartLayer } from '../chart/ChartLayer';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 
@@ -9,6 +12,7 @@ export function MainArea() {
   const { messages } = useChat();
   const { theme } = useTheme();
   const hasMessages = messages.length > 0;
+  const [isChartVisible, setIsChartVisible] = useState(false);
 
   return (
     <main className={`flex-1 flex flex-col h-full relative overflow-hidden transition-colors ${
@@ -20,7 +24,20 @@ export function MainArea() {
           : 'from-gray-100/50 via-white to-white'
       }`} />
 
+      {/* Chart Layer - z-5, below all UI elements */}
+      <ChartLayer isVisible={isChartVisible} theme={theme} />
+
       <AccountHeader />
+
+      {/* Chart Toggle - positioned at top of content area */}
+      <div className={`relative z-10 flex justify-end px-4 py-2 border-b ${
+        theme === 'dark' ? 'border-zinc-800/30' : 'border-gray-100'
+      }`}>
+        <ChartToggle 
+          isActive={isChartVisible} 
+          onToggle={() => setIsChartVisible(!isChartVisible)} 
+        />
+      </div>
 
       <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
         {!hasMessages ? (
