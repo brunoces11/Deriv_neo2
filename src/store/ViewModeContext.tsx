@@ -25,8 +25,8 @@ const START_POINTS: Record<ViewMode, Required<Omit<UserPoint, never>> & { chartV
   },
   graph: {
     sidebarCollapsed: true,
-    executionsSidebarCollapsed: true,
-    executionsSidebarWidth: 54, // COLLAPSED_WIDTH
+    executionsSidebarCollapsed: false,  // Sidebar expandido por padrão no Graph Mode
+    executionsSidebarWidth: 669,        // Largura padrão 669px no Graph Mode
     chartVisible: true,
   },
 };

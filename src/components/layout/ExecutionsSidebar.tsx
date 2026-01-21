@@ -3,10 +3,13 @@ import { Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import { ExecutionCard } from './ExecutionCard';
+import { ChatMessages } from '../chat/ChatMessages';
+import { ChatInput } from '../chat/ChatInput';
 
 interface ExecutionsSidebarProps {
   isCollapsed: boolean;
   width: number;
+  isGraphMode: boolean;
   onToggleCollapse: () => void;
   onResize: (width: number) => void;
   onResizeStart: () => void;
@@ -19,7 +22,8 @@ const SNAP_THRESHOLD = 100;
 
 export function ExecutionsSidebar({ 
   isCollapsed, 
-  width: propWidth, 
+  width: propWidth,
+  isGraphMode,
   onToggleCollapse, 
   onResize,
   onResizeStart,
@@ -172,45 +176,81 @@ export function ExecutionsSidebar({
         </div>
       </div>
 
-      {/* Cards List */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-        {showCollapsedContent ? (
-          <div className="flex flex-col items-center space-y-2">
+      {/* Cards List - Chat Mode: apenas executions, Graph Mode: executions + chat */}
+      {isGraphMode && !showCollapsedContent ? (
+        // Graph Mode Layout: 3 seções
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Executions Section */}
+          <div className={`max-h-[40%] overflow-y-auto custom-scrollbar p-3 border-b ${
+            theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'
+          }`}>
             {activeCards.length === 0 ? (
-              <Zap className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
+              <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
+                <Zap className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
+                <p className="text-xs">No executions</p>
+              </div>
             ) : (
-              activeCards.slice(0, 5).map((card, index) => (
-                <div 
-                  key={card.id} 
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium ${
-                    theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
-                  }`} 
-                  title={card.type}
-                >
-                  {index + 1}
-                </div>
-              ))
-            )}
-            {activeCards.length > 5 && (
-              <div className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
-                +{activeCards.length - 5}
+              <div className="space-y-2">
+                {activeCards.map(card => (
+                  <ExecutionCard key={card.id} card={card} />
+                ))}
               </div>
             )}
           </div>
-        ) : activeCards.length === 0 ? (
-          <div className={`text-center py-8 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-            <Zap className={`w-8 h-8 mx-auto mb-2 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
-            <p className="text-sm">No executions yet</p>
-            <p className="text-xs mt-1">Cards will appear here as you chat</p>
+
+          {/* Chat Messages Section */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar px-3">
+            <ChatMessages displayMode="sidebar" />
           </div>
-        ) : (
-          <div className="space-y-2">
-            {activeCards.map(card => (
-              <ExecutionCard key={card.id} card={card} />
-            ))}
+
+          {/* Chat Input Section */}
+          <div className={`flex-shrink-0 p-3 border-t ${
+            theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'
+          }`}>
+            <ChatInput displayMode="sidebar" />
           </div>
-        )}
-      </div>
+        </div>
+      ) : (
+        // Chat Mode Layout: apenas executions (comportamento original)
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
+          {showCollapsedContent ? (
+            <div className="flex flex-col items-center space-y-2">
+              {activeCards.length === 0 ? (
+                <Zap className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
+              ) : (
+                activeCards.slice(0, 5).map((card, index) => (
+                  <div 
+                    key={card.id} 
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium ${
+                      theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+                    }`} 
+                    title={card.type}
+                  >
+                    {index + 1}
+                  </div>
+                ))
+              )}
+              {activeCards.length > 5 && (
+                <div className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                  +{activeCards.length - 5}
+                </div>
+              )}
+            </div>
+          ) : activeCards.length === 0 ? (
+            <div className={`text-center py-8 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
+              <Zap className={`w-8 h-8 mx-auto mb-2 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
+              <p className="text-sm">No executions yet</p>
+              <p className="text-xs mt-1">Cards will appear here as you chat</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {activeCards.map(card => (
+                <ExecutionCard key={card.id} card={card} />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </aside>
   );
 }

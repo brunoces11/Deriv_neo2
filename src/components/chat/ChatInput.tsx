@@ -5,12 +5,18 @@ import { useTheme } from '../../store/ThemeContext';
 import { simulateLangFlowResponse } from '../../services/mockSimulation';
 import type { ChatMessage } from '../../types';
 
-export function ChatInput() {
+interface ChatInputProps {
+  displayMode?: 'center' | 'sidebar';
+}
+
+export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { addMessage, setTyping, isTyping, processUIEvent, currentSessionId, createNewSession } = useChat();
   const { theme } = useTheme();
+
+  const isSidebar = displayMode === 'sidebar';
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -91,7 +97,7 @@ export function ChatInput() {
             ? 'bg-zinc-900 border-zinc-700/50'
             : 'bg-white border-gray-200'
         }`}>
-          <div className="flex items-end gap-2 p-2">
+          <div className={`flex items-end gap-2 ${isSidebar ? 'p-1.5' : 'p-2'}`}>
             <textarea
               ref={textareaRef}
               value={message}
@@ -99,10 +105,12 @@ export function ChatInput() {
               onKeyDown={handleKeyDown}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              placeholder="Message FlowChat..."
+              placeholder={isSidebar ? "Message..." : "Message FlowChat..."}
               rows={1}
               disabled={isTyping}
-              className={`flex-1 bg-transparent resize-none focus:outline-none py-2 px-3 text-sm max-h-[150px] disabled:opacity-50 transition-colors ${
+              className={`flex-1 bg-transparent resize-none focus:outline-none py-2 px-3 disabled:opacity-50 transition-colors ${
+                isSidebar ? 'text-xs max-h-[80px]' : 'text-sm max-h-[150px]'
+              } ${
                 theme === 'dark'
                   ? 'text-white placeholder-zinc-500'
                   : 'text-gray-900 placeholder-gray-400'
@@ -111,7 +119,9 @@ export function ChatInput() {
             <button
               onClick={handleSubmit}
               disabled={!message.trim() || isTyping}
-              className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 ${
+              className={`flex-shrink-0 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                isSidebar ? 'w-8 h-8' : 'w-10 h-10'
+              } ${
                 message.trim() && !isTyping
                   ? 'bg-gradient-to-r from-red-500 to-rose-500 text-white hover:shadow-lg hover:shadow-red-500/25 hover:scale-105 active:scale-95'
                   : theme === 'dark'
@@ -120,20 +130,22 @@ export function ChatInput() {
               }`}
             >
               {isTyping ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className={`animate-spin ${isSidebar ? 'w-4 h-4' : 'w-5 h-5'}`} />
               ) : (
-                <Send className="w-5 h-5" />
+                <Send className={isSidebar ? 'w-4 h-4' : 'w-5 h-5'} />
               )}
             </button>
           </div>
         </div>
       </div>
 
-      <p className={`text-xs text-center mt-3 transition-colors ${
-        theme === 'dark' ? 'text-zinc-600' : 'text-gray-500'
-      }`}>
-        FlowChat may produce inaccurate information. Cards are dynamically generated.
-      </p>
+      {!isSidebar && (
+        <p className={`text-xs text-center mt-3 transition-colors ${
+          theme === 'dark' ? 'text-zinc-600' : 'text-gray-500'
+        }`}>
+          FlowChat may produce inaccurate information. Cards are dynamically generated.
+        </p>
+      )}
     </div>
   );
 }

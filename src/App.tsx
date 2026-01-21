@@ -34,6 +34,7 @@ function MainLayout() {
       <ExecutionsSidebar 
         isCollapsed={executionsSidebarCollapsed}
         width={executionsSidebarWidth}
+        isGraphMode={currentMode === 'graph'}
         onToggleCollapse={() => updateUserPoint({ executionsSidebarCollapsed: !executionsSidebarCollapsed })}
         onResize={(width) => updateUserPoint({ executionsSidebarWidth: width })}
         onResizeStart={() => setResizing(true)}

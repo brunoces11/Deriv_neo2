@@ -34,7 +34,10 @@ export function MainArea({ isGraphMode }: MainAreaProps) {
       </div>
 
       <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
-        {!hasMessages ? (
+        {isGraphMode ? (
+          // Graph Mode: área vazia, chat está no sidebar
+          <div className="flex-1" />
+        ) : !hasMessages ? (
           <WelcomeScreen />
         ) : (
           <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -46,15 +49,17 @@ export function MainArea({ isGraphMode }: MainAreaProps) {
         )}
       </div>
 
-      <div className={`relative z-20 border-t backdrop-blur-xl transition-colors ${
-        theme === 'dark'
-          ? 'border-zinc-800/50 bg-zinc-900/80'
-          : 'border-gray-200 bg-white/80'
-      }`}>
-        <div className="max-w-3xl mx-auto w-full px-4 py-4">
-          <ChatInput />
+      {!isGraphMode && (
+        <div className={`relative z-20 border-t backdrop-blur-xl transition-colors ${
+          theme === 'dark'
+            ? 'border-zinc-800/50 bg-zinc-900/80'
+            : 'border-gray-200 bg-white/80'
+        }`}>
+          <div className="max-w-3xl mx-auto w-full px-4 py-4">
+            <ChatInput />
+          </div>
         </div>
-      </div>
+      )}
     </main>
   );
 }

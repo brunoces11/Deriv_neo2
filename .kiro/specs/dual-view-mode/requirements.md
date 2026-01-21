@@ -14,6 +14,8 @@ Este documento define os requisitos para implementação do sistema de **Dual Vi
 - **Mode_State**: Estado completo de um modo incluindo Start_Point e User_Point
 - **Component_Config**: Configuração de parâmetros de um componente específico para um modo
 - **Layout_Manager**: Gerenciador de layout que aplica configurações de modo aos componentes
+- **Chat_Components**: Conjunto de componentes de interação do chat (ChatInput, ChatMessages, WelcomeScreen)
+- **Display_Mode**: Modo de exibição de um componente ('center' para MainArea, 'sidebar' para ExecutionsSidebar)
 
 ## Requirements
 
@@ -65,17 +67,21 @@ Este documento define os requisitos para implementação do sistema de **Dual Vi
 2. WHEN Chat_Mode is active, THE Layout_Manager SHALL set ExecutionsSidebar to expanded (w-72)
 3. WHEN Chat_Mode is active, THE Layout_Manager SHALL hide ChartLayer
 4. WHEN Chat_Mode is active, THE Layout_Manager SHALL set MainArea background to opaque
+5. WHEN Chat_Mode is active, THE Layout_Manager SHALL render Chat_Components (ChatInput, WelcomeScreen, ChatMessages) inside MainArea centered
+6. WHEN Chat_Mode is active, THE ExecutionsSidebar SHALL display only Executions cards (no chat components)
 
 ### Requirement 5: Graph Mode Configuration
 
-**User Story:** As a user, I want Graph Mode to maximize chart visibility, so that I can focus on market analysis.
+**User Story:** As a user, I want Graph Mode to maximize chart visibility while keeping chat accessible in the sidebar, so that I can focus on market analysis without losing conversation context.
 
 #### Acceptance Criteria
 
 1. WHEN Graph_Mode is active, THE Layout_Manager SHALL set Sidebar to collapsed (w-16)
-2. WHEN Graph_Mode is active, THE Layout_Manager SHALL set ExecutionsSidebar to collapsed (w-54)
+2. WHEN Graph_Mode is active, THE Layout_Manager SHALL set ExecutionsSidebar to expanded with default width of 669px
 3. WHEN Graph_Mode is active, THE Layout_Manager SHALL show ChartLayer as full-screen background
-4. WHEN Graph_Mode is active, THE Layout_Manager SHALL set MainArea background to transparent
+4. WHEN Graph_Mode is active, THE Layout_Manager SHALL set MainArea to transparent and empty (no chat components)
+5. WHEN Graph_Mode is active, THE ExecutionsSidebar SHALL render Chat_Components in sidebar layout: Executions (top), ChatMessages (middle), ChatInput (bottom)
+6. WHEN Graph_Mode is active for the first time in a session, THE ExecutionsSidebar SHALL open with 669px width by default
 
 ### Requirement 6: Transição Suave entre Modos
 
@@ -120,7 +126,35 @@ Este documento define os requisitos para implementação do sistema de **Dual Vi
 3. WHEN reset is triggered, THE View_Mode_System SHALL apply Start_Point configuration
 4. THE reset action SHALL display a browser confirmation dialog before proceeding
 
-### Requirement 10: Extensibilidade para Novos Modos (Future Enhancement)
+### Requirement 10: Chat Components Dual Display Mode
+
+**User Story:** As a user, I want chat components to adapt their display based on the current view mode, so that I can interact with the chat regardless of which mode I'm using.
+
+#### Acceptance Criteria
+
+1. THE ChatInput component SHALL support two display modes: 'center' (for Chat_Mode) and 'sidebar' (for Graph_Mode)
+2. WHEN in 'center' mode, THE ChatInput SHALL render with full width, max-w-3xl, centered in MainArea
+3. WHEN in 'sidebar' mode, THE ChatInput SHALL render compact, fitting within ExecutionsSidebar width
+4. THE ChatMessages component SHALL support two display modes: 'center' (for Chat_Mode) and 'sidebar' (for Graph_Mode)
+5. WHEN in 'center' mode, THE ChatMessages SHALL render with full width, max-w-3xl, centered in MainArea
+6. WHEN in 'sidebar' mode, THE ChatMessages SHALL render compact with smaller message bubbles fitting sidebar width
+7. THE WelcomeScreen component SHALL only render in Chat_Mode (not displayed in Graph_Mode sidebar)
+8. WHEN Graph_Mode is active and no messages exist, THE ExecutionsSidebar SHALL show ChatInput without WelcomeScreen
+
+### Requirement 11: ExecutionsSidebar Graph Mode Layout
+
+**User Story:** As a user, I want the ExecutionsSidebar in Graph Mode to contain both executions and chat, so that I can monitor trades and chat simultaneously.
+
+#### Acceptance Criteria
+
+1. WHEN Graph_Mode is active, THE ExecutionsSidebar SHALL use a three-section vertical layout
+2. THE top section SHALL display Executions cards with scrollable overflow
+3. THE middle section SHALL display ChatMessages with scrollable overflow
+4. THE bottom section SHALL display ChatInput fixed at the bottom
+5. THE ExecutionsSidebar SHALL use flex layout with appropriate flex-grow for each section
+6. WHEN ExecutionsSidebar is resized in Graph_Mode, THE Chat_Components SHALL adapt to the new width
+
+### Requirement 12: Extensibilidade para Novos Modos (Future Enhancement)
 
 **User Story:** As a developer, I want the system to support adding new modes easily, so that we can expand functionality in the future.
 
