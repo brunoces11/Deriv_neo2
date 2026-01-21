@@ -30,6 +30,7 @@ export function ExecutionsSidebar({
   const [localWidth, setLocalWidth] = useState(propWidth);
   const [isResizing, setIsResizing] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
+  const finalWidthRef = useRef(propWidth);
 
   // Sincronizar com prop width quando não está em resize
   useEffect(() => {
@@ -45,7 +46,12 @@ export function ExecutionsSidebar({
     onResizeStart();
     
     const startX = e.clientX;
-    const startWidth = localWidth;
+    // Quando colapsado, começar do COLLAPSED_WIDTH real
+    const startWidth = isCollapsed ? COLLAPSED_WIDTH : localWidth;
+    
+    // Atualizar localWidth para o valor real de início
+    setLocalWidth(startWidth);
+    finalWidthRef.current = startWidth;
 
     const handleMouseMove = (e: MouseEvent) => {
       const delta = startX - e.clientX;
@@ -57,16 +63,28 @@ export function ExecutionsSidebar({
         newWidth = Math.min(MAX_WIDTH, newWidth);
       }
       
+      finalWidthRef.current = newWidth;
       setLocalWidth(newWidth);
     };
 
     const handleMouseUp = () => {
+      const finalWidth = finalWidthRef.current;
+      
       setIsResizing(false);
       onResizeEnd();
       
-      // Persistir o width final
-      if (localWidth > COLLAPSED_WIDTH) {
-        onResize(localWidth);
+      // Persistir o width final - se snap para collapsed, atualizar collapsed state
+      if (finalWidth <= COLLAPSED_WIDTH) {
+        // Snap para collapsed - atualizar o estado de collapsed
+        if (!isCollapsed) {
+          onToggleCollapse();
+        }
+      } else {
+        // Width normal - garantir que não está collapsed e persistir width
+        if (isCollapsed) {
+          onToggleCollapse();
+        }
+        onResize(finalWidth);
       }
       
       document.removeEventListener('mousemove', handleMouseMove);
@@ -79,10 +97,10 @@ export function ExecutionsSidebar({
     document.addEventListener('mouseup', handleMouseUp);
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
-  }, [localWidth, onResizeStart, onResizeEnd, onResize]);
+  }, [localWidth, isCollapsed, onResizeStart, onResizeEnd, onResize, onToggleCollapse]);
 
-  // Width visual: collapsed força 54px, senão usa localWidth
-  const displayWidth = isCollapsed ? COLLAPSED_WIDTH : localWidth;
+  // Width visual: durante resize sempre usa localWidth, senão respeita collapsed
+  const displayWidth = isResizing ? localWidth : (isCollapsed ? COLLAPSED_WIDTH : localWidth);
   const showCollapsedContent = displayWidth <= COLLAPSED_WIDTH;
 
   return (

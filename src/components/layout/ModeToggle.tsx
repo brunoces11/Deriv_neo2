@@ -24,21 +24,48 @@ export function ModeToggle() {
   return (
     <button
       onClick={toggleMode}
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-        isGraphMode
-          ? 'bg-gradient-to-r from-red-500/20 to-rose-500/20 text-red-400 border border-red-500/30'
-          : theme === 'dark'
-            ? 'bg-zinc-800/50 text-zinc-400 hover:text-white hover:bg-zinc-800 border border-zinc-700/50'
-            : 'bg-gray-100 text-gray-600 hover:text-gray-900 hover:bg-gray-200 border border-gray-200'
+      className={`relative flex items-center h-9 rounded-full p-1 transition-colors ${
+        theme === 'dark' 
+          ? 'bg-zinc-800 border border-zinc-700/50' 
+          : 'bg-gray-200 border border-gray-300'
       }`}
-      title={isGraphMode ? 'Switch to Chat Mode' : 'Switch to Graph Mode'}
+      title="Toggle view mode (Ctrl+Shift+M)"
     >
-      {isGraphMode ? (
-        <MessageSquare className="w-3.5 h-3.5" />
-      ) : (
-        <TrendingUp className="w-3.5 h-3.5" />
-      )}
-      <span>{isGraphMode ? 'Chat Mode' : 'Graph Mode'}</span>
+      {/* Slider */}
+      <div
+        className={`absolute h-7 rounded-full transition-all duration-300 ease-out ${
+          isGraphMode 
+            ? 'bg-gradient-to-r from-red-500 to-rose-500 left-[calc(50%-2px)]' 
+            : theme === 'dark' 
+              ? 'bg-zinc-600 left-1' 
+              : 'bg-white shadow-sm left-1'
+        }`}
+        style={{ width: 'calc(50% - 2px)' }}
+      />
+      
+      {/* Chat Mode Label */}
+      <span
+        className={`relative z-10 px-4 py-1 text-sm font-bold transition-colors text-center flex items-center gap-1.5 ${
+          !isGraphMode
+            ? theme === 'dark' ? 'text-white' : 'text-gray-900'
+            : theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'
+        }`}
+      >
+        <MessageSquare className="w-4 h-4" />
+        Chat Mode
+      </span>
+      
+      {/* Graph Mode Label */}
+      <span
+        className={`relative z-10 px-4 py-1 text-sm font-bold transition-colors text-center flex items-center gap-1.5 ${
+          isGraphMode
+            ? 'text-white'
+            : theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'
+        }`}
+      >
+        <TrendingUp className="w-4 h-4" />
+        Graph Mode
+      </span>
     </button>
   );
 }

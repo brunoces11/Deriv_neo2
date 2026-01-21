@@ -1,7 +1,6 @@
 import { ChatMessages } from '../chat/ChatMessages';
 import { ChatInput } from '../chat/ChatInput';
 import { ActiveCards } from '../cards/ActiveCards';
-import { AccountHeader } from './AccountHeader';
 import { ModeToggle } from './ModeToggle';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
@@ -27,12 +26,10 @@ export function MainArea({ isGraphMode }: MainAreaProps) {
         }`} />
       )}
 
-      <AccountHeader />
-
       {/* Mode Toggle */}
       <div className={`relative z-10 flex justify-end px-4 py-2 border-b ${
         theme === 'dark' ? 'border-zinc-800/30' : 'border-gray-100'
-      }`}>
+      }`} style={{ marginTop: '7px' }}>
         <ModeToggle />
       </div>
 
