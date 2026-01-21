@@ -1,3 +1,4 @@
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Zap, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
@@ -8,72 +9,151 @@ interface ExecutionsSidebarProps {
   onToggleCollapse?: () => void;
 }
 
+const COLLAPSED_WIDTH = 54;
+const MAX_WIDTH = 900;
+const DEFAULT_WIDTH = 288;
+const SNAP_THRESHOLD = 100;
+
 export function ExecutionsSidebar({ isCollapsed = false, onToggleCollapse }: ExecutionsSidebarProps) {
   const { activeCards } = useChat();
   const { theme } = useTheme();
+  const [width, setWidth] = useState(isCollapsed ? COLLAPSED_WIDTH : DEFAULT_WIDTH);
+  const [isResizing, setIsResizing] = useState(false);
+  const buttonClickRef = useRef(false);
+  const sidebarRef = useRef<HTMLElement>(null);
+
+  // Handle button click - always takes priority, immediately updates width
+  const handleToggleClick = useCallback(() => {
+    buttonClickRef.current = true;
+    if (width <= COLLAPSED_WIDTH) {
+      // Currently collapsed -> expand to default
+      setWidth(DEFAULT_WIDTH);
+    } else {
+      // Currently expanded -> collapse to minimum
+      setWidth(COLLAPSED_WIDTH);
+    }
+    // Also notify parent
+    onToggleCollapse?.();
+  }, [width, onToggleCollapse]);
+
+  // Sync width when isCollapsed changes from EXTERNAL source (e.g., chart toggle)
+  // Skip if the change came from our own button click
+  useEffect(() => {
+    if (buttonClickRef.current) {
+      buttonClickRef.current = false;
+      return;
+    }
+    if (!isResizing) {
+      if (isCollapsed) {
+        setWidth(COLLAPSED_WIDTH);
+      } else {
+        setWidth(DEFAULT_WIDTH);
+      }
+    }
+  }, [isCollapsed]);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    const startX = e.clientX;
+    const startWidth = width;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const delta = startX - e.clientX;
+      let newWidth = startWidth + delta;
+      
+      // Snap to collapsed ONLY when below threshold (< 100px)
+      if (newWidth < SNAP_THRESHOLD) {
+        newWidth = COLLAPSED_WIDTH;
+      } else {
+        // No minimum - just cap at max
+        newWidth = Math.min(MAX_WIDTH, newWidth);
+      }
+      
+      setWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, [width]);
+
+  // Use width directly - no override based on isCollapsed during resize
+  const showCollapsedContent = width <= COLLAPSED_WIDTH;
 
   return (
-    <aside className={`relative z-40 border-l flex flex-col h-full transition-all duration-300 ${
-      isCollapsed ? 'w-16' : 'w-72'
-    } ${
-      theme === 'dark'
-        ? 'bg-zinc-950 border-zinc-800/50'
-        : 'bg-gray-50 border-gray-200'
-    }`}>
+    <aside 
+      ref={sidebarRef}
+      className={`relative z-40 border-l flex flex-col h-full ${
+        isResizing ? '' : 'transition-all duration-300'
+      } ${theme === 'dark' ? 'bg-zinc-950 border-zinc-800/50' : 'bg-gray-50 border-gray-200'}`}
+      style={{ width }}
+    >
+      {/* Resize Handle - ALWAYS visible */}
+      <div
+        onMouseDown={handleMouseDown}
+        className="absolute left-0 top-0 bottom-0 w-3 cursor-col-resize group z-[60]"
+        style={{ marginLeft: '-4px' }}
+      >
+        <div className={`absolute left-1 top-1/2 -translate-y-1/2 w-1.5 h-20 rounded-full transition-colors ${
+          isResizing 
+            ? 'bg-red-500' 
+            : theme === 'dark' 
+              ? 'bg-zinc-500 group-hover:bg-red-400' 
+              : 'bg-gray-400 group-hover:bg-red-400'
+        }`} />
+      </div>
+
       {/* Header */}
-      <div className={`p-4 border-b transition-colors ${
-        theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'
-      }`}>
+      <div className={`p-4 border-b transition-colors ${theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'}`}>
         <div className="flex items-center gap-3">
-          {onToggleCollapse && !isCollapsed && (
-            <button
-              onClick={onToggleCollapse}
+          {onToggleCollapse && !showCollapsedContent && (
+            <button 
+              onClick={handleToggleClick} 
               className={`p-1.5 rounded-lg transition-colors ${
-                theme === 'dark'
-                  ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
-                  : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
-              }`}
+                theme === 'dark' ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+              }`} 
               title="Collapse sidebar"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
           )}
-          {onToggleCollapse && isCollapsed && (
-            <button
-              onClick={onToggleCollapse}
-              className={`absolute -left-3 top-5 p-1 rounded-full shadow-md transition-colors ${
-                theme === 'dark'
-                  ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700'
-                  : 'bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-700 border border-gray-200'
-              }`}
+          {onToggleCollapse && showCollapsedContent && (
+            <button 
+              onClick={handleToggleClick} 
+              className={`absolute -left-3 top-5 p-1 rounded-full shadow-md transition-colors z-[70] ${
+                theme === 'dark' ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700' : 'bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-700 border border-gray-200'
+              }`} 
               title="Expand sidebar"
             >
               <ChevronLeft className="w-3 h-3" />
             </button>
           )}
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-            theme === 'dark'
-              ? 'bg-red-500/10'
-              : 'bg-red-50'
-          }`}>
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${theme === 'dark' ? 'bg-red-500/10' : 'bg-red-50'}`}>
             <Zap className="w-4 h-4 text-red-500" />
           </div>
-          {!isCollapsed && (
+          {!showCollapsedContent && (
             <>
-              <div className="flex-1">
-                <h2 className={`text-sm font-medium transition-colors ${
-                  theme === 'dark' ? 'text-white' : 'text-gray-900'
-                }`}>
+              <div className="flex-1 min-w-0">
+                <h2 className={`text-sm font-medium transition-colors truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                   Executions
                 </h2>
-                <p className={`text-xs transition-colors ${
-                  theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'
-                }`}>
+                <p className={`text-xs transition-colors ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
                   {activeCards.length} active
                 </p>
               </div>
               {activeCards.length > 0 && (
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
               )}
             </>
           )}
@@ -82,42 +162,32 @@ export function ExecutionsSidebar({ isCollapsed = false, onToggleCollapse }: Exe
 
       {/* Cards List */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-        {isCollapsed ? (
+        {showCollapsedContent ? (
           <div className="flex flex-col items-center space-y-2">
             {activeCards.length === 0 ? (
-              <Zap className={`w-5 h-5 ${
-                theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'
-              }`} />
+              <Zap className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
             ) : (
               activeCards.slice(0, 5).map((card, index) => (
-                <div
-                  key={card.id}
+                <div 
+                  key={card.id} 
                   className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium ${
-                    theme === 'dark'
-                      ? 'bg-zinc-800 text-zinc-400'
-                      : 'bg-gray-200 text-gray-600'
-                  }`}
-                  title={card.title}
+                    theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+                  }`} 
+                  title={card.type}
                 >
                   {index + 1}
                 </div>
               ))
             )}
             {activeCards.length > 5 && (
-              <div className={`text-xs ${
-                theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'
-              }`}>
+              <div className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
                 +{activeCards.length - 5}
               </div>
             )}
           </div>
         ) : activeCards.length === 0 ? (
-          <div className={`text-center py-8 transition-colors ${
-            theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'
-          }`}>
-            <Zap className={`w-8 h-8 mx-auto mb-2 ${
-              theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'
-            }`} />
+          <div className={`text-center py-8 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
+            <Zap className={`w-8 h-8 mx-auto mb-2 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
             <p className="text-sm">No executions yet</p>
             <p className="text-xs mt-1">Cards will appear here as you chat</p>
           </div>
