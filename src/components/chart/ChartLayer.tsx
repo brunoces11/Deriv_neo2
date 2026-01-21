@@ -38,6 +38,8 @@ export function ChartLayer({ isVisible, theme, symbol = 'BTC/USD' }: ChartLayerP
         timeVisible: true,
         secondsVisible: false,
       },
+      handleScroll: true,
+      handleScale: true,
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight,
     });

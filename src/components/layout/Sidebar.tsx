@@ -1,4 +1,4 @@
-import { Star, Archive, ChevronDown, ChevronRight, MessageSquare } from 'lucide-react';
+import { Star, Archive, ChevronDown, ChevronRight, ChevronLeft, MessageSquare } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
@@ -42,7 +42,12 @@ function saveSidebarState(state: SidebarState): void {
   }
 }
 
-export function Sidebar() {
+interface SidebarProps {
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
+}
+
+export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const { favoriteCards, archivedCards, sessions, resetChat } = useChat();
   const { theme } = useTheme();
   
@@ -81,7 +86,9 @@ export function Sidebar() {
   const archivedChats = sessions.filter(s => s.is_archived);
 
   return (
-    <aside className={`relative z-40 w-72 border-r flex flex-col h-full transition-colors ${
+    <aside className={`relative z-40 border-r flex flex-col h-full transition-all duration-300 ${
+      isCollapsed ? 'w-16' : 'w-72'
+    } ${
       theme === 'dark'
         ? 'bg-zinc-950 border-zinc-800/50'
         : 'bg-gray-50 border-gray-200'
@@ -89,16 +96,90 @@ export function Sidebar() {
       <div className={`p-4 border-b transition-colors ${
         theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'
       }`}>
-        <div className="flex items-center justify-center">
-          <img
-            src={theme === 'dark' ? derivNeoDark : derivNeoLight}
-            alt="Deriv Neo"
-            className="h-7 w-auto cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={resetChat}
-          />
+        <div className="flex items-center justify-between">
+          {!isCollapsed && (
+            <img
+              src={theme === 'dark' ? derivNeoDark : derivNeoLight}
+              alt="Deriv Neo"
+              className="h-7 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={resetChat}
+            />
+          )}
+          {isCollapsed && (
+            <div className="w-full flex justify-center">
+              <div 
+                className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={resetChat}
+              >
+                <svg className="w-4 h-4 text-white" viewBox="0 0 19.11 23.89" fill="currentColor">
+                  <path d="M14.42.75l-1.23,6.99h-4.28c-3.99,0-7.8,3.23-8.5,7.22l-.3,1.7c-.7,3.99,1.96,7.22,5.95,7.22h3.57c2.91,0,5.68-2.35,6.19-5.26L19.11,0l-4.69.75ZM11.39,17.96c-.16.9-.97,1.63-1.87,1.63h-2.17c-1.79,0-2.99-1.46-2.68-3.25l.19-1.06c.32-1.79,2.03-3.25,3.82-3.25h3.75l-1.05,5.93Z"/>
+                </svg>
+              </div>
+            </div>
+          )}
+          {onToggleCollapse && !isCollapsed && (
+            <button
+              onClick={onToggleCollapse}
+              className={`p-1.5 rounded-lg transition-colors ${
+                theme === 'dark'
+                  ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
+                  : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+              }`}
+              title="Collapse sidebar"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+          )}
+          {onToggleCollapse && isCollapsed && (
+            <button
+              onClick={onToggleCollapse}
+              className={`absolute -right-3 top-5 p-1 rounded-full shadow-md transition-colors ${
+                theme === 'dark'
+                  ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700'
+                  : 'bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-700 border border-gray-200'
+              }`}
+              title="Expand sidebar"
+            >
+              <ChevronRight className="w-3 h-3" />
+            </button>
+          )}
         </div>
       </div>
 
+      {isCollapsed ? (
+        <div className="flex-1 flex flex-col items-center py-4 space-y-4">
+          <button
+            className={`p-2 rounded-lg transition-colors ${
+              theme === 'dark'
+                ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
+                : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+            }`}
+            title="Chats"
+          >
+            <MessageSquare className="w-5 h-5 text-brand-green" />
+          </button>
+          <button
+            className={`p-2 rounded-lg transition-colors ${
+              theme === 'dark'
+                ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
+                : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+            }`}
+            title="Favorites"
+          >
+            <Star className="w-5 h-5 text-brand-green" />
+          </button>
+          <button
+            className={`p-2 rounded-lg transition-colors ${
+              theme === 'dark'
+                ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
+                : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+            }`}
+            title="Archived"
+          >
+            <Archive className="w-5 h-5 text-brand-green" />
+          </button>
+        </div>
+      ) : (
       <div className="flex-1 overflow-y-auto custom-scrollbar">
         <div className={`p-3 rounded-lg transition-colors ${
           chatsOpen && activeChats.length > 0
@@ -248,9 +329,10 @@ export function Sidebar() {
           )}
         </div>
       </div>
+      )}
 
       {/* User Profile Footer */}
-      <UserProfile />
+      {!isCollapsed && <UserProfile />}
     </aside>
   );
 }
