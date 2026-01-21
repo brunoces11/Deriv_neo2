@@ -331,8 +331,8 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
       </div>
       )}
 
-      {/* User Profile Footer */}
-      {!isCollapsed && <UserProfile />}
+      {/* User Profile Footer - always visible */}
+      <UserProfile isCollapsed={isCollapsed} />
     </aside>
   );
 }

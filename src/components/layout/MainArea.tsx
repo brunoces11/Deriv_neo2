@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { ChatMessages } from '../chat/ChatMessages';
 import { ChatInput } from '../chat/ChatInput';
 import { ActiveCards } from '../cards/ActiveCards';
@@ -8,11 +7,15 @@ import { ChartLayer } from '../chart/ChartLayer';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 
-export function MainArea() {
+interface MainAreaProps {
+  isChartVisible: boolean;
+  onChartToggle: () => void;
+}
+
+export function MainArea({ isChartVisible, onChartToggle }: MainAreaProps) {
   const { messages } = useChat();
   const { theme } = useTheme();
   const hasMessages = messages.length > 0;
-  const [isChartVisible, setIsChartVisible] = useState(false);
 
   return (
     <main className={`flex-1 flex flex-col h-full relative overflow-hidden transition-colors ${
@@ -35,7 +38,7 @@ export function MainArea() {
       }`}>
         <ChartToggle 
           isActive={isChartVisible} 
-          onToggle={() => setIsChartVisible(!isChartVisible)} 
+          onToggle={onChartToggle} 
         />
       </div>
 

@@ -10,6 +10,22 @@ import { CardsPage } from './pages/CardsPage';
 function MainLayout() {
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
   const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
+  const [isChartVisible, setIsChartVisible] = useState(false);
+
+  const handleChartToggle = () => {
+    const newChartState = !isChartVisible;
+    setIsChartVisible(newChartState);
+    
+    if (newChartState) {
+      // Auto-collapse both sidebars when chart is shown
+      setLeftSidebarCollapsed(true);
+      setRightSidebarCollapsed(true);
+    } else {
+      // Auto-expand both sidebars when chart is hidden (only if collapsed)
+      setLeftSidebarCollapsed(false);
+      setRightSidebarCollapsed(false);
+    }
+  };
 
   return (
     <div className="h-screen flex overflow-hidden">
@@ -17,7 +33,10 @@ function MainLayout() {
         isCollapsed={leftSidebarCollapsed} 
         onToggleCollapse={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)} 
       />
-      <MainArea />
+      <MainArea 
+        isChartVisible={isChartVisible}
+        onChartToggle={handleChartToggle}
+      />
       <ExecutionsSidebar 
         isCollapsed={rightSidebarCollapsed} 
         onToggleCollapse={() => setRightSidebarCollapsed(!rightSidebarCollapsed)} 
