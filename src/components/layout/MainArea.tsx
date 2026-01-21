@@ -3,7 +3,6 @@ import { ChatInput } from '../chat/ChatInput';
 import { ActiveCards } from '../cards/ActiveCards';
 import { AccountHeader } from './AccountHeader';
 import { ChartToggle } from '../chart/ChartToggle';
-import { ChartLayer } from '../chart/ChartLayer';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 
@@ -20,15 +19,14 @@ export function MainArea({ isChartVisible, onChartToggle }: MainAreaProps) {
   return (
     <main className={`flex-1 flex flex-col h-full relative overflow-hidden transition-colors ${
       theme === 'dark' ? 'bg-zinc-900' : 'bg-white'
-    }`}>
-      <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] pointer-events-none transition-opacity ${
-        theme === 'dark'
-          ? 'from-zinc-800/20 via-zinc-900 to-zinc-900'
-          : 'from-gray-100/50 via-white to-white'
-      }`} />
-
-      {/* Chart Layer - z-5, below all UI elements */}
-      <ChartLayer isVisible={isChartVisible} theme={theme} />
+    } ${isChartVisible ? 'bg-transparent' : ''}`}>
+      {!isChartVisible && (
+        <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] pointer-events-none transition-opacity ${
+          theme === 'dark'
+            ? 'from-zinc-800/20 via-zinc-900 to-zinc-900'
+            : 'from-gray-100/50 via-white to-white'
+        }`} />
+      )}
 
       <AccountHeader />
 
