@@ -2,16 +2,15 @@ import { ChatMessages } from '../chat/ChatMessages';
 import { ChatInput } from '../chat/ChatInput';
 import { ActiveCards } from '../cards/ActiveCards';
 import { AccountHeader } from './AccountHeader';
-import { ChartToggle } from '../chart/ChartToggle';
+import { ModeToggle } from './ModeToggle';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 
 interface MainAreaProps {
-  isChartVisible: boolean;
-  onChartToggle: () => void;
+  isGraphMode: boolean;
 }
 
-export function MainArea({ isChartVisible, onChartToggle }: MainAreaProps) {
+export function MainArea({ isGraphMode }: MainAreaProps) {
   const { messages } = useChat();
   const { theme } = useTheme();
   const hasMessages = messages.length > 0;
@@ -19,8 +18,8 @@ export function MainArea({ isChartVisible, onChartToggle }: MainAreaProps) {
   return (
     <main className={`flex-1 flex flex-col h-full relative overflow-hidden transition-colors ${
       theme === 'dark' ? 'bg-zinc-900' : 'bg-white'
-    } ${isChartVisible ? 'bg-transparent' : ''}`}>
-      {!isChartVisible && (
+    } ${isGraphMode ? 'bg-transparent' : ''}`}>
+      {!isGraphMode && (
         <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] pointer-events-none transition-opacity ${
           theme === 'dark'
             ? 'from-zinc-800/20 via-zinc-900 to-zinc-900'
@@ -30,14 +29,11 @@ export function MainArea({ isChartVisible, onChartToggle }: MainAreaProps) {
 
       <AccountHeader />
 
-      {/* Chart Toggle - positioned at top of content area */}
+      {/* Mode Toggle */}
       <div className={`relative z-10 flex justify-end px-4 py-2 border-b ${
         theme === 'dark' ? 'border-zinc-800/30' : 'border-gray-100'
       }`}>
-        <ChartToggle 
-          isActive={isChartVisible} 
-          onToggle={onChartToggle} 
-        />
+        <ModeToggle />
       </div>
 
       <div className="flex-1 flex flex-col relative z-10 overflow-hidden">

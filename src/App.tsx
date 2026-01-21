@@ -1,7 +1,7 @@
-import { useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ChatProvider } from './store/ChatContext';
 import { ThemeProvider, useTheme } from './store/ThemeContext';
+import { ViewModeProvider, useViewMode } from './store/ViewModeContext';
 import { Sidebar } from './components/layout/Sidebar';
 import { MainArea } from './components/layout/MainArea';
 import { ExecutionsSidebar } from './components/layout/ExecutionsSidebar';
@@ -9,42 +9,35 @@ import { ChartLayer } from './components/chart/ChartLayer';
 import { CardsPage } from './pages/CardsPage';
 
 function MainLayout() {
-  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(false);
-  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(false);
-  const [isChartVisible, setIsChartVisible] = useState(false);
   const { theme } = useTheme();
-
-  const handleChartToggle = () => {
-    const newChartState = !isChartVisible;
-    setIsChartVisible(newChartState);
-    
-    if (newChartState) {
-      // Auto-collapse both sidebars when chart is shown
-      setLeftSidebarCollapsed(true);
-      setRightSidebarCollapsed(true);
-    } else {
-      // Auto-expand both sidebars when chart is hidden (only if collapsed)
-      setLeftSidebarCollapsed(false);
-      setRightSidebarCollapsed(false);
-    }
-  };
+  const {
+    currentMode,
+    sidebarCollapsed,
+    executionsSidebarCollapsed,
+    executionsSidebarWidth,
+    chartVisible,
+    updateUserPoint,
+    setResizing,
+  } = useViewMode();
 
   return (
     <div className="h-screen flex overflow-hidden relative">
-      {/* Chart Layer - Full screen background, behind everything */}
-      <ChartLayer isVisible={isChartVisible} theme={theme} />
+      <ChartLayer isVisible={chartVisible} theme={theme} />
       
       <Sidebar 
-        isCollapsed={leftSidebarCollapsed} 
-        onToggleCollapse={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)} 
+        isCollapsed={sidebarCollapsed} 
+        onToggleCollapse={() => updateUserPoint({ sidebarCollapsed: !sidebarCollapsed })} 
       />
-      <MainArea 
-        isChartVisible={isChartVisible}
-        onChartToggle={handleChartToggle}
-      />
+      
+      <MainArea isGraphMode={currentMode === 'graph'} />
+      
       <ExecutionsSidebar 
-        isCollapsed={rightSidebarCollapsed} 
-        onToggleCollapse={() => setRightSidebarCollapsed(!rightSidebarCollapsed)} 
+        isCollapsed={executionsSidebarCollapsed}
+        width={executionsSidebarWidth}
+        onToggleCollapse={() => updateUserPoint({ executionsSidebarCollapsed: !executionsSidebarCollapsed })}
+        onResize={(width) => updateUserPoint({ executionsSidebarWidth: width })}
+        onResizeStart={() => setResizing(true)}
+        onResizeEnd={() => setResizing(false)}
       />
     </div>
   );
@@ -54,12 +47,14 @@ function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <ChatProvider>
-          <Routes>
-            <Route path="/" element={<MainLayout />} />
-            <Route path="/cards" element={<CardsPage />} />
-          </Routes>
-        </ChatProvider>
+        <ViewModeProvider>
+          <ChatProvider>
+            <Routes>
+              <Route path="/" element={<MainLayout />} />
+              <Route path="/cards" element={<CardsPage />} />
+            </Routes>
+          </ChatProvider>
+        </ViewModeProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

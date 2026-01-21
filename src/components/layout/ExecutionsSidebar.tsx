@@ -5,77 +5,70 @@ import { useTheme } from '../../store/ThemeContext';
 import { ExecutionCard } from './ExecutionCard';
 
 interface ExecutionsSidebarProps {
-  isCollapsed?: boolean;
-  onToggleCollapse?: () => void;
+  isCollapsed: boolean;
+  width: number;
+  onToggleCollapse: () => void;
+  onResize: (width: number) => void;
+  onResizeStart: () => void;
+  onResizeEnd: () => void;
 }
 
 const COLLAPSED_WIDTH = 54;
 const MAX_WIDTH = 900;
-const DEFAULT_WIDTH = 288;
 const SNAP_THRESHOLD = 100;
 
-export function ExecutionsSidebar({ isCollapsed = false, onToggleCollapse }: ExecutionsSidebarProps) {
+export function ExecutionsSidebar({ 
+  isCollapsed, 
+  width: propWidth, 
+  onToggleCollapse, 
+  onResize,
+  onResizeStart,
+  onResizeEnd,
+}: ExecutionsSidebarProps) {
   const { activeCards } = useChat();
   const { theme } = useTheme();
-  const [width, setWidth] = useState(isCollapsed ? COLLAPSED_WIDTH : DEFAULT_WIDTH);
+  const [localWidth, setLocalWidth] = useState(propWidth);
   const [isResizing, setIsResizing] = useState(false);
-  const buttonClickRef = useRef(false);
   const sidebarRef = useRef<HTMLElement>(null);
 
-  // Handle button click - always takes priority, immediately updates width
-  const handleToggleClick = useCallback(() => {
-    buttonClickRef.current = true;
-    if (width <= COLLAPSED_WIDTH) {
-      // Currently collapsed -> expand to default
-      setWidth(DEFAULT_WIDTH);
-    } else {
-      // Currently expanded -> collapse to minimum
-      setWidth(COLLAPSED_WIDTH);
-    }
-    // Also notify parent
-    onToggleCollapse?.();
-  }, [width, onToggleCollapse]);
-
-  // Sync width when isCollapsed changes from EXTERNAL source (e.g., chart toggle)
-  // Skip if the change came from our own button click
+  // Sincronizar com prop width quando não está em resize
   useEffect(() => {
-    if (buttonClickRef.current) {
-      buttonClickRef.current = false;
-      return;
-    }
     if (!isResizing) {
-      if (isCollapsed) {
-        setWidth(COLLAPSED_WIDTH);
-      } else {
-        setWidth(DEFAULT_WIDTH);
-      }
+      setLocalWidth(isCollapsed ? COLLAPSED_WIDTH : propWidth);
     }
-  }, [isCollapsed]);
+  }, [propWidth, isCollapsed, isResizing]);
 
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsResizing(true);
+    onResizeStart();
+    
     const startX = e.clientX;
-    const startWidth = width;
+    const startWidth = localWidth;
 
     const handleMouseMove = (e: MouseEvent) => {
       const delta = startX - e.clientX;
       let newWidth = startWidth + delta;
       
-      // Snap to collapsed ONLY when below threshold (< 100px)
       if (newWidth < SNAP_THRESHOLD) {
         newWidth = COLLAPSED_WIDTH;
       } else {
-        // No minimum - just cap at max
         newWidth = Math.min(MAX_WIDTH, newWidth);
       }
       
-      setWidth(newWidth);
+      setLocalWidth(newWidth);
     };
 
     const handleMouseUp = () => {
       setIsResizing(false);
+      onResizeEnd();
+      
+      // Persistir o width final
+      if (localWidth > COLLAPSED_WIDTH) {
+        onResize(localWidth);
+      }
+      
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       document.body.style.cursor = '';
@@ -86,10 +79,11 @@ export function ExecutionsSidebar({ isCollapsed = false, onToggleCollapse }: Exe
     document.addEventListener('mouseup', handleMouseUp);
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
-  }, [width]);
+  }, [localWidth, onResizeStart, onResizeEnd, onResize]);
 
-  // Use width directly - no override based on isCollapsed during resize
-  const showCollapsedContent = width <= COLLAPSED_WIDTH;
+  // Width visual: collapsed força 54px, senão usa localWidth
+  const displayWidth = isCollapsed ? COLLAPSED_WIDTH : localWidth;
+  const showCollapsedContent = displayWidth <= COLLAPSED_WIDTH;
 
   return (
     <aside 
@@ -97,9 +91,9 @@ export function ExecutionsSidebar({ isCollapsed = false, onToggleCollapse }: Exe
       className={`relative z-40 border-l flex flex-col h-full ${
         isResizing ? '' : 'transition-all duration-300'
       } ${theme === 'dark' ? 'bg-zinc-950 border-zinc-800/50' : 'bg-gray-50 border-gray-200'}`}
-      style={{ width }}
+      style={{ width: displayWidth }}
     >
-      {/* Resize Handle - ALWAYS visible */}
+      {/* Resize Handle */}
       <div
         onMouseDown={handleMouseDown}
         className="absolute left-0 top-0 bottom-0 w-3 cursor-col-resize group z-[60]"
@@ -117,9 +111,9 @@ export function ExecutionsSidebar({ isCollapsed = false, onToggleCollapse }: Exe
       {/* Header */}
       <div className={`p-4 border-b transition-colors ${theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'}`}>
         <div className="flex items-center gap-3">
-          {onToggleCollapse && !showCollapsedContent && (
+          {!showCollapsedContent && (
             <button 
-              onClick={handleToggleClick} 
+              onClick={onToggleCollapse} 
               className={`p-1.5 rounded-lg transition-colors ${
                 theme === 'dark' ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
               }`} 
@@ -128,9 +122,9 @@ export function ExecutionsSidebar({ isCollapsed = false, onToggleCollapse }: Exe
               <ChevronRight className="w-4 h-4" />
             </button>
           )}
-          {onToggleCollapse && showCollapsedContent && (
+          {showCollapsedContent && (
             <button 
-              onClick={handleToggleClick} 
+              onClick={onToggleCollapse} 
               className={`absolute -left-3 top-5 p-1 rounded-full shadow-md transition-colors z-[70] ${
                 theme === 'dark' ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700' : 'bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-700 border border-gray-200'
               }`} 
