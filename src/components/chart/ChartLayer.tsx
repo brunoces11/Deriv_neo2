@@ -1,18 +1,49 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { createChart, ColorType, CandlestickSeries, CrosshairMode } from 'lightweight-charts';
-import type { IChartApi } from 'lightweight-charts';
+import type { IChartApi, ISeriesApi } from 'lightweight-charts';
+import { fetchKlines, type SupportedSymbol, type SupportedTimeframe } from '../../services/binanceApi';
 import { generateMockCandlestickData } from '../../services/mockChartData';
+import { ChartToolbar } from './ChartToolbar';
 
 interface ChartLayerProps {
   isVisible: boolean;
   theme: 'dark' | 'light';
-  symbol?: string;
 }
 
-export function ChartLayer({ isVisible, theme, symbol = 'BTC/USD' }: ChartLayerProps) {
+export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
+  const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
 
+  const [symbol, setSymbol] = useState<SupportedSymbol>('BTC/USD');
+  const [timeframe, setTimeframe] = useState<SupportedTimeframe>('1D');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Load data from Binance API
+  const loadData = useCallback(async () => {
+    if (!seriesRef.current) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const data = await fetchKlines({ symbol, timeframe, limit: 500 });
+      seriesRef.current.setData(data);
+      chartRef.current?.timeScale().fitContent();
+    } catch (err) {
+      console.error('Failed to load data:', err);
+      setError('Failed to load data. Using mock data.');
+      // Fallback to mock data
+      const mockData = generateMockCandlestickData();
+      seriesRef.current.setData(mockData);
+      chartRef.current?.timeScale().fitContent();
+    } finally {
+      setIsLoading(false);
+    }
+  }, [symbol, timeframe]);
+
+  // Initialize chart
   useEffect(() => {
     if (!isVisible || !chartContainerRef.current) return;
 
@@ -28,27 +59,24 @@ export function ChartLayer({ isVisible, theme, symbol = 'BTC/USD' }: ChartLayerP
       },
       crosshair: {
         mode: CrosshairMode.Normal,
-        vertLine: { 
-          color: '#ff444f', 
-          width: 1, 
-          style: 2, 
+        vertLine: {
+          color: '#ff444f',
+          width: 1,
+          style: 2,
           labelBackgroundColor: '#ff444f',
           labelVisible: true,
         },
-        horzLine: { 
-          color: '#ff444f', 
-          width: 1, 
-          style: 2, 
+        horzLine: {
+          color: '#ff444f',
+          width: 1,
+          style: 2,
           labelBackgroundColor: '#ff444f',
           labelVisible: true,
         },
       },
       rightPriceScale: {
         borderColor: theme === 'dark' ? '#27272a' : '#e4e4e7',
-        scaleMargins: {
-          top: 0.1,
-          bottom: 0.1,
-        },
+        scaleMargins: { top: 0.1, bottom: 0.1 },
       },
       timeScale: {
         borderColor: theme === 'dark' ? '#27272a' : '#e4e4e7',
@@ -58,7 +86,6 @@ export function ChartLayer({ isVisible, theme, symbol = 'BTC/USD' }: ChartLayerP
         barSpacing: 8,
         minBarSpacing: 2,
       },
-      // Enable all mouse interactions
       handleScroll: {
         mouseWheel: true,
         pressedMouseMove: true,
@@ -70,13 +97,8 @@ export function ChartLayer({ isVisible, theme, symbol = 'BTC/USD' }: ChartLayerP
         mouseWheel: true,
         pinch: true,
       },
-      kineticScroll: {
-        mouse: true,
-        touch: true,
-      },
-      trackingMode: {
-        exitMode: 1, // Exit tracking mode on next click
-      },
+      kineticScroll: { mouse: true, touch: true },
+      trackingMode: { exitMode: 1 },
       autoSize: true,
     });
 
@@ -93,9 +115,7 @@ export function ChartLayer({ isVisible, theme, symbol = 'BTC/USD' }: ChartLayerP
       lastValueVisible: true,
     });
 
-    const mockData = generateMockCandlestickData();
-    candlestickSeries.setData(mockData);
-    chart.timeScale().fitContent();
+    seriesRef.current = candlestickSeries;
 
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
@@ -107,7 +127,6 @@ export function ChartLayer({ isVisible, theme, symbol = 'BTC/USD' }: ChartLayerP
     };
 
     window.addEventListener('resize', handleResize);
-    // Initial resize to ensure proper sizing
     handleResize();
 
     return () => {
@@ -115,10 +134,19 @@ export function ChartLayer({ isVisible, theme, symbol = 'BTC/USD' }: ChartLayerP
       if (chartRef.current) {
         chartRef.current.remove();
         chartRef.current = null;
+        seriesRef.current = null;
       }
     };
-  }, [isVisible, theme]);
+  }, [isVisible]);
 
+  // Load data when symbol or timeframe changes
+  useEffect(() => {
+    if (isVisible && seriesRef.current) {
+      loadData();
+    }
+  }, [isVisible, symbol, timeframe, loadData]);
+
+  // Update theme
   useEffect(() => {
     if (!chartRef.current) return;
 
@@ -131,25 +159,35 @@ export function ChartLayer({ isVisible, theme, symbol = 'BTC/USD' }: ChartLayerP
         vertLines: { color: theme === 'dark' ? '#27272a' : '#e4e4e7' },
         horzLines: { color: theme === 'dark' ? '#27272a' : '#e4e4e7' },
       },
-      rightPriceScale: {
-        borderColor: theme === 'dark' ? '#27272a' : '#e4e4e7',
-      },
-      timeScale: {
-        borderColor: theme === 'dark' ? '#27272a' : '#e4e4e7',
-      },
+      rightPriceScale: { borderColor: theme === 'dark' ? '#27272a' : '#e4e4e7' },
+      timeScale: { borderColor: theme === 'dark' ? '#27272a' : '#e4e4e7' },
     });
   }, [theme]);
 
   if (!isVisible) return null;
 
-  const labelClass = theme === 'dark'
-    ? 'absolute top-4 left-4 z-10 px-3 py-1.5 rounded-lg text-xs font-medium bg-zinc-900/80 text-zinc-300 border border-zinc-700/50'
-    : 'absolute top-4 left-4 z-10 px-3 py-1.5 rounded-lg text-xs font-medium bg-white/80 text-gray-700 border border-gray-200';
-
   return (
     <div className="fixed inset-0 z-[5]">
-      <div className={labelClass}>{symbol}</div>
-      <div ref={chartContainerRef} className="w-full h-full" />
+      <ChartToolbar
+        symbol={symbol}
+        timeframe={timeframe}
+        onSymbolChange={setSymbol}
+        onTimeframeChange={setTimeframe}
+        onRefresh={loadData}
+        isLoading={isLoading}
+        theme={theme}
+      />
+
+      {/* Error message */}
+      {error && (
+        <div className={`absolute top-16 left-4 z-20 px-3 py-2 rounded-lg text-xs pointer-events-auto ${
+          theme === 'dark' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+        }`}>
+          {error}
+        </div>
+      )}
+
+      <div ref={chartContainerRef} className="w-full h-full pointer-events-auto" />
     </div>
   );
 }
