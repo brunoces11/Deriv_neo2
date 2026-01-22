@@ -2,6 +2,7 @@ import { Star, Archive, ChevronDown, ChevronRight, ChevronLeft, MessageSquare } 
 import { useState, useEffect, useCallback } from 'react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
+import { useDrawingTools } from '../../store/DrawingToolsContext';
 import { SidebarCard } from './SidebarCard';
 import { ChatSessionCard } from './ChatSessionCard';
 import { UserProfile } from './UserProfile';
@@ -50,9 +51,16 @@ interface SidebarProps {
 export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const { favoriteCards, archivedCards, sessions, resetChat } = useChat();
   const { theme } = useTheme();
+  const { clearChatTags } = useDrawingTools();
   
   const [sidebarState, setSidebarState] = useState<SidebarState>(loadSidebarState);
   const { chatsOpen, favoritesOpen, archivedOpen } = sidebarState;
+
+  // Handler para iniciar novo chat - limpa tudo
+  const handleNewChat = useCallback(() => {
+    resetChat();
+    clearChatTags();
+  }, [resetChat, clearChatTags]);
 
   // Sync state across tabs/windows
   useEffect(() => {
@@ -102,14 +110,14 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
               src={theme === 'dark' ? derivNeoDark : derivNeoLight}
               alt="Deriv Neo"
               className="h-7 w-auto cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={resetChat}
+              onClick={handleNewChat}
             />
           )}
           {isCollapsed && (
             <div className="w-full flex justify-center">
               <div 
                 className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={resetChat}
+                onClick={handleNewChat}
               >
                 <svg className="w-4 h-4 text-white" viewBox="0 0 19.11 23.89" fill="currentColor">
                   <path d="M14.42.75l-1.23,6.99h-4.28c-3.99,0-7.8,3.23-8.5,7.22l-.3,1.7c-.7,3.99,1.96,7.22,5.95,7.22h3.57c2.91,0,5.68-2.35,6.19-5.26L19.11,0l-4.69.75ZM11.39,17.96c-.16.9-.97,1.63-1.87,1.63h-2.17c-1.79,0-2.99-1.46-2.68-3.25l.19-1.06c.32-1.79,2.03-3.25,3.82-3.25h3.75l-1.05,5.93Z"/>

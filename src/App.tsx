@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ChatProvider } from './store/ChatContext';
 import { ThemeProvider, useTheme } from './store/ThemeContext';
 import { ViewModeProvider, useViewMode } from './store/ViewModeContext';
+import { DrawingToolsProvider } from './store/DrawingToolsContext';
 import { Sidebar } from './components/layout/Sidebar';
 import { MainArea } from './components/layout/MainArea';
 import { ExecutionsSidebar } from './components/layout/ExecutionsSidebar';
@@ -49,12 +50,14 @@ function App() {
     <BrowserRouter>
       <ThemeProvider>
         <ViewModeProvider>
-          <ChatProvider>
-            <Routes>
-              <Route path="/" element={<MainLayout />} />
-              <Route path="/cards" element={<CardsPage />} />
-            </Routes>
-          </ChatProvider>
+          <DrawingToolsProvider>
+            <ChatProvider>
+              <Routes>
+                <Route path="/" element={<MainLayout />} />
+                <Route path="/cards" element={<CardsPage />} />
+              </Routes>
+            </ChatProvider>
+          </DrawingToolsProvider>
         </ViewModeProvider>
       </ThemeProvider>
     </BrowserRouter>

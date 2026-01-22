@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader2 } from 'lucide-react';
+import { Send, Loader2, X } from 'lucide-react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
+import { useDrawingTools, DRAWING_COLORS } from '../../store/DrawingToolsContext';
 import { simulateLangFlowResponse } from '../../services/mockSimulation';
 import type { ChatMessage } from '../../types';
 
@@ -15,6 +16,7 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { addMessage, setTyping, isTyping, processUIEvent, currentSessionId, createNewSession } = useChat();
   const { theme } = useTheme();
+  const { chatTags, removeTagFromChat, clearChatTags, selectDrawing, selectedDrawingId } = useDrawingTools();
 
   const isSidebar = displayMode === 'sidebar';
 
@@ -26,10 +28,16 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
   }, [message]);
 
   const handleSubmit = async () => {
-    if (!message.trim() || isTyping) return;
+    if ((!message.trim() && chatTags.length === 0) || isTyping) return;
 
-    const messageContent = message.trim();
+    // Build message content with tags prefix
+    const tagsPrefix = chatTags.length > 0 
+      ? chatTags.map(tag => `[@${tag.label}]`).join(' ') + ' '
+      : '';
+    const messageContent = tagsPrefix + message.trim();
+    
     setMessage('');
+    clearChatTags(); // Clear tags after sending
     setTyping(true);
 
     try {
@@ -99,6 +107,41 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
               : 'bg-zinc-900 border-zinc-700/50'
             : 'bg-white border-gray-200'
         }`}>
+          {/* Drawing Tags */}
+          {chatTags.length > 0 && (
+            <div className={`flex flex-wrap gap-1.5 px-3 pt-2 ${isSidebar ? 'pb-0' : 'pb-1'}`}>
+              {chatTags.map((tag) => {
+                const colors = DRAWING_COLORS[tag.type];
+                const isTagSelected = selectedDrawingId === tag.drawingId;
+                
+                return (
+                  <span
+                    key={tag.drawingId}
+                    onClick={() => selectDrawing(isTagSelected ? null : tag.drawingId)}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium transition-all cursor-pointer select-none ${
+                      isTagSelected
+                        ? `${colors.tagBgSelected} ${colors.tagTextSelected} border-2 ${colors.tagBorderSelected}`
+                        : `${colors.tagBg} ${colors.tagText} border ${colors.tagBorder} hover:opacity-80`
+                    }`}
+                  >
+                    @{tag.label}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeTagFromChat(tag.drawingId);
+                      }}
+                      className={`ml-0.5 rounded-full p-0.5 transition-colors hover:bg-white/20 ${
+                        isTagSelected ? colors.tagTextSelected : colors.tagText
+                      }`}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                );
+              })}
+            </div>
+          )}
+
           <div className={`flex items-end gap-2 ${isSidebar ? 'p-1.5' : 'p-2'}`}>
             <textarea
               ref={textareaRef}
@@ -120,11 +163,11 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
             />
             <button
               onClick={handleSubmit}
-              disabled={!message.trim() || isTyping}
+              disabled={(!message.trim() && chatTags.length === 0) || isTyping}
               className={`flex-shrink-0 rounded-xl flex items-center justify-center transition-all duration-200 ${
                 isSidebar ? 'w-8 h-8' : 'w-10 h-10'
               } ${
-                message.trim() && !isTyping
+                (message.trim() || chatTags.length > 0) && !isTyping
                   ? 'bg-gradient-to-r from-red-500 to-rose-500 text-white hover:shadow-lg hover:shadow-red-500/25 hover:scale-105 active:scale-95'
                   : theme === 'dark'
                     ? isSidebar 
