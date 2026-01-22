@@ -83,7 +83,7 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
 
   return (
     <div className="relative">
-      <div className="relative rounded-2xl">
+      <div className={`relative rounded-2xl ${isSidebar ? 'shadow-lg shadow-black/20' : ''}`}>
         <div
           className={`absolute -inset-[1px] rounded-2xl transition-all duration-300 ${
             isFocused
@@ -94,7 +94,9 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
 
         <div className={`relative rounded-2xl border transition-colors ${
           theme === 'dark'
-            ? 'bg-zinc-900 border-zinc-700/50'
+            ? isSidebar 
+              ? 'bg-zinc-800 border-zinc-600'
+              : 'bg-zinc-900 border-zinc-700/50'
             : 'bg-white border-gray-200'
         }`}>
           <div className={`flex items-end gap-2 ${isSidebar ? 'p-1.5' : 'p-2'}`}>
@@ -125,7 +127,9 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
                 message.trim() && !isTyping
                   ? 'bg-gradient-to-r from-red-500 to-rose-500 text-white hover:shadow-lg hover:shadow-red-500/25 hover:scale-105 active:scale-95'
                   : theme === 'dark'
-                    ? 'bg-zinc-800 text-zinc-500'
+                    ? isSidebar 
+                      ? 'bg-zinc-700 text-zinc-400'
+                      : 'bg-zinc-800 text-zinc-500'
                     : 'bg-gray-100 text-gray-400'
               }`}
             >

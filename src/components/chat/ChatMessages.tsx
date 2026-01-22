@@ -63,10 +63,14 @@ function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
             } ${
               isUser
                 ? theme === 'dark'
-                  ? 'bg-zinc-800 text-white rounded-tr-md'
+                  ? isSidebar 
+                    ? 'bg-zinc-700 text-zinc-100 rounded-tr-md' 
+                    : 'bg-zinc-800 text-white rounded-tr-md'
                   : 'bg-gray-100 text-gray-900 rounded-tr-md'
                 : theme === 'dark'
-                  ? 'bg-zinc-800/50 text-zinc-200 rounded-tl-md'
+                  ? isSidebar
+                    ? 'bg-zinc-800 text-zinc-200 rounded-tl-md'
+                    : 'bg-zinc-800/50 text-zinc-200 rounded-tl-md'
                   : 'bg-gray-50 text-gray-800 rounded-tl-md'
             }`}
           >

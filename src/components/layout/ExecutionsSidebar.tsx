@@ -19,6 +19,7 @@ interface ExecutionsSidebarProps {
 const COLLAPSED_WIDTH = 54;
 const MAX_WIDTH = 900;
 const SNAP_THRESHOLD = 100;
+const MIN_WIDTH_GRAPH_MODE = 270;
 
 export function ExecutionsSidebar({ 
   isCollapsed, 
@@ -61,11 +62,18 @@ export function ExecutionsSidebar({
       const delta = startX - e.clientX;
       let newWidth = startWidth + delta;
       
+      // Snap para collapsed se abaixo do threshold
       if (newWidth < SNAP_THRESHOLD) {
         newWidth = COLLAPSED_WIDTH;
-      } else {
-        newWidth = Math.min(MAX_WIDTH, newWidth);
+      } else if (isGraphMode && newWidth < MIN_WIDTH_GRAPH_MODE) {
+        // No Graph Mode, não permitir width entre SNAP_THRESHOLD e MIN_WIDTH_GRAPH_MODE
+        // Se está tentando diminuir e passou do min, snap para collapsed
+        if (newWidth < MIN_WIDTH_GRAPH_MODE && newWidth >= SNAP_THRESHOLD) {
+          newWidth = MIN_WIDTH_GRAPH_MODE;
+        }
       }
+      
+      newWidth = Math.min(MAX_WIDTH, newWidth);
       
       finalWidthRef.current = newWidth;
       setLocalWidth(newWidth);
@@ -205,7 +213,7 @@ export function ExecutionsSidebar({
 
           {/* Chat Input Section */}
           <div className={`flex-shrink-0 p-3 border-t ${
-            theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'
+            theme === 'dark' ? 'border-zinc-700 bg-zinc-900/80' : 'border-gray-200 bg-gray-100/50'
           }`}>
             <ChatInput displayMode="sidebar" />
           </div>

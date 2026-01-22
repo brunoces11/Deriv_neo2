@@ -56,7 +56,7 @@ export function ChartToolbar({
     : 'hover:bg-gray-100 text-gray-700';
 
   return (
-    <div className={`absolute top-4 left-4 right-4 z-20 flex items-center gap-3 px-4 py-2 rounded-lg border backdrop-blur-sm pointer-events-auto ${baseClass}`}>
+    <div className={`absolute top-4 left-[72px] right-4 z-[50] flex items-center gap-3 px-4 py-2 rounded-lg border backdrop-blur-sm pointer-events-auto ${baseClass}`}>
       {/* Symbol Selector */}
       <div className="relative" ref={dropdownRef}>
         <button
@@ -68,7 +68,7 @@ export function ChartToolbar({
         </button>
 
         {symbolDropdownOpen && (
-          <div className={`absolute top-full left-0 mt-1 py-1 rounded-lg border min-w-[120px] ${dropdownClass}`}>
+          <div className={`absolute top-full left-0 mt-1 py-1 rounded-lg border min-w-[120px] z-[60] ${dropdownClass}`}>
             {AVAILABLE_SYMBOLS.map((s) => (
               <button
                 key={s}
