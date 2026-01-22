@@ -212,7 +212,7 @@ export function ExecutionsSidebar({
           </div>
 
           {/* Chat Input Section */}
-          <div className={`flex-shrink-0 p-3 border-t ${
+          <div className={`flex-shrink-0 p-[22px] border-t ${
             theme === 'dark' ? 'border-zinc-700 bg-zinc-900/80' : 'border-gray-200 bg-gray-100/50'
           }`}>
             <ChatInput displayMode="sidebar" />

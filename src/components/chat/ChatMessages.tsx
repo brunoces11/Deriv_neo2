@@ -42,17 +42,17 @@ function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
       <div className={`flex ${isSidebar ? 'gap-2' : 'gap-4'} ${isUser ? 'flex-row-reverse' : ''}`}>
         <div
           className={`flex-shrink-0 rounded-lg flex items-center justify-center ${
-            isSidebar ? 'w-6 h-6' : 'w-8 h-8'
+            isSidebar ? 'w-7 h-7' : 'w-8 h-8'
           } ${
             isUser
-              ? theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
+              ? theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-300'
               : 'bg-gradient-to-br from-red-500 to-rose-600'
           }`}
         >
           {isUser ? (
-            <User className={`${isSidebar ? 'w-3 h-3' : 'w-4 h-4'} ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-600'}`} />
+            <User className={`${isSidebar ? 'w-3.5 h-3.5' : 'w-4 h-4'} ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-600'}`} />
           ) : (
-            <Bot className={`${isSidebar ? 'w-3 h-3' : 'w-4 h-4'} text-white`} />
+            <Bot className={`${isSidebar ? 'w-3.5 h-3.5' : 'w-4 h-4'} text-white`} />
           )}
         </div>
 
@@ -66,15 +66,19 @@ function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
                   ? isSidebar 
                     ? 'bg-zinc-700 text-zinc-100 rounded-tr-md' 
                     : 'bg-zinc-800 text-white rounded-tr-md'
-                  : 'bg-gray-100 text-gray-900 rounded-tr-md'
+                  : isSidebar
+                    ? 'bg-gray-200 text-gray-900 rounded-tr-md'
+                    : 'bg-gray-100 text-gray-900 rounded-tr-md'
                 : theme === 'dark'
                   ? isSidebar
                     ? 'bg-zinc-800 text-zinc-200 rounded-tl-md'
                     : 'bg-zinc-800/50 text-zinc-200 rounded-tl-md'
-                  : 'bg-gray-50 text-gray-800 rounded-tl-md'
+                  : isSidebar
+                    ? 'bg-gray-200 text-gray-800 rounded-tl-md'
+                    : 'bg-gray-50 text-gray-800 rounded-tl-md'
             }`}
           >
-            <p className={`leading-relaxed whitespace-pre-wrap ${isSidebar ? 'text-xs' : 'text-sm'}`}>
+            <p className={`leading-relaxed whitespace-pre-wrap ${isSidebar ? 'text-[13px]' : 'text-sm'}`}>
               {message.content}
             </p>
           </div>
@@ -101,18 +105,20 @@ function TypingIndicator({ isSidebar = false }: TypingIndicatorProps) {
   return (
     <div className={`flex animate-fade-in ${isSidebar ? 'gap-2' : 'gap-4'}`}>
       <div className={`flex-shrink-0 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center ${
-        isSidebar ? 'w-6 h-6' : 'w-8 h-8'
+        isSidebar ? 'w-7 h-7' : 'w-8 h-8'
       }`}>
-        <Bot className={`${isSidebar ? 'w-3 h-3' : 'w-4 h-4'} text-white`} />
+        <Bot className={`${isSidebar ? 'w-3.5 h-3.5' : 'w-4 h-4'} text-white`} />
       </div>
       <div className={`flex items-center gap-2 rounded-2xl rounded-tl-md transition-colors ${
         isSidebar ? 'px-3 py-2' : 'px-4 py-3'
       } ${
-        theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'
+        theme === 'dark' 
+          ? isSidebar ? 'bg-zinc-800' : 'bg-zinc-800/50' 
+          : isSidebar ? 'bg-gray-200' : 'bg-gray-50'
       }`}>
-        <Loader2 className={`text-red-500 animate-spin ${isSidebar ? 'w-3 h-3' : 'w-4 h-4'}`} />
+        <Loader2 className={`text-red-500 animate-spin ${isSidebar ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
         <span className={`transition-colors ${
-          isSidebar ? 'text-xs' : 'text-sm'
+          isSidebar ? 'text-[13px]' : 'text-sm'
         } ${
           theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'
         }`}>Thinking...</span>

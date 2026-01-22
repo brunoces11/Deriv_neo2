@@ -166,8 +166,9 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
 
   if (!isVisible) return null;
 
+  // Right offset = collapsed sidebar width (54px) para não sobrepor elementos do chart
   return (
-    <div className="fixed inset-0 z-[5]">
+    <div className="fixed inset-0 right-[54px] z-[5]">
       <ChartToolbar
         symbol={symbol}
         timeframe={timeframe}
