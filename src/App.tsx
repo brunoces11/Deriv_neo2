@@ -1,18 +1,69 @@
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ChatProvider } from './store/ChatContext';
-import { ThemeProvider } from './store/ThemeContext';
+import { ThemeProvider, useTheme } from './store/ThemeContext';
+import { ViewModeProvider, useViewMode } from './store/ViewModeContext';
+import { DrawingToolsProvider } from './store/DrawingToolsContext';
+import { SessionSyncProvider } from './components/SessionSyncProvider';
 import { Sidebar } from './components/layout/Sidebar';
 import { MainArea } from './components/layout/MainArea';
+import { ExecutionsSidebar } from './components/layout/ExecutionsSidebar';
+import { ChartLayer } from './components/chart/ChartLayer';
+import { CardsPage } from './pages/CardsPage';
+
+function MainLayout() {
+  const { theme } = useTheme();
+  const {
+    currentMode,
+    sidebarCollapsed,
+    executionsSidebarCollapsed,
+    executionsSidebarWidth,
+    chartVisible,
+    updateUserPoint,
+    setResizing,
+  } = useViewMode();
+
+  return (
+    <div className="h-screen flex overflow-hidden relative">
+      <ChartLayer isVisible={chartVisible} theme={theme} />
+      
+      <Sidebar 
+        isCollapsed={sidebarCollapsed} 
+        onToggleCollapse={() => updateUserPoint({ sidebarCollapsed: !sidebarCollapsed })} 
+      />
+      
+      <MainArea isGraphMode={currentMode === 'graph'} />
+      
+      <ExecutionsSidebar 
+        isCollapsed={executionsSidebarCollapsed}
+        width={executionsSidebarWidth}
+        isGraphMode={currentMode === 'graph'}
+        onToggleCollapse={() => updateUserPoint({ executionsSidebarCollapsed: !executionsSidebarCollapsed })}
+        onResize={(width) => updateUserPoint({ executionsSidebarWidth: width })}
+        onResizeStart={() => setResizing(true)}
+        onResizeEnd={() => setResizing(false)}
+      />
+    </div>
+  );
+}
 
 function App() {
   return (
-    <ThemeProvider>
-      <ChatProvider>
-        <div className="h-screen flex overflow-hidden">
-          <Sidebar />
-          <MainArea />
-        </div>
-      </ChatProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider>
+        <ViewModeProvider>
+          <DrawingToolsProvider>
+            <ChatProvider>
+              <SessionSyncProvider>
+                <Routes>
+                  <Route path="/" element={<MainLayout />} />
+                  <Route path="/cards" element={<CardsPage />} />
+                </Routes>
+              </SessionSyncProvider>
+            </ChatProvider>
+          </DrawingToolsProvider>
+        </ViewModeProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 

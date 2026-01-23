@@ -1,4 +1,4 @@
-export type CardType = 'intent-summary' | 'action-ticket' | 'bot' | 'portfolio-snapshot';
+export type CardType = 'intent-summary' | 'action-ticket' | 'bot' | 'portfolio-snapshot' | 'portfolio-table';
 
 export type CardStatus = 'active' | 'archived' | 'hidden';
 
@@ -45,11 +45,27 @@ export interface PortfolioSnapshotPayload {
   }>;
 }
 
+export interface PortfolioTablePayload {
+  totalValue: string;
+  change24h: string;
+  changePercent: string;
+  assets: Array<{
+    symbol: string;
+    name: string;
+    allocation: number;
+    value: string;
+    invested: string;
+    change: string;
+    changePercent: string;
+  }>;
+}
+
 export type CardPayload =
   | IntentSummaryPayload
   | ActionTicketPayload
   | BotPayload
-  | PortfolioSnapshotPayload;
+  | PortfolioSnapshotPayload
+  | PortfolioTablePayload;
 
 export interface ChatMessage {
   id: string;

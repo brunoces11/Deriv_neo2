@@ -1,11 +1,16 @@
 import { ChatMessages } from '../chat/ChatMessages';
 import { ChatInput } from '../chat/ChatInput';
 import { ActiveCards } from '../cards/ActiveCards';
-import { AccountHeader } from './AccountHeader';
+import { ModeToggle } from './ModeToggle';
+import { DrawingToolsPanel } from '../chart/DrawingToolsPanel';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 
-export function MainArea() {
+interface MainAreaProps {
+  isGraphMode: boolean;
+}
+
+export function MainArea({ isGraphMode }: MainAreaProps) {
   const { messages } = useChat();
   const { theme } = useTheme();
   const hasMessages = messages.length > 0;
@@ -13,17 +18,29 @@ export function MainArea() {
   return (
     <main className={`flex-1 flex flex-col h-full relative overflow-hidden transition-colors ${
       theme === 'dark' ? 'bg-zinc-900' : 'bg-white'
-    }`}>
-      <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] pointer-events-none transition-opacity ${
-        theme === 'dark'
-          ? 'from-zinc-800/20 via-zinc-900 to-zinc-900'
-          : 'from-gray-100/50 via-white to-white'
-      }`} />
+    } ${isGraphMode ? 'bg-transparent pointer-events-none' : ''}`}>
+      {!isGraphMode && (
+        <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] pointer-events-none transition-opacity ${
+          theme === 'dark'
+            ? 'from-zinc-800/20 via-zinc-900 to-zinc-900'
+            : 'from-gray-100/50 via-white to-white'
+        }`} />
+      )}
 
-      <AccountHeader />
+      {/* Mode Toggle - sempre interativo */}
+      <div className={`relative z-10 flex justify-end items-center gap-3 px-4 py-2 border-b pointer-events-auto ${
+        theme === 'dark' ? 'border-zinc-800/30' : 'border-gray-100'
+      } ${isGraphMode ? 'border-transparent' : ''}`} style={{ marginTop: '7px' }}>
+        {/* Drawing Tools - só aparece em Graph Mode, à esquerda do ModeToggle */}
+        {isGraphMode && <DrawingToolsPanel />}
+        <ModeToggle />
+      </div>
 
-      <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
-        {!hasMessages ? (
+      <div className={`flex-1 flex flex-col relative z-10 overflow-hidden ${isGraphMode ? 'pointer-events-none' : ''}`}>
+        {isGraphMode ? (
+          // Graph Mode: área vazia, chart está no fundo e recebe eventos
+          <div className="flex-1" />
+        ) : !hasMessages ? (
           <WelcomeScreen />
         ) : (
           <div className="flex-1 overflow-y-auto custom-scrollbar">
@@ -35,15 +52,17 @@ export function MainArea() {
         )}
       </div>
 
-      <div className={`relative z-20 border-t backdrop-blur-xl transition-colors ${
-        theme === 'dark'
-          ? 'border-zinc-800/50 bg-zinc-900/80'
-          : 'border-gray-200 bg-white/80'
-      }`}>
-        <div className="max-w-3xl mx-auto w-full px-4 py-4">
-          <ChatInput />
+      {!isGraphMode && (
+        <div className={`relative z-20 border-t backdrop-blur-xl transition-colors ${
+          theme === 'dark'
+            ? 'border-zinc-800/50 bg-zinc-900/80'
+            : 'border-gray-200 bg-white/80'
+        }`}>
+          <div className="max-w-3xl mx-auto w-full px-4 py-4">
+            <ChatInput />
+          </div>
         </div>
-      </div>
+      )}
     </main>
   );
 }
