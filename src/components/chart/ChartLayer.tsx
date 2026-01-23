@@ -105,10 +105,10 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     let menuY = 0;
 
     if (selectedDrawing.type === 'horizontal') {
-      // For horizontal line, position at the right side
+      // For horizontal line, position at the center of the chart
       const priceY = series.priceToCoordinate(selectedDrawing.points[0].price);
       if (priceY === null) return null;
-      menuX = containerRect.width - 120; // Position near right edge
+      menuX = containerRect.width / 2; // Position at center
       menuY = priceY;
     } else if (selectedDrawing.type === 'trendline' && selectedDrawing.points.length >= 2) {
       // For trendline, position at the second point (end point)
