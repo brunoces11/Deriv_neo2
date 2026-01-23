@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { createChart, ColorType, CandlestickSeries, CrosshairMode } from 'lightweight-charts';
 import type { IChartApi, ISeriesApi, Time } from 'lightweight-charts';
 import { fetchKlinesWithVolume, type SupportedSymbol, type SupportedTimeframe, type KlineDataWithVolume } from '../../services/binanceApi';
@@ -10,6 +10,7 @@ import { TrendLinePrimitive } from './primitives/TrendLinePrimitive';
 import { HorizontalLinePrimitive } from './primitives/HorizontalLinePrimitive';
 import { RectanglePrimitive } from './primitives/RectanglePrimitive';
 import type { DrawingPoint } from './primitives/types';
+import { MessageSquare, Trash2 } from 'lucide-react';
 
 // Helper function to calculate distance from point to line segment
 function distanceToLineSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
@@ -49,15 +50,17 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   const [, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Drawing state
+  const { activeTool, addDrawing, drawings, setActiveTool, selectDrawing, selectedDrawingId, removeDrawing, addTagToChat } = useDrawingTools();
+  const { currentSessionId, addDrawingToSession } = useChat();
+  const { executionsSidebarWidth, executionsSidebarCollapsed, updateUserPoint } = useViewMode();
+  
   // Get sidebar width from ViewMode context
-  const { executionsSidebarWidth, executionsSidebarCollapsed } = useViewMode();
   const sidebarWidth = executionsSidebarCollapsed ? 54 : executionsSidebarWidth;
 
-  // Drawing state
-  const { activeTool, addDrawing, drawings, setActiveTool, selectDrawing, selectedDrawingId } = useDrawingTools();
-  const { currentSessionId, addDrawingToSession } = useChat();
   const [pendingPoint, setPendingPoint] = useState<DrawingPoint | null>(null);
   const [previewPrimitive, setPreviewPrimitive] = useState<PrimitiveInstance | null>(null);
+  const [menuUpdateTrigger, setMenuUpdateTrigger] = useState(0);
   const activeToolRef = useRef(activeTool);
   const pendingPointRef = useRef(pendingPoint);
   const drawingsRef = useRef(drawings);
@@ -84,6 +87,79 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   useEffect(() => {
     currentSessionIdRef.current = currentSessionId;
   }, [currentSessionId]);
+
+  // Calculate floating menu position for selected drawing
+  const floatingMenuPosition = useMemo(() => {
+    if (!selectedDrawingId || !chartRef.current || !seriesRef.current || !chartContainerRef.current) {
+      return null;
+    }
+
+    const selectedDrawing = drawings.find(d => d.id === selectedDrawingId);
+    if (!selectedDrawing) return null;
+
+    const timeScale = chartRef.current.timeScale();
+    const series = seriesRef.current;
+    const containerRect = chartContainerRef.current.getBoundingClientRect();
+
+    let menuX = 0;
+    let menuY = 0;
+
+    if (selectedDrawing.type === 'horizontal') {
+      // For horizontal line, position at the right side
+      const priceY = series.priceToCoordinate(selectedDrawing.points[0].price);
+      if (priceY === null) return null;
+      menuX = containerRect.width - 120; // Position near right edge
+      menuY = priceY;
+    } else if (selectedDrawing.type === 'trendline' && selectedDrawing.points.length >= 2) {
+      // For trendline, position at the second point (end point)
+      const x2 = timeScale.timeToCoordinate(selectedDrawing.points[1].time as Time);
+      const y2 = series.priceToCoordinate(selectedDrawing.points[1].price);
+      if (x2 === null || y2 === null) return null;
+      menuX = x2 + 10;
+      menuY = y2;
+    } else if (selectedDrawing.type === 'rectangle' && selectedDrawing.points.length >= 2) {
+      // For rectangle, position at top-right corner
+      const x1 = timeScale.timeToCoordinate(selectedDrawing.points[0].time as Time);
+      const x2 = timeScale.timeToCoordinate(selectedDrawing.points[1].time as Time);
+      const y1 = series.priceToCoordinate(selectedDrawing.points[0].price);
+      const y2 = series.priceToCoordinate(selectedDrawing.points[1].price);
+      if (x1 === null || x2 === null || y1 === null || y2 === null) return null;
+      menuX = Math.max(x1, x2) + 10;
+      menuY = Math.min(y1, y2);
+    }
+
+    // Ensure menu stays within bounds
+    menuX = Math.min(menuX, containerRect.width - 100);
+    menuX = Math.max(menuX, 10);
+    menuY = Math.max(menuY, 10);
+    menuY = Math.min(menuY, containerRect.height - 80);
+
+    return { x: menuX, y: menuY };
+  }, [selectedDrawingId, drawings, menuUpdateTrigger]);
+
+  // Handle send to chat action
+  const handleSendToChat = useCallback(() => {
+    const selectedDrawing = drawings.find(d => d.id === selectedDrawingId);
+    if (!selectedDrawing) return;
+    
+    addTagToChat(selectedDrawing);
+    
+    // Expand sidebar if needed
+    if (executionsSidebarCollapsed || executionsSidebarWidth < 500) {
+      updateUserPoint({ 
+        executionsSidebarCollapsed: false,
+        executionsSidebarWidth: 500 
+      });
+    }
+    
+    selectDrawing(null);
+  }, [selectedDrawingId, drawings, addTagToChat, executionsSidebarCollapsed, executionsSidebarWidth, updateUserPoint, selectDrawing]);
+
+  // Handle delete drawing action
+  const handleDeleteDrawing = useCallback(() => {
+    if (!selectedDrawingId) return;
+    removeDrawing(selectedDrawingId);
+  }, [selectedDrawingId, removeDrawing]);
 
   // Load data from Binance API
   const loadData = useCallback(async () => {
@@ -385,6 +461,13 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     // Load initial data
     loadData();
 
+    // Update floating menu position when chart scrolls/zooms
+    const updateMenuPosition = () => {
+      setMenuUpdateTrigger(prev => prev + 1);
+    };
+    
+    chart.timeScale().subscribeVisibleLogicalRangeChange(updateMenuPosition);
+
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
         chartRef.current.applyOptions({
@@ -392,6 +475,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
           height: chartContainerRef.current.clientHeight,
         });
       }
+      updateMenuPosition();
     };
 
     window.addEventListener('resize', handleResize);
@@ -399,6 +483,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      chart.timeScale().unsubscribeVisibleLogicalRangeChange(updateMenuPosition);
       if (chartRef.current) {
         chartRef.current.remove();
         chartRef.current = null;
@@ -548,7 +633,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     });
   }, [theme]);
 
-  // Cancel drawing on Escape
+  // Cancel drawing on Escape, Delete selected drawing on Delete key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
@@ -558,12 +643,17 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
           seriesRef.current.detachPrimitive(previewPrimitive);
           setPreviewPrimitive(null);
         }
+      } else if (e.key === 'Delete' || e.key === 'Backspace') {
+        // Delete selected drawing
+        if (selectedDrawingIdRef.current) {
+          removeDrawing(selectedDrawingIdRef.current);
+        }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [previewPrimitive, setActiveTool]);
+  }, [previewPrimitive, setActiveTool, removeDrawing]);
 
   if (!isVisible) return null;
 
@@ -600,6 +690,58 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
         ref={chartContainerRef} 
         className={`flex-1 pointer-events-auto ${activeTool !== 'none' ? 'cursor-crosshair' : ''}`} 
       />
+
+      {/* Floating menu for selected drawing */}
+      {selectedDrawingId && floatingMenuPosition && (
+        <div
+          className={`absolute z-30 pointer-events-auto flex items-center gap-1 p-1 rounded-full shadow-lg transition-all ${
+            theme === 'dark'
+              ? 'bg-zinc-800 border border-zinc-700/50'
+              : 'bg-white border border-gray-200'
+          }`}
+          style={{
+            left: `${floatingMenuPosition.x}px`,
+            top: `${floatingMenuPosition.y}px`,
+          }}
+        >
+          {/* Send to Chat button */}
+          <button
+            onClick={handleSendToChat}
+            className={`group relative flex items-center justify-center w-7 h-7 rounded-full transition-all ${
+              theme === 'dark'
+                ? 'text-zinc-300 hover:text-blue-400 hover:bg-zinc-700'
+                : 'text-gray-600 hover:text-blue-500 hover:bg-gray-100'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4" />
+            {/* Tooltip */}
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-zinc-900 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              Send to Chat
+              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900" />
+            </div>
+          </button>
+
+          {/* Divider */}
+          <div className={`w-px h-5 ${theme === 'dark' ? 'bg-zinc-600' : 'bg-gray-300'}`} />
+
+          {/* Delete button */}
+          <button
+            onClick={handleDeleteDrawing}
+            className={`group relative flex items-center justify-center w-7 h-7 rounded-full transition-all ${
+              theme === 'dark'
+                ? 'text-zinc-300 hover:text-red-400 hover:bg-zinc-700'
+                : 'text-gray-600 hover:text-red-500 hover:bg-gray-100'
+            }`}
+          >
+            <Trash2 className="w-4 h-4" />
+            {/* Tooltip */}
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-zinc-900 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+              Delete
+              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900" />
+            </div>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

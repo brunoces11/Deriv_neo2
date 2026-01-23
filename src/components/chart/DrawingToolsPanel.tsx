@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { TrendingUp, Minus, Square, Trash2, MessageSquare } from 'lucide-react';
+import { TrendingUp, Minus, Square, Trash2 } from 'lucide-react';
 import { useTheme } from '../../store/ThemeContext';
 import { useDrawingTools, type DrawingTool } from '../../store/DrawingToolsContext';
-import { useViewMode } from '../../store/ViewModeContext';
 
 interface TooltipProps {
   text: string;
@@ -58,44 +57,15 @@ export function DrawingToolsPanel() {
     toggleTool, 
     drawings, 
     clearAllDrawings,
-    selectedDrawingId,
-    addTagToChat,
-    selectDrawing,
   } = useDrawingTools();
-  const { updateUserPoint, executionsSidebarWidth, executionsSidebarCollapsed } = useViewMode();
   
   const [showClearTooltip, setShowClearTooltip] = useState(false);
-  const [showSendTooltip, setShowSendTooltip] = useState(false);
 
   const tools: { tool: Exclude<DrawingTool, 'none'>; icon: React.ReactNode; label: string }[] = [
     { tool: 'trendline', icon: <TrendingUp className="w-4 h-4" />, label: 'Trend Line' },
     { tool: 'horizontal', icon: <Minus className="w-4 h-4" />, label: 'Support/Resistance' },
     { tool: 'rectangle', icon: <Square className="w-4 h-4" />, label: 'Rectangle Selection' },
   ];
-
-  const selectedDrawing = selectedDrawingId 
-    ? drawings.find(d => d.id === selectedDrawingId) 
-    : null;
-
-  const handleSendToChat = () => {
-    if (!selectedDrawing) return;
-    
-    // Add tag to chat
-    addTagToChat(selectedDrawing);
-    
-    // Expand the executions sidebar if collapsed or too small
-    // Only resize if current width is less than 500px
-    const currentWidth = executionsSidebarWidth;
-    if (executionsSidebarCollapsed || currentWidth < 500) {
-      updateUserPoint({ 
-        executionsSidebarCollapsed: false,
-        executionsSidebarWidth: 500 
-      });
-    }
-    
-    // Deselect the drawing
-    selectDrawing(null);
-  };
 
   return (
     <div
@@ -116,8 +86,8 @@ export function DrawingToolsPanel() {
         />
       ))}
 
-      {/* Separator + Action buttons */}
-      {(drawings.length > 0 || selectedDrawingId) && (
+      {/* Clear all button - only when there are drawings */}
+      {drawings.length > 0 && (
         <>
           <div
             className={`w-px h-5 mx-1 ${
@@ -125,39 +95,19 @@ export function DrawingToolsPanel() {
             }`}
           />
           
-          {/* Send to Chat button - only when drawing is selected */}
-          {selectedDrawing && (
-            <button
-              onClick={handleSendToChat}
-              onMouseEnter={() => setShowSendTooltip(true)}
-              onMouseLeave={() => setShowSendTooltip(false)}
-              className={`relative flex items-center justify-center w-7 h-7 rounded-full transition-all ${
-                theme === 'dark'
-                  ? 'text-zinc-400 hover:text-blue-400 hover:bg-zinc-700'
-                  : 'text-gray-500 hover:text-blue-500 hover:bg-gray-300'
-              }`}
-            >
-              <MessageSquare className="w-4 h-4" />
-              <Tooltip text="Send to Chat" visible={showSendTooltip} />
-            </button>
-          )}
-          
-          {/* Clear all button */}
-          {drawings.length > 0 && (
-            <button
-              onClick={clearAllDrawings}
-              onMouseEnter={() => setShowClearTooltip(true)}
-              onMouseLeave={() => setShowClearTooltip(false)}
-              className={`relative flex items-center justify-center w-7 h-7 rounded-full transition-all ${
-                theme === 'dark'
-                  ? 'text-zinc-400 hover:text-red-400 hover:bg-zinc-700'
-                  : 'text-gray-500 hover:text-red-500 hover:bg-gray-300'
-              }`}
-            >
-              <Trash2 className="w-4 h-4" />
-              <Tooltip text={`Clear all (${drawings.length})`} visible={showClearTooltip} />
-            </button>
-          )}
+          <button
+            onClick={clearAllDrawings}
+            onMouseEnter={() => setShowClearTooltip(true)}
+            onMouseLeave={() => setShowClearTooltip(false)}
+            className={`relative flex items-center justify-center w-7 h-7 rounded-full transition-all ${
+              theme === 'dark'
+                ? 'text-zinc-400 hover:text-red-400 hover:bg-zinc-700'
+                : 'text-gray-500 hover:text-red-500 hover:bg-gray-300'
+            }`}
+          >
+            <Trash2 className="w-4 h-4" />
+            <Tooltip text={`Clear all (${drawings.length})`} visible={showClearTooltip} />
+          </button>
         </>
       )}
     </div>
