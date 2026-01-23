@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Sun, Moon, LayoutGrid } from 'lucide-react';
+import { ChevronDown, Sun, Moon, LayoutGrid, Wrench } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../store/ThemeContext';
 
@@ -101,6 +101,28 @@ export function UserProfile({ isCollapsed = false }: UserProfileProps) {
                   <button
                     type="button"
                     onClick={() => {
+                      setIsProfileOpen(false);
+                      navigate('/component-builder');
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
+                      theme === 'dark' ? 'hover:bg-zinc-900' : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                      theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-brand-green/10 text-brand-green'
+                    }`}>
+                      <Wrench className="w-3.5 h-3.5" />
+                    </div>
+                    <span className={`text-sm font-medium ${
+                      theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
+                    }`}>
+                      Component Builder
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
                       toggleTheme();
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
@@ -187,6 +209,28 @@ export function UserProfile({ isCollapsed = false }: UserProfileProps) {
                     theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
                   }`}>
                     Cards
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    navigate('/component-builder');
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
+                    theme === 'dark' ? 'hover:bg-zinc-900' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                    theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-brand-green/10 text-brand-green'
+                  }`}>
+                    <Wrench className="w-3.5 h-3.5" />
+                  </div>
+                  <span className={`text-sm font-medium ${
+                    theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
+                  }`}>
+                    Component Builder
                   </span>
                 </button>
 

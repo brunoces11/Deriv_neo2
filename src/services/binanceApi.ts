@@ -49,11 +49,29 @@ export interface FetchKlinesOptions {
   limit?: number;
 }
 
+export interface KlineDataWithVolume {
+  time: Time;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
 export async function fetchKlines({
   symbol,
   timeframe,
   limit = 500,
 }: FetchKlinesOptions): Promise<CandlestickData<Time>[]> {
+  const data = await fetchKlinesWithVolume({ symbol, timeframe, limit });
+  return data.map(({ time, open, high, low, close }) => ({ time, open, high, low, close }));
+}
+
+export async function fetchKlinesWithVolume({
+  symbol,
+  timeframe,
+  limit = 500,
+}: FetchKlinesOptions): Promise<KlineDataWithVolume[]> {
   const binanceSymbol = SYMBOL_MAP[symbol];
   const interval = TIMEFRAME_MAP[timeframe];
 
@@ -73,11 +91,12 @@ export async function fetchKlines({
     const data: BinanceKline[] = await response.json();
 
     return data.map((kline) => ({
-      time: (kline[0] / 1000) as Time, // Convert ms to seconds for lightweight-charts
+      time: (kline[0] / 1000) as Time,
       open: parseFloat(kline[1]),
       high: parseFloat(kline[2]),
       low: parseFloat(kline[3]),
       close: parseFloat(kline[4]),
+      volume: parseFloat(kline[5]),
     }));
   } catch (error) {
     console.error('Failed to fetch klines from Binance:', error);
