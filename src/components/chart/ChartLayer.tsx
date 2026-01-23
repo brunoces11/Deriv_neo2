@@ -6,6 +6,7 @@ import { generateMockCandlestickData } from '../../services/mockChartData';
 import { ChartToolbar } from './ChartToolbar';
 import { useDrawingTools, DRAWING_COLORS } from '../../store/DrawingToolsContext';
 import { useViewMode } from '../../store/ViewModeContext';
+import { useChat } from '../../store/ChatContext';
 import { TrendLinePrimitive } from './primitives/TrendLinePrimitive';
 import { HorizontalLinePrimitive } from './primitives/HorizontalLinePrimitive';
 import { RectanglePrimitive } from './primitives/RectanglePrimitive';
@@ -54,12 +55,14 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
 
   // Drawing state
   const { activeTool, addDrawing, drawings, setActiveTool, selectDrawing, selectedDrawingId } = useDrawingTools();
+  const { currentSessionId, addDrawingToSession } = useChat();
   const [pendingPoint, setPendingPoint] = useState<DrawingPoint | null>(null);
   const [previewPrimitive, setPreviewPrimitive] = useState<PrimitiveInstance | null>(null);
   const activeToolRef = useRef(activeTool);
   const pendingPointRef = useRef(pendingPoint);
   const drawingsRef = useRef(drawings);
   const selectedDrawingIdRef = useRef(selectedDrawingId);
+  const currentSessionIdRef = useRef(currentSessionId);
 
   // Keep refs in sync
   useEffect(() => {
@@ -77,6 +80,10 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   useEffect(() => {
     selectedDrawingIdRef.current = selectedDrawingId;
   }, [selectedDrawingId]);
+
+  useEffect(() => {
+    currentSessionIdRef.current = currentSessionId;
+  }, [currentSessionId]);
 
   // Load data from Binance API
   const loadData = useCallback(async () => {
@@ -184,20 +191,30 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
 
     const point: DrawingPoint = { time: coords.time, price: coords.price };
 
+    // Use currentSessionId directly from context (not ref) for persistence
+    const sessionIdForPersistence = currentSessionId;
+
     if (tool === 'horizontal') {
       // Horizontal line needs only 1 click
-      addDrawing({
+      const newDrawing = addDrawing({
         type: 'horizontal',
         points: [{ time: coords.time as number, price: coords.price }],
         color: DRAWING_COLORS.horizontal.color,
       });
+      // Persist to session if active
+      if (sessionIdForPersistence) {
+        console.log('Persisting horizontal drawing to session:', sessionIdForPersistence);
+        addDrawingToSession(newDrawing);
+      } else {
+        console.warn('No session ID available for drawing persistence');
+      }
     } else if (tool === 'trendline' || tool === 'rectangle') {
       // Trend line and rectangle need 2 clicks
       const pending = pendingPointRef.current;
       if (!pending) {
         setPendingPoint(point);
       } else {
-        addDrawing({
+        const newDrawing = addDrawing({
           type: tool,
           points: [
             { time: pending.time as number, price: pending.price },
@@ -205,6 +222,13 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
           ],
           color: DRAWING_COLORS[tool].color,
         });
+        // Persist to session if active
+        if (sessionIdForPersistence) {
+          console.log(`Persisting ${tool} drawing to session:`, sessionIdForPersistence);
+          addDrawingToSession(newDrawing);
+        } else {
+          console.warn('No session ID available for drawing persistence');
+        }
         setPendingPoint(null);
         // Remove preview
         if (previewPrimitive && seriesRef.current) {
@@ -213,7 +237,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
         }
       }
     }
-  }, [addDrawing, pixelToChartCoords, previewPrimitive, findDrawingAtPoint, selectDrawing]);
+  }, [addDrawing, pixelToChartCoords, previewPrimitive, findDrawingAtPoint, selectDrawing, addDrawingToSession, currentSessionId]);
 
   // Handle mouse move for preview
   const handleChartMouseMove = useCallback((e: MouseEvent) => {

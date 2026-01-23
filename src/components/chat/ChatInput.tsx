@@ -14,9 +14,17 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const [isFocused, setIsFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const { addMessage, setTyping, isTyping, processUIEvent, currentSessionId, createNewSession } = useChat();
+  const { 
+    addMessage, 
+    setTyping, 
+    isTyping, 
+    processUIEvent, 
+    currentSessionId, 
+    createNewSession,
+    addTagToSession,
+  } = useChat();
   const { theme } = useTheme();
-  const { chatTags, removeTagFromChat, clearChatTags, selectDrawing, selectedDrawingId } = useDrawingTools();
+  const { chatTags, removeTagFromChat, clearChatTags, selectDrawing, selectedDrawingId, drawings } = useDrawingTools();
 
   const isSidebar = displayMode === 'sidebar';
 
@@ -36,13 +44,32 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
       : '';
     const messageContent = tagsPrefix + message.trim();
     
+    // Store tags to persist before clearing
+    const tagsToSave = [...chatTags];
+    
     setMessage('');
     clearChatTags(); // Clear tags after sending
     setTyping(true);
 
     try {
-      if (!currentSessionId) {
-        await createNewSession(messageContent);
+      // Get or create session ID
+      let sessionId = currentSessionId;
+      
+      if (!sessionId) {
+        sessionId = await createNewSession(messageContent);
+        if (!sessionId) {
+          throw new Error('Failed to create session');
+        }
+      }
+
+      // Persist tags to session (as snapshots)
+      if (tagsToSave.length > 0) {
+        for (const tag of tagsToSave) {
+          const drawing = drawings.find(d => d.id === tag.drawingId);
+          if (drawing) {
+            await addTagToSession(tag, drawing);
+          }
+        }
       }
 
       const userMessage: ChatMessage = {
@@ -52,7 +79,8 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
         timestamp: new Date(),
       };
 
-      await addMessage(userMessage);
+      // Pass sessionId explicitly to ensure message is saved to correct session
+      await addMessage(userMessage, sessionId);
 
       const response = await simulateLangFlowResponse(userMessage.content);
 
@@ -63,13 +91,16 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
         timestamp: new Date(),
       };
 
-      await addMessage(assistantMessage);
+      // Pass sessionId explicitly
+      await addMessage(assistantMessage, sessionId);
 
       for (let i = 0; i < response.ui_events.length; i++) {
         await new Promise(resolve => setTimeout(resolve, 300 * (i + 1)));
-        await processUIEvent(response.ui_events[i]);
+        // Pass sessionId explicitly
+        await processUIEvent(response.ui_events[i], sessionId);
       }
-    } catch {
+    } catch (err) {
+      console.error('Error in handleSubmit:', err);
       const errorMessage: ChatMessage = {
         id: `msg-${Date.now()}`,
         role: 'assistant',

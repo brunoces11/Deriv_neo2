@@ -17,6 +17,15 @@ export interface DrawingTag {
   label: string;
 }
 
+// Extended tag with snapshot for persistence
+export interface DrawingTagWithSnapshot extends DrawingTag {
+  id: string;
+  snapshot: {
+    points: { time: number; price: number }[];
+    color: string;
+  };
+}
+
 interface DrawingToolsContextValue {
   activeTool: DrawingTool;
   drawings: Drawing[];
@@ -24,13 +33,17 @@ interface DrawingToolsContextValue {
   chatTags: DrawingTag[];
   setActiveTool: (tool: DrawingTool) => void;
   toggleTool: (tool: Exclude<DrawingTool, 'none'>) => void;
-  addDrawing: (drawing: Omit<Drawing, 'id' | 'createdAt'>) => void;
+  addDrawing: (drawing: Omit<Drawing, 'id' | 'createdAt'>) => Drawing;
   removeDrawing: (id: string) => void;
   clearAllDrawings: () => void;
   selectDrawing: (id: string | null) => void;
-  addTagToChat: (drawing: Drawing) => void;
+  addTagToChat: (drawing: Drawing) => DrawingTag;
   removeTagFromChat: (drawingId: string) => void;
   clearChatTags: () => void;
+  // Session sync functions
+  setDrawingsFromSession: (drawings: Drawing[]) => void;
+  setTagsFromSession: (tags: DrawingTagWithSnapshot[]) => void;
+  restoreDrawingFromSnapshot: (snapshot: DrawingTagWithSnapshot) => Drawing;
 }
 
 const DrawingToolsContext = createContext<DrawingToolsContextValue | null>(null);
@@ -99,14 +112,15 @@ export function DrawingToolsProvider({ children }: { children: ReactNode }) {
     setSelectedDrawingId(null); // Deselect when changing tool
   }, []);
 
-  const addDrawing = useCallback((drawing: Omit<Drawing, 'id' | 'createdAt'>) => {
+  const addDrawing = useCallback((drawing: Omit<Drawing, 'id' | 'createdAt'>): Drawing => {
     const newDrawing: Drawing = {
       ...drawing,
-      id: `drawing-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `drawing-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
       createdAt: Date.now(),
     };
     setDrawings(current => [...current, newDrawing]);
     setActiveTool('none');
+    return newDrawing;
   }, []);
 
   const removeDrawing = useCallback((id: string) => {
@@ -131,10 +145,13 @@ export function DrawingToolsProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const addTagToChat = useCallback((drawing: Drawing) => {
+  const addTagToChat = useCallback((drawing: Drawing): DrawingTag => {
+    let newTag: DrawingTag | null = null;
+    
     setChatTags(current => {
       // Don't add duplicate
       if (current.some(t => t.drawingId === drawing.id)) {
+        newTag = current.find(t => t.drawingId === drawing.id)!;
         return current;
       }
       
@@ -143,12 +160,16 @@ export function DrawingToolsProvider({ children }: { children: ReactNode }) {
       const counter = sameTypeCount + 1;
       const baseLabel = generateLabel(drawing.type);
       
-      return [...current, {
+      newTag = {
         drawingId: drawing.id,
         type: drawing.type,
         label: `${baseLabel}-${counter}`,
-      }];
+      };
+      
+      return [...current, newTag];
     });
+    
+    return newTag!;
   }, []);
 
   const removeTagFromChat = useCallback((drawingId: string) => {
@@ -157,6 +178,47 @@ export function DrawingToolsProvider({ children }: { children: ReactNode }) {
 
   const clearChatTags = useCallback(() => {
     setChatTags([]);
+  }, []);
+
+  // Session sync functions
+  const setDrawingsFromSession = useCallback((sessionDrawings: Drawing[]) => {
+    console.log('DrawingToolsContext: setDrawingsFromSession called', { count: sessionDrawings.length, drawings: sessionDrawings });
+    setDrawings(sessionDrawings);
+    setSelectedDrawingId(null);
+    setActiveTool('none');
+  }, []);
+
+  const setTagsFromSession = useCallback((sessionTags: DrawingTagWithSnapshot[]) => {
+    // Convert session tags to chat tags format
+    const tags: DrawingTag[] = sessionTags.map(t => ({
+      drawingId: t.drawingId,
+      type: t.type,
+      label: t.label,
+    }));
+    setChatTags(tags);
+  }, []);
+
+  const restoreDrawingFromSnapshot = useCallback((snapshot: DrawingTagWithSnapshot): Drawing => {
+    // Create a temporary drawing from the snapshot to display on chart
+    const restoredDrawing: Drawing = {
+      id: `restored-${snapshot.id}-${Date.now()}`,
+      type: snapshot.type,
+      points: snapshot.snapshot.points,
+      color: snapshot.snapshot.color,
+      createdAt: Date.now(),
+    };
+    
+    // Add to drawings temporarily (for visualization)
+    setDrawings(current => {
+      // Remove any previous restored version of this snapshot
+      const filtered = current.filter(d => !d.id.startsWith(`restored-${snapshot.id}`));
+      return [...filtered, restoredDrawing];
+    });
+    
+    // Select the restored drawing
+    setSelectedDrawingId(restoredDrawing.id);
+    
+    return restoredDrawing;
   }, []);
 
   return (
@@ -175,6 +237,9 @@ export function DrawingToolsProvider({ children }: { children: ReactNode }) {
         addTagToChat,
         removeTagFromChat,
         clearChatTags,
+        setDrawingsFromSession,
+        setTagsFromSession,
+        restoreDrawingFromSnapshot,
       }}
     >
       {children}

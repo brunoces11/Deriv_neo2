@@ -888,12 +888,12 @@ CREATE TABLE chat_messages (
 );
 ```
 
-### 10.3 Tabela: chat_cards
+### 10.3 Tabela: chat_executions
 ```sql
-CREATE TABLE chat_cards (
+CREATE TABLE chat_executions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id uuid NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
-  type text NOT NULL CHECK (type IN ('intent-summary', 'action-ticket', 'bot', 'portfolio-snapshot')),
+  type text NOT NULL CHECK (type IN ('intent-summary', 'action-ticket', 'bot', 'portfolio-snapshot', 'portfolio-table')),
   status text NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'archived', 'hidden')),
   is_favorite boolean DEFAULT false,
   payload jsonb NOT NULL DEFAULT '{}',
@@ -901,16 +901,42 @@ CREATE TABLE chat_cards (
 );
 ```
 
-### 10.4 Índices
+### 10.4 Tabela: chat_drawings
+```sql
+CREATE TABLE chat_drawings (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id uuid NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
+  type text NOT NULL CHECK (type IN ('trendline', 'horizontal', 'rectangle')),
+  points jsonb NOT NULL DEFAULT '[]',
+  color text NOT NULL DEFAULT '#3b82f6',
+  created_at timestamptz DEFAULT now()
+);
+```
+
+### 10.5 Tabela: chat_tags
+```sql
+CREATE TABLE chat_tags (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id uuid NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
+  label text NOT NULL,
+  drawing_type text NOT NULL CHECK (drawing_type IN ('trendline', 'horizontal', 'rectangle')),
+  drawing_snapshot jsonb NOT NULL DEFAULT '{}',
+  created_at timestamptz DEFAULT now()
+);
+```
+
+### 10.6 Índices
 ```sql
 CREATE INDEX idx_chat_messages_session_id ON chat_messages(session_id);
-CREATE INDEX idx_chat_cards_session_id ON chat_cards(session_id);
+CREATE INDEX idx_chat_executions_session_id ON chat_executions(session_id);
+CREATE INDEX idx_chat_drawings_session_id ON chat_drawings(session_id);
+CREATE INDEX idx_chat_tags_session_id ON chat_tags(session_id);
 CREATE INDEX idx_chat_sessions_created_at ON chat_sessions(created_at DESC);
 CREATE INDEX idx_chat_sessions_is_favorite ON chat_sessions(is_favorite) WHERE is_favorite = true;
 CREATE INDEX idx_chat_sessions_is_archived ON chat_sessions(is_archived) WHERE is_archived = true;
 ```
 
-### 10.5 Trigger de updated_at
+### 10.7 Trigger de updated_at
 ```sql
 CREATE TRIGGER update_chat_sessions_updated_at
   BEFORE UPDATE ON chat_sessions

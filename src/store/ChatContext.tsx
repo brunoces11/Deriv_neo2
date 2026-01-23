@@ -1,6 +1,8 @@
 import { createContext, useContext, useReducer, useCallback, useMemo, useEffect, ReactNode } from 'react';
 import type { BaseCard, ChatMessage, UIEvent, CardStatus, ChatSession } from '../types';
+import type { Drawing, DrawingTag } from './DrawingToolsContext';
 import * as supabaseService from '../services/supabase';
+import type { ChatTagWithSnapshot } from '../services/supabase';
 
 interface ChatState {
   currentSessionId: string | null;
@@ -9,6 +11,8 @@ interface ChatState {
   activeCards: BaseCard[];
   archivedCards: BaseCard[];
   favoriteCards: BaseCard[];
+  sessionDrawings: Drawing[];
+  sessionTags: ChatTagWithSnapshot[];
   isTyping: boolean;
   isLoading: boolean;
 }
@@ -29,6 +33,12 @@ type ChatAction =
   | { type: 'FAVORITE_CARD'; payload: string }
   | { type: 'UNFAVORITE_CARD'; payload: string }
   | { type: 'HIDE_CARD'; payload: string }
+  | { type: 'SET_SESSION_DRAWINGS'; payload: Drawing[] }
+  | { type: 'ADD_SESSION_DRAWING'; payload: Drawing }
+  | { type: 'REMOVE_SESSION_DRAWING'; payload: string }
+  | { type: 'SET_SESSION_TAGS'; payload: ChatTagWithSnapshot[] }
+  | { type: 'ADD_SESSION_TAG'; payload: ChatTagWithSnapshot }
+  | { type: 'REMOVE_SESSION_TAG'; payload: string }
   | { type: 'RESET_CHAT' };
 
 const initialState: ChatState = {
@@ -38,6 +48,8 @@ const initialState: ChatState = {
   activeCards: [],
   archivedCards: [],
   favoriteCards: [],
+  sessionDrawings: [],
+  sessionTags: [],
   isTyping: false,
   isLoading: true,
 };
@@ -136,12 +148,32 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
         favoriteCards: state.favoriteCards.filter(c => c.id !== action.payload),
       };
 
+    case 'SET_SESSION_DRAWINGS':
+      return { ...state, sessionDrawings: action.payload };
+
+    case 'ADD_SESSION_DRAWING':
+      return { ...state, sessionDrawings: [...state.sessionDrawings, action.payload] };
+
+    case 'REMOVE_SESSION_DRAWING':
+      return { ...state, sessionDrawings: state.sessionDrawings.filter(d => d.id !== action.payload) };
+
+    case 'SET_SESSION_TAGS':
+      return { ...state, sessionTags: action.payload };
+
+    case 'ADD_SESSION_TAG':
+      return { ...state, sessionTags: [...state.sessionTags, action.payload] };
+
+    case 'REMOVE_SESSION_TAG':
+      return { ...state, sessionTags: state.sessionTags.filter(t => t.id !== action.payload) };
+
     case 'RESET_CHAT':
       return {
         ...state,
         currentSessionId: null,
         messages: [],
         activeCards: [],
+        sessionDrawings: [],
+        sessionTags: [],
         isTyping: false,
       };
 
@@ -153,9 +185,11 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 interface ChatContextValue extends ChatState {
   sessions: ChatSession[];
   currentSessionId: string | null;
-  addMessage: (message: ChatMessage) => Promise<void>;
+  sessionDrawings: Drawing[];
+  sessionTags: ChatTagWithSnapshot[];
+  addMessage: (message: ChatMessage, sessionId?: string) => Promise<void>;
   setTyping: (typing: boolean) => void;
-  processUIEvent: (event: UIEvent) => Promise<void>;
+  processUIEvent: (event: UIEvent, sessionId?: string) => Promise<void>;
   archiveCard: (cardId: string) => Promise<void>;
   favoriteCard: (cardId: string) => Promise<void>;
   unfavoriteCard: (cardId: string) => Promise<void>;
@@ -166,6 +200,12 @@ interface ChatContextValue extends ChatState {
   updateSession: (sessionId: string, updates: Partial<Pick<ChatSession, 'title' | 'is_favorite' | 'is_archived'>>) => Promise<void>;
   deleteSession: (sessionId: string) => Promise<void>;
   refreshSessions: () => Promise<void>;
+  // Drawing persistence
+  addDrawingToSession: (drawing: Drawing) => Promise<boolean>;
+  removeDrawingFromSession: (drawingId: string) => Promise<boolean>;
+  // Tag persistence
+  addTagToSession: (tag: DrawingTag, drawing: Drawing) => Promise<ChatTagWithSnapshot | null>;
+  removeTagFromSession: (tagId: string) => Promise<boolean>;
 }
 
 const ChatContext = createContext<ChatContextValue | null>(null);
@@ -184,40 +224,77 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
   const createNewSession = useCallback(async (firstMessage: string): Promise<string | null> => {
     const title = firstMessage.slice(0, 50) + (firstMessage.length > 50 ? '...' : '');
+    console.log('createNewSession called:', { title });
+    
     const session = await supabaseService.createChatSession(title);
 
-    if (!session) return null;
+    if (!session) {
+      console.error('Failed to create session in Supabase');
+      return null;
+    }
 
+    console.log('Session created successfully:', session.id);
+    
     dispatch({ type: 'ADD_SESSION', payload: session });
     dispatch({ type: 'SET_CURRENT_SESSION', payload: session.id });
     dispatch({ type: 'SET_MESSAGES', payload: [] });
     dispatch({ type: 'SET_CARDS', payload: [] });
+    dispatch({ type: 'SET_SESSION_DRAWINGS', payload: [] });
+    dispatch({ type: 'SET_SESSION_TAGS', payload: [] });
 
     return session.id;
   }, []);
 
   const loadSession = useCallback(async (sessionId: string) => {
+    console.log('loadSession called:', sessionId);
     dispatch({ type: 'SET_LOADING', payload: true });
     dispatch({ type: 'SET_CURRENT_SESSION', payload: sessionId });
 
-    const [messages, cards] = await Promise.all([
+    const [messages, cards, drawings, tags] = await Promise.all([
       supabaseService.getSessionMessages(sessionId),
       supabaseService.getSessionCards(sessionId),
+      supabaseService.getSessionDrawings(sessionId),
+      supabaseService.getSessionTags(sessionId),
     ]);
+
+    console.log('loadSession data loaded:', { 
+      sessionId, 
+      messagesCount: messages.length, 
+      cardsCount: cards.length,
+      drawingsCount: drawings.length,
+      tagsCount: tags.length 
+    });
 
     dispatch({ type: 'SET_MESSAGES', payload: messages });
     dispatch({ type: 'SET_CARDS', payload: cards });
+    dispatch({ type: 'SET_SESSION_DRAWINGS', payload: drawings });
+    dispatch({ type: 'SET_SESSION_TAGS', payload: tags });
     dispatch({ type: 'SET_LOADING', payload: false });
   }, []);
 
-  const addMessage = useCallback(async (message: ChatMessage) => {
+  const addMessage = useCallback(async (message: ChatMessage, sessionId?: string) => {
     dispatch({ type: 'ADD_MESSAGE', payload: message });
 
-    if (state.currentSessionId) {
-      await supabaseService.addMessageToSession(state.currentSessionId, {
+    const targetSessionId = sessionId || state.currentSessionId;
+    console.log('addMessage called:', { 
+      providedSessionId: sessionId, 
+      stateSessionId: state.currentSessionId, 
+      targetSessionId,
+      messageRole: message.role 
+    });
+    
+    if (targetSessionId) {
+      const success = await supabaseService.addMessageToSession(targetSessionId, {
         role: message.role,
         content: message.content,
       });
+      if (!success) {
+        console.error('Failed to persist message to session:', targetSessionId);
+      } else {
+        console.log('Message persisted successfully to session:', targetSessionId);
+      }
+    } else {
+      console.warn('No session ID available for message persistence');
     }
   }, [state.currentSessionId]);
 
@@ -225,7 +302,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_TYPING', payload: typing });
   }, []);
 
-  const processUIEvent = useCallback(async (event: UIEvent) => {
+  const processUIEvent = useCallback(async (event: UIEvent, sessionId?: string) => {
+    const targetSessionId = sessionId || state.currentSessionId;
+    console.log('processUIEvent called:', { 
+      eventType: event.type, 
+      providedSessionId: sessionId, 
+      stateSessionId: state.currentSessionId,
+      targetSessionId 
+    });
+    
     if (event.type === 'ADD_CARD' && event.cardType && event.payload) {
       const card: BaseCard = {
         id: event.cardId,
@@ -236,10 +321,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         payload: event.payload,
       };
 
+      console.log('Adding card to state:', card.id, card.type);
       dispatch({ type: 'ADD_CARD', payload: card });
 
-      if (state.currentSessionId) {
-        await supabaseService.addCardToSession(state.currentSessionId, card);
+      if (targetSessionId) {
+        console.log('Persisting card to session:', targetSessionId);
+        const success = await supabaseService.addCardToSession(targetSessionId, card);
+        console.log('Card persistence result:', success);
+      } else {
+        console.warn('No session ID for card persistence');
       }
     } else if (event.type === 'ARCHIVE_CARD') {
       dispatch({ type: 'ARCHIVE_CARD', payload: event.cardId });
@@ -297,6 +387,67 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Drawing persistence functions
+  const addDrawingToSession = useCallback(async (drawing: Drawing): Promise<boolean> => {
+    console.log('addDrawingToSession called:', { 
+      drawingId: drawing.id, 
+      currentSessionId: state.currentSessionId 
+    });
+    
+    if (!state.currentSessionId) {
+      console.warn('No current session ID for drawing persistence');
+      return false;
+    }
+    
+    const success = await supabaseService.addSessionDrawing(state.currentSessionId, drawing);
+    if (success) {
+      dispatch({ type: 'ADD_SESSION_DRAWING', payload: drawing });
+      console.log('Drawing added to session state');
+    }
+    return success;
+  }, [state.currentSessionId]);
+
+  const removeDrawingFromSession = useCallback(async (drawingId: string): Promise<boolean> => {
+    const success = await supabaseService.deleteSessionDrawing(drawingId);
+    if (success) {
+      dispatch({ type: 'REMOVE_SESSION_DRAWING', payload: drawingId });
+    }
+    return success;
+  }, []);
+
+  // Tag persistence functions
+  const addTagToSession = useCallback(async (
+    tag: DrawingTag,
+    drawing: Drawing
+  ): Promise<ChatTagWithSnapshot | null> => {
+    if (!state.currentSessionId) return null;
+    
+    const tagId = await supabaseService.addSessionTag(state.currentSessionId, tag, drawing);
+    if (!tagId) return null;
+
+    const newTag: ChatTagWithSnapshot = {
+      id: tagId,
+      drawingId: tagId,
+      type: tag.type,
+      label: tag.label,
+      snapshot: {
+        points: drawing.points,
+        color: drawing.color,
+      },
+    };
+    
+    dispatch({ type: 'ADD_SESSION_TAG', payload: newTag });
+    return newTag;
+  }, [state.currentSessionId]);
+
+  const removeTagFromSession = useCallback(async (tagId: string): Promise<boolean> => {
+    const success = await supabaseService.deleteSessionTag(tagId);
+    if (success) {
+      dispatch({ type: 'REMOVE_SESSION_TAG', payload: tagId });
+    }
+    return success;
+  }, []);
+
   const value = useMemo<ChatContextValue>(
     () => ({
       ...state,
@@ -313,6 +464,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       updateSession,
       deleteSession,
       refreshSessions,
+      addDrawingToSession,
+      removeDrawingFromSession,
+      addTagToSession,
+      removeTagFromSession,
     }),
     [
       state,
@@ -329,6 +484,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       updateSession,
       deleteSession,
       refreshSessions,
+      addDrawingToSession,
+      removeDrawingFromSession,
+      addTagToSession,
+      removeTagFromSession,
     ]
   );
 

@@ -3,6 +3,7 @@ import { ChatProvider } from './store/ChatContext';
 import { ThemeProvider, useTheme } from './store/ThemeContext';
 import { ViewModeProvider, useViewMode } from './store/ViewModeContext';
 import { DrawingToolsProvider } from './store/DrawingToolsContext';
+import { SessionSyncProvider } from './components/SessionSyncProvider';
 import { Sidebar } from './components/layout/Sidebar';
 import { MainArea } from './components/layout/MainArea';
 import { ExecutionsSidebar } from './components/layout/ExecutionsSidebar';
@@ -52,10 +53,12 @@ function App() {
         <ViewModeProvider>
           <DrawingToolsProvider>
             <ChatProvider>
-              <Routes>
-                <Route path="/" element={<MainLayout />} />
-                <Route path="/cards" element={<CardsPage />} />
-              </Routes>
+              <SessionSyncProvider>
+                <Routes>
+                  <Route path="/" element={<MainLayout />} />
+                  <Route path="/cards" element={<CardsPage />} />
+                </Routes>
+              </SessionSyncProvider>
             </ChatProvider>
           </DrawingToolsProvider>
         </ViewModeProvider>

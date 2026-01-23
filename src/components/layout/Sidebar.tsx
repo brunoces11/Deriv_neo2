@@ -51,7 +51,7 @@ interface SidebarProps {
 export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps) {
   const { favoriteCards, archivedCards, sessions, resetChat } = useChat();
   const { theme } = useTheme();
-  const { clearChatTags } = useDrawingTools();
+  const { clearChatTags, clearAllDrawings } = useDrawingTools();
   
   const [sidebarState, setSidebarState] = useState<SidebarState>(loadSidebarState);
   const { chatsOpen, favoritesOpen, archivedOpen } = sidebarState;
@@ -60,7 +60,8 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
   const handleNewChat = useCallback(() => {
     resetChat();
     clearChatTags();
-  }, [resetChat, clearChatTags]);
+    clearAllDrawings(); // Limpa os desenhos do chart também
+  }, [resetChat, clearChatTags, clearAllDrawings]);
 
   // Sync state across tabs/windows
   useEffect(() => {
