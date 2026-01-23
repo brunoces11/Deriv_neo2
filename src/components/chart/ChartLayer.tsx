@@ -97,9 +97,6 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   const [, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Indicator panel height
-  const INDICATOR_HEIGHT = 150;
-
   // Get sidebar width from ViewMode context
   const { executionsSidebarWidth, executionsSidebarCollapsed } = useViewMode();
   const sidebarWidth = executionsSidebarCollapsed ? 54 : executionsSidebarWidth;
@@ -422,7 +419,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
         rightOffset: 12,
         barSpacing: 8,
         minBarSpacing: 2,
-        visible: false, // Hide time scale on main chart, show on indicator
+        visible: true, // Show time scale on main chart
       },
       handleScroll: {
         mouseWheel: true,
@@ -834,39 +831,8 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
         className={`flex-1 pointer-events-auto ${activeTool !== 'none' ? 'cursor-crosshair' : ''}`} 
       />
 
-      {/* Indicator panel separator */}
-      <div className={`h-px ${theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-300'}`} />
-
-      {/* RSI + Volume indicator panel */}
-      <div className="relative pointer-events-auto" style={{ height: `${INDICATOR_HEIGHT}px` }}>
-        {/* RSI label */}
-        <div className={`absolute top-2 left-2 z-10 px-2 py-1 rounded text-xs font-medium ${
-          theme === 'dark' ? 'bg-zinc-800/80 text-purple-400' : 'bg-white/80 text-purple-600'
-        }`}>
-          RSI (14)
-        </div>
-        {/* Volume label */}
-        <div className={`absolute bottom-2 left-2 z-10 px-2 py-1 rounded text-xs font-medium ${
-          theme === 'dark' ? 'bg-zinc-800/80 text-zinc-400' : 'bg-white/80 text-gray-600'
-        }`}>
-          Volume
-        </div>
-        {/* RSI overbought/oversold lines indicator */}
-        <div className={`absolute top-2 right-16 z-10 flex items-center gap-2 text-xs ${
-          theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'
-        }`}>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-0.5 bg-red-500/50" />70
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-3 h-0.5 bg-green-500/50" />30
-          </span>
-        </div>
-        <div 
-          ref={indicatorContainerRef} 
-          className="w-full h-full"
-        />
-      </div>
+      {/* Indicator panel disabled - hidden div to maintain ref */}
+      <div ref={indicatorContainerRef} className="hidden" />
     </div>
   );
 }
