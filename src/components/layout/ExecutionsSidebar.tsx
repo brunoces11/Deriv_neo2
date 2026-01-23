@@ -4,7 +4,7 @@ import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import { ExecutionCard } from './ExecutionCard';
 import { ChatMessages } from '../chat/ChatMessages';
-import { ChatInput } from '../chat/ChatInput';
+import { ChatInput_NEO } from '../chat/ChatInput_NEO';
 
 interface ExecutionsSidebarProps {
   isCollapsed: boolean;
@@ -215,7 +215,7 @@ export function ExecutionsSidebar({
           <div className={`flex-shrink-0 p-[22px] border-t ${
             theme === 'dark' ? 'border-zinc-700 bg-zinc-900/80' : 'border-gray-200 bg-gray-100/50'
           }`}>
-            <ChatInput displayMode="sidebar" />
+            <ChatInput_NEO displayMode="sidebar" />
           </div>
         </div>
       ) : (

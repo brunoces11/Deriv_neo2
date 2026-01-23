@@ -184,7 +184,7 @@ export function UserProfile({ isCollapsed = false }: UserProfileProps) {
           </button>
 
           {isProfileOpen && (
-            <div className={`absolute bottom-full left-0 mb-2 w-56 rounded-xl shadow-xl border z-[100] ${
+            <div className={`absolute bottom-full mb-2 w-[253px] rounded-xl shadow-xl border z-[100] -left-[35px] ${
               theme === 'dark'
                 ? 'bg-zinc-800 border-zinc-700'
                 : 'bg-white border-gray-200'

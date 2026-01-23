@@ -1,5 +1,5 @@
 import { ChatMessages } from '../chat/ChatMessages';
-import { ChatInput } from '../chat/ChatInput';
+import { ChatInput_NEO } from '../chat/ChatInput_NEO';
 import { ActiveCards } from '../cards/ActiveCards';
 import { ModeToggle } from './ModeToggle';
 import { DrawingToolsPanel } from '../chart/DrawingToolsPanel';
@@ -59,7 +59,7 @@ export function MainArea({ isGraphMode }: MainAreaProps) {
             : 'border-gray-200 bg-white/80'
         }`}>
           <div className="max-w-3xl mx-auto w-full px-4 py-4">
-            <ChatInput />
+            <ChatInput_NEO />
           </div>
         </div>
       )}
