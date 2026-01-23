@@ -30,7 +30,6 @@ interface ChatInput_NEOProps {
 
 export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
   const [message, setMessage] = useState('');
-  const [isFocused, setIsFocused] = useState(false);
   const [autoMode, setAutoMode] = useState(true);
   const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
@@ -150,13 +149,19 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
 
   return (
     <div className="relative">
+      {/* Custom slow pulse animation */}
+      <style>{`
+        @keyframes slow-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+        .animate-slow-pulse {
+          animation: slow-pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+      `}</style>
       <div className={`relative rounded-2xl ${isSidebar ? 'shadow-lg shadow-black/20' : ''}`}>
         <div
-          className={`absolute -inset-[1px] rounded-2xl transition-all duration-300 ${
-            isFocused
-              ? 'bg-gradient-to-r from-red-500/50 via-rose-400/50 to-red-500/50 animate-pulse'
-              : 'bg-transparent'
-          }`}
+          className="absolute -inset-[1px] rounded-2xl bg-gradient-to-r from-red-500/50 via-rose-400/50 to-red-500/50 animate-slow-pulse"
         />
 
         <div className={`relative rounded-2xl border transition-colors ${
@@ -208,8 +213,6 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
               placeholder={isSidebar ? "Message..." : "Message FlowChat..."}
               rows={1}
               disabled={isTyping}

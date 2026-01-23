@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { createChart, ColorType, CandlestickSeries, CrosshairMode, LineSeries, HistogramSeries } from 'lightweight-charts';
+import { createChart, ColorType, CandlestickSeries, CrosshairMode } from 'lightweight-charts';
 import type { IChartApi, ISeriesApi, Time } from 'lightweight-charts';
 import { fetchKlinesWithVolume, type SupportedSymbol, type SupportedTimeframe, type KlineDataWithVolume } from '../../services/binanceApi';
 import { generateMockCandlestickData } from '../../services/mockChartData';
@@ -10,50 +10,6 @@ import { TrendLinePrimitive } from './primitives/TrendLinePrimitive';
 import { HorizontalLinePrimitive } from './primitives/HorizontalLinePrimitive';
 import { RectanglePrimitive } from './primitives/RectanglePrimitive';
 import type { DrawingPoint } from './primitives/types';
-
-// Calculate RSI
-function calculateRSI(closes: number[], period: number = 14): number[] {
-  const rsi: number[] = [];
-  if (closes.length < period + 1) return rsi;
-
-  let gains = 0;
-  let losses = 0;
-
-  // First RSI calculation
-  for (let i = 1; i <= period; i++) {
-    const change = closes[i] - closes[i - 1];
-    if (change >= 0) gains += change;
-    else losses -= change;
-  }
-
-  let avgGain = gains / period;
-  let avgLoss = losses / period;
-
-  // Fill initial values with null equivalent
-  for (let i = 0; i < period; i++) {
-    rsi.push(50); // neutral value for initial period
-  }
-
-  // Calculate RSI for remaining values
-  for (let i = period; i < closes.length; i++) {
-    if (i > period) {
-      const change = closes[i] - closes[i - 1];
-      const gain = change >= 0 ? change : 0;
-      const loss = change < 0 ? -change : 0;
-      avgGain = (avgGain * (period - 1) + gain) / period;
-      avgLoss = (avgLoss * (period - 1) + loss) / period;
-    }
-
-    if (avgLoss === 0) {
-      rsi.push(100);
-    } else {
-      const rs = avgGain / avgLoss;
-      rsi.push(100 - (100 / (1 + rs)));
-    }
-  }
-
-  return rsi;
-}
 
 // Helper function to calculate distance from point to line segment
 function distanceToLineSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
@@ -83,12 +39,8 @@ type PrimitiveInstance = TrendLinePrimitive | HorizontalLinePrimitive | Rectangl
 
 export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const indicatorContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const indicatorChartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
-  const rsiSeriesRef = useRef<ISeriesApi<'Line'> | null>(null);
-  const volumeSeriesRef = useRef<ISeriesApi<'Histogram'> | null>(null);
   const primitivesRef = useRef<Map<string, PrimitiveInstance>>(new Map());
   const rawDataRef = useRef<KlineDataWithVolume[]>([]);
 
@@ -144,6 +96,9 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
       const data = await fetchKlinesWithVolume({ symbol, timeframe, limit: 500 });
       rawDataRef.current = data;
       
+      // Check again in case component unmounted during fetch
+      if (!seriesRef.current) return;
+      
       // Set candlestick data
       seriesRef.current.setData(data.map(d => ({
         time: d.time,
@@ -153,42 +108,17 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
         close: d.close,
       })));
       
-      // Calculate and set RSI
-      if (rsiSeriesRef.current) {
-        const closes = data.map(d => d.close);
-        const rsiValues = calculateRSI(closes);
-        const rsiData = data.map((d, i) => ({
-          time: d.time,
-          value: rsiValues[i] ?? 50,
-        }));
-        rsiSeriesRef.current.setData(rsiData);
-      }
-      
-      // Set volume data with colors based on price direction
-      if (volumeSeriesRef.current) {
-        // Normalize volume to fit in RSI scale (0-50 range, bottom half)
-        const maxVolume = Math.max(...data.map(d => d.volume));
-        const volumeData = data.map((d) => {
-          const isUp = d.close >= d.open;
-          // Scale volume to 0-50 range (bottom half of RSI panel)
-          const normalizedVolume = (d.volume / maxVolume) * 50;
-          return {
-            time: d.time,
-            value: normalizedVolume,
-            color: isUp ? 'rgba(0, 182, 123, 0.5)' : 'rgba(255, 68, 79, 0.5)',
-          };
-        });
-        volumeSeriesRef.current.setData(volumeData);
-      }
-      
       chartRef.current?.timeScale().fitContent();
-      indicatorChartRef.current?.timeScale().fitContent();
     } catch (err) {
       console.error('Failed to load data:', err);
       setError('Failed to load data. Using mock data.');
-      const mockData = generateMockCandlestickData();
-      seriesRef.current.setData(mockData);
-      chartRef.current?.timeScale().fitContent();
+      
+      // Check if series still exists before setting mock data
+      if (seriesRef.current) {
+        const mockData = generateMockCandlestickData();
+        seriesRef.current.setData(mockData);
+        chartRef.current?.timeScale().fitContent();
+      }
     } finally {
       setIsLoading(false);
     }
@@ -378,7 +308,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
 
   // Initialize chart
   useEffect(() => {
-    if (!isVisible || !chartContainerRef.current || !indicatorContainerRef.current) return;
+    if (!isVisible || !chartContainerRef.current) return;
 
     // Main candlestick chart
     const chart = createChart(chartContainerRef.current, {
@@ -452,147 +382,14 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
 
     seriesRef.current = candlestickSeries;
 
-    // Indicator chart (RSI + Volume)
-    const indicatorChart = createChart(indicatorContainerRef.current, {
-      layout: {
-        background: { type: ColorType.Solid, color: 'transparent' },
-        textColor: theme === 'dark' ? '#a1a1aa' : '#52525b',
-        fontFamily: 'Inter, system-ui, sans-serif',
-      },
-      grid: {
-        vertLines: { color: theme === 'dark' ? '#27272a' : '#e4e4e7' },
-        horzLines: { color: theme === 'dark' ? '#27272a' : '#e4e4e7' },
-      },
-      crosshair: {
-        mode: CrosshairMode.Normal,
-        vertLine: {
-          color: '#ff444f',
-          width: 1,
-          style: 2,
-          labelBackgroundColor: '#ff444f',
-          labelVisible: true,
-        },
-        horzLine: {
-          color: '#ff444f',
-          width: 1,
-          style: 2,
-          labelBackgroundColor: '#ff444f',
-          labelVisible: false,
-        },
-      },
-      rightPriceScale: {
-        borderColor: theme === 'dark' ? '#27272a' : '#e4e4e7',
-        scaleMargins: { top: 0.1, bottom: 0.1 },
-      },
-      timeScale: {
-        borderColor: theme === 'dark' ? '#27272a' : '#e4e4e7',
-        timeVisible: true,
-        secondsVisible: false,
-        rightOffset: 12,
-        barSpacing: 8,
-        minBarSpacing: 2,
-      },
-      handleScroll: {
-        mouseWheel: true,
-        pressedMouseMove: true,
-        horzTouchDrag: true,
-        vertTouchDrag: true,
-      },
-      handleScale: {
-        axisPressedMouseMove: true,
-        mouseWheel: true,
-        pinch: true,
-      },
-      kineticScroll: { mouse: true, touch: true },
-      trackingMode: { exitMode: 1 },
-      autoSize: false,
-    });
-
-    indicatorChartRef.current = indicatorChart;
-
-    // Volume histogram (behind RSI)
-    const volumeSeries = indicatorChart.addSeries(HistogramSeries, {
-      priceFormat: { type: 'volume' },
-      priceScaleId: 'right',
-    });
-    volumeSeriesRef.current = volumeSeries;
-
-    // RSI line - using right price scale
-    const rsiSeries = indicatorChart.addSeries(LineSeries, {
-      color: '#8b5cf6',
-      lineWidth: 2,
-      priceScaleId: 'right',
-      lastValueVisible: true,
-      priceLineVisible: false,
-    });
-    rsiSeriesRef.current = rsiSeries;
-
-    // Configure the right price scale for RSI (0-100)
-    indicatorChart.priceScale('right').applyOptions({
-      scaleMargins: { top: 0.05, bottom: 0.05 },
-      autoScale: false,
-    });
-
-    // Set RSI scale to 0-100
-    rsiSeries.applyOptions({
-      autoscaleInfoProvider: () => ({
-        priceRange: { minValue: 0, maxValue: 100 },
-      }),
-    });
-
-    // Sync time scales bidirectionally
-    let isSyncing = false;
-    
-    chart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
-      if (range && !isSyncing) {
-        isSyncing = true;
-        indicatorChart.timeScale().setVisibleLogicalRange(range);
-        isSyncing = false;
-      }
-    });
-
-    indicatorChart.timeScale().subscribeVisibleLogicalRangeChange((range) => {
-      if (range && !isSyncing) {
-        isSyncing = true;
-        chart.timeScale().setVisibleLogicalRange(range);
-        isSyncing = false;
-      }
-    });
-
-    // Sync crosshair between charts
-    chart.subscribeCrosshairMove((param) => {
-      if (param.time) {
-        const rsiData = rsiSeries.data();
-        if (rsiData.length > 0) {
-          indicatorChart.setCrosshairPosition(50, param.time, rsiSeries);
-        }
-      } else {
-        indicatorChart.clearCrosshairPosition();
-      }
-    });
-
-    indicatorChart.subscribeCrosshairMove((param) => {
-      if (param.time) {
-        const candleData = candlestickSeries.data();
-        if (candleData.length > 0) {
-          chart.setCrosshairPosition(0, param.time, candlestickSeries);
-        }
-      } else {
-        chart.clearCrosshairPosition();
-      }
-    });
+    // Load initial data
+    loadData();
 
     const handleResize = () => {
       if (chartContainerRef.current && chartRef.current) {
         chartRef.current.applyOptions({
           width: chartContainerRef.current.clientWidth,
           height: chartContainerRef.current.clientHeight,
-        });
-      }
-      if (indicatorContainerRef.current && indicatorChartRef.current) {
-        indicatorChartRef.current.applyOptions({
-          width: indicatorContainerRef.current.clientWidth,
-          height: indicatorContainerRef.current.clientHeight,
         });
       }
     };
@@ -607,12 +404,6 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
         chartRef.current = null;
         seriesRef.current = null;
       }
-      if (indicatorChartRef.current) {
-        indicatorChartRef.current.remove();
-        indicatorChartRef.current = null;
-        rsiSeriesRef.current = null;
-        volumeSeriesRef.current = null;
-      }
     };
   }, [isVisible]);
 
@@ -622,12 +413,6 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
       chartRef.current.applyOptions({
         width: chartContainerRef.current.clientWidth,
         height: chartContainerRef.current.clientHeight,
-      });
-    }
-    if (indicatorContainerRef.current && indicatorChartRef.current) {
-      indicatorChartRef.current.applyOptions({
-        width: indicatorContainerRef.current.clientWidth,
-        height: indicatorContainerRef.current.clientHeight,
       });
     }
   }, [sidebarWidth]);
@@ -738,12 +523,12 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     }
   }, [drawings.length]);
 
-  // Load data when symbol or timeframe changes
+  // Load data when symbol or timeframe changes (after initial load)
   useEffect(() => {
-    if (isVisible && seriesRef.current) {
-      loadData();
-    }
-  }, [isVisible, symbol, timeframe, loadData]);
+    // Skip initial load (handled in chart initialization)
+    if (!chartRef.current || !seriesRef.current) return;
+    loadData();
+  }, [symbol, timeframe, loadData]);
 
   // Update theme
   useEffect(() => {
@@ -761,21 +546,6 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
       rightPriceScale: { borderColor: theme === 'dark' ? '#27272a' : '#e4e4e7' },
       timeScale: { borderColor: theme === 'dark' ? '#27272a' : '#e4e4e7' },
     });
-
-    if (indicatorChartRef.current) {
-      indicatorChartRef.current.applyOptions({
-        layout: {
-          background: { type: ColorType.Solid, color: 'transparent' },
-          textColor: theme === 'dark' ? '#a1a1aa' : '#52525b',
-        },
-        grid: {
-          vertLines: { color: theme === 'dark' ? '#27272a' : '#e4e4e7' },
-          horzLines: { color: theme === 'dark' ? '#27272a' : '#e4e4e7' },
-        },
-        rightPriceScale: { borderColor: theme === 'dark' ? '#27272a' : '#e4e4e7' },
-        timeScale: { borderColor: theme === 'dark' ? '#27272a' : '#e4e4e7' },
-      });
-    }
   }, [theme]);
 
   // Cancel drawing on Escape
@@ -830,9 +600,6 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
         ref={chartContainerRef} 
         className={`flex-1 pointer-events-auto ${activeTool !== 'none' ? 'cursor-crosshair' : ''}`} 
       />
-
-      {/* Indicator panel disabled - hidden div to maintain ref */}
-      <div ref={indicatorContainerRef} className="hidden" />
     </div>
   );
 }
