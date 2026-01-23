@@ -550,15 +550,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
       className="fixed inset-0 z-[5]"
       style={{ right: `${sidebarWidth}px` }}
     >
-      <ChartToolbar
-        symbol={symbol}
-        timeframe={timeframe}
-        onSymbolChange={setSymbol}
-        onTimeframeChange={setTimeframe}
-        onRefresh={loadData}
-        isLoading={isLoading}
-        theme={theme}
-      />
+      {/* ChartToolbar hidden - keeping only drawing tools */}
 
       {/* Error message */}
       {error && (

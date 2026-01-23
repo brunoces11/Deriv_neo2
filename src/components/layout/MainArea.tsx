@@ -27,13 +27,13 @@ export function MainArea({ isGraphMode }: MainAreaProps) {
         }`} />
       )}
 
-      {/* Mode Toggle - sempre interativo */}
-      <div className={`relative z-10 flex justify-end items-center gap-3 px-4 py-2 border-b pointer-events-auto ${
+      {/* Mode Toggle - sempre interativo, alinhado à esquerda */}
+      <div className={`relative z-10 flex justify-start items-center gap-3 px-4 py-2 border-b pointer-events-auto ${
         theme === 'dark' ? 'border-zinc-800/30' : 'border-gray-100'
       } ${isGraphMode ? 'border-transparent' : ''}`} style={{ marginTop: '7px' }}>
-        {/* Drawing Tools - só aparece em Graph Mode, à esquerda do ModeToggle */}
-        {isGraphMode && <DrawingToolsPanel />}
         <ModeToggle />
+        {/* Drawing Tools - só aparece em Graph Mode, à direita do ModeToggle */}
+        {isGraphMode && <DrawingToolsPanel />}
       </div>
 
       <div className={`flex-1 flex flex-col relative z-10 overflow-hidden ${isGraphMode ? 'pointer-events-none' : ''}`}>
