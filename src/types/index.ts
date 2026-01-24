@@ -1,4 +1,4 @@
-export type CardType = 'intent-summary' | 'action-ticket' | 'bot' | 'portfolio-snapshot' | 'portfolio-table';
+export type CardType = 'intent-summary' | 'action-ticket' | 'bot' | 'portfolio-snapshot' | 'portfolio-table' | 'portfolio-sidebar' | 'portfolio-table-expanded' | 'portfolio-table-complete';
 
 export type CardStatus = 'active' | 'archived' | 'hidden';
 

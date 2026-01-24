@@ -1,5 +1,6 @@
 import { useRef, useEffect } from 'react';
 import { User, Bot, Loader2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import type { ChatMessage } from '../../types';
@@ -78,9 +79,45 @@ function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
                     : 'bg-gray-50 text-gray-800 rounded-tl-md'
             }`}
           >
-            <p className={`leading-relaxed whitespace-pre-wrap ${isSidebar ? 'text-[13px]' : 'text-sm'}`}>
-              {message.content}
-            </p>
+            <div className={`prose prose-sm max-w-none leading-relaxed ${isSidebar ? 'text-[13px]' : 'text-sm'} ${
+              theme === 'dark' ? 'prose-invert' : ''
+            }`}>
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                  ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
+                  li: ({ children }) => <li className="mb-1">{children}</li>,
+                  code: ({ children }) => (
+                    <code className={`px-1 py-0.5 rounded text-xs ${
+                      theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
+                    }`}>{children}</code>
+                  ),
+                  pre: ({ children }) => (
+                    <pre className={`p-2 rounded overflow-x-auto text-xs mb-2 ${
+                      theme === 'dark' ? 'bg-zinc-900' : 'bg-gray-100'
+                    }`}>{children}</pre>
+                  ),
+                  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                  em: ({ children }) => <em className="italic">{children}</em>,
+                  h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
+                  h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
+                  a: ({ href, children }) => (
+                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:underline">
+                      {children}
+                    </a>
+                  ),
+                  blockquote: ({ children }) => (
+                    <blockquote className={`border-l-2 pl-3 italic mb-2 ${
+                      theme === 'dark' ? 'border-zinc-600 text-zinc-400' : 'border-gray-300 text-gray-600'
+                    }`}>{children}</blockquote>
+                  ),
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
+            </div>
           </div>
           <p className={`mt-1 px-1 transition-colors ${
             isSidebar ? 'text-[10px]' : 'text-xs'
