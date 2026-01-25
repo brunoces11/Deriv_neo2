@@ -3,7 +3,6 @@ import { Bot, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
-import { DRAWING_COLORS } from '../../store/DrawingToolsContext';
 import type { ChatMessage } from '../../types';
 
 // URL da foto do usuário (mesma usada no UserProfile)
@@ -29,17 +28,17 @@ function TagBadge({ tagName, tagNumber }: { tagName: string; tagNumber?: string 
   if (!drawingType) {
     // Tag desconhecida - renderiza com estilo genérico
     return (
-      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-500/20 text-zinc-300 border border-zinc-500/30">
+      <span className="inline-flex items-center px-2 py-px rounded-full text-xs font-medium bg-zinc-500/25 text-zinc-800 border border-zinc-500/40">
         @{tagName}{tagNumber ? `-${tagNumber}` : ''}
       </span>
     );
   }
 
-  const colors = DRAWING_COLORS[drawingType];
   const label = tagNumber ? `${tagName}-${tagNumber}` : tagName;
 
+  // Todas as tags usam azul com texto escuro para legibilidade
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors.tagBg} ${colors.tagText} border ${colors.tagBorder}`}>
+    <span className="inline-flex items-center px-2 py-px rounded-full text-xs font-medium bg-blue-500/25 text-blue-900 border border-blue-500/40">
       @{label}
     </span>
   );

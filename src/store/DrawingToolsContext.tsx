@@ -50,7 +50,18 @@ interface DrawingToolsContextValue {
 
 const DrawingToolsContext = createContext<DrawingToolsContextValue | null>(null);
 
-// Drawing colors by type
+// Drawing colors by type - ALL use the same blue color
+const BLUE_COLOR = {
+  color: '#3b82f6',           // Blue vivo
+  selectedColor: '#60a5fa',   // Blue mais claro quando selecionado
+  tagBg: 'bg-blue-500/20',
+  tagBgSelected: 'bg-blue-600/30',
+  tagText: 'text-blue-300',
+  tagTextSelected: 'text-blue-200',
+  tagBorder: 'border-blue-500/30',
+  tagBorderSelected: 'border-blue-900/80',
+};
+
 export const DRAWING_COLORS: Record<Exclude<DrawingTool, 'none'>, { 
   color: string; 
   selectedColor: string; 
@@ -61,46 +72,10 @@ export const DRAWING_COLORS: Record<Exclude<DrawingTool, 'none'>, {
   tagBorderSelected: string;
   tagBgSelected: string;
 }> = {
-  trendline: {
-    color: '#3b82f6',           // Blue escuro
-    selectedColor: '#60a5fa',   // Blue mais claro quando selecionado
-    tagBg: 'bg-blue-500/20',
-    tagBgSelected: 'bg-blue-600/30',
-    tagText: 'text-blue-300',   // 13% mais escuro que text-blue-400
-    tagTextSelected: 'text-blue-200',
-    tagBorder: 'border-blue-500/30',
-    tagBorderSelected: 'border-blue-900/80',
-  },
-  horizontal: {
-    color: '#a1a1aa',           // Cinza 50%
-    selectedColor: '#d4d4d8',   // Cinza mais claro quando selecionado
-    tagBg: 'bg-zinc-500/20',
-    tagBgSelected: 'bg-zinc-600/30',
-    tagText: 'text-zinc-400',
-    tagTextSelected: 'text-zinc-300',
-    tagBorder: 'border-zinc-500/30',
-    tagBorderSelected: 'border-zinc-800/80',
-  },
-  rectangle: {
-    color: '#22d3ee',           // Cyan claro
-    selectedColor: '#67e8f9',   // Cyan mais claro quando selecionado
-    tagBg: 'bg-cyan-500/20',
-    tagBgSelected: 'bg-cyan-600/30',
-    tagText: 'text-cyan-300',   // 18% mais escuro que text-cyan-400
-    tagTextSelected: 'text-cyan-200',
-    tagBorder: 'border-cyan-500/30',
-    tagBorderSelected: 'border-cyan-900/80',
-  },
-  note: {
-    color: '#a855f7',           // Purple
-    selectedColor: '#c084fc',   // Purple mais claro quando selecionado
-    tagBg: 'bg-purple-500/20',
-    tagBgSelected: 'bg-purple-600/30',
-    tagText: 'text-purple-300',
-    tagTextSelected: 'text-purple-200',
-    tagBorder: 'border-purple-500/30',
-    tagBorderSelected: 'border-purple-900/80',
-  },
+  trendline: BLUE_COLOR,
+  horizontal: BLUE_COLOR,
+  rectangle: BLUE_COLOR,
+  note: BLUE_COLOR,
 };
 
 // Helper to generate label

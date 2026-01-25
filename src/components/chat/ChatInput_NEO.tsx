@@ -40,12 +40,13 @@ function getDrawingTypeFromTagName(tagName: string): 'trendline' | 'horizontal' 
   return null;
 }
 
-// Cores inline para tags (convertidas de Tailwind)
+// Cores inline para tags - todas usam o mesmo azul
+// Texto azul bem escuro (#1e3a5f) para melhor legibilidade
 const TAG_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  trendline: { bg: 'rgba(59, 130, 246, 0.2)', text: '#93c5fd', border: 'rgba(59, 130, 246, 0.3)' },
-  horizontal: { bg: 'rgba(161, 161, 170, 0.2)', text: '#a1a1aa', border: 'rgba(161, 161, 170, 0.3)' },
-  rectangle: { bg: 'rgba(34, 211, 238, 0.2)', text: '#67e8f9', border: 'rgba(34, 211, 238, 0.3)' },
-  note: { bg: 'rgba(168, 85, 247, 0.2)', text: '#c4b5fd', border: 'rgba(168, 85, 247, 0.3)' },
+  trendline: { bg: 'rgba(59, 130, 246, 0.25)', text: '#1e3a5f', border: 'rgba(59, 130, 246, 0.4)' },
+  horizontal: { bg: 'rgba(59, 130, 246, 0.25)', text: '#1e3a5f', border: 'rgba(59, 130, 246, 0.4)' },
+  rectangle: { bg: 'rgba(59, 130, 246, 0.25)', text: '#1e3a5f', border: 'rgba(59, 130, 246, 0.4)' },
+  note: { bg: 'rgba(59, 130, 246, 0.25)', text: '#1e3a5f', border: 'rgba(59, 130, 246, 0.4)' },
 };
 
 // Gera HTML para uma tag estilizada
@@ -54,13 +55,13 @@ function generateTagHTML(tagName: string, tagNumber: string, theme: 'dark' | 'li
   const label = `${tagName}-${tagNumber}`;
   
   if (!drawingType) {
-    // Tag desconhecida - estilo genérico
-    return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; background: rgba(113, 113, 122, 0.2); color: ${theme === 'dark' ? '#a1a1aa' : '#71717a'}; border: 1px solid rgba(113, 113, 122, 0.3); margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
+    // Tag desconhecida - estilo genérico (altura reduzida 12%)
+    return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; background: rgba(113, 113, 122, 0.25); color: #3d3d3d; border: 1px solid rgba(113, 113, 122, 0.4); margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
   }
 
   const c = TAG_COLORS[drawingType];
   
-  return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; background: ${c.bg}; color: ${c.text}; border: 1px solid ${c.border}; margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
+  return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; background: ${c.bg}; color: ${c.text}; border: 1px solid ${c.border}; margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
 }
 
 // Converte texto com tags para HTML renderizado
