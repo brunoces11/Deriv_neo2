@@ -3,10 +3,79 @@ import { Bot, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
+import { DRAWING_COLORS } from '../../store/DrawingToolsContext';
 import type { ChatMessage } from '../../types';
 
 // URL da foto do usuário (mesma usada no UserProfile)
 const USER_AVATAR_URL = "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=200";
+
+// Regex para detectar tags no formato [@TagName-N] ou [@TagName]
+const TAG_REGEX = /\[@([A-Za-z]+)(?:-(\d+))?\]/g;
+
+// Mapeia nomes de tags para tipos de drawing
+function getDrawingTypeFromTagName(tagName: string): 'trendline' | 'horizontal' | 'rectangle' | 'note' | null {
+  const normalized = tagName.toLowerCase();
+  if (normalized === 'trendline') return 'trendline';
+  if (normalized === 'horizontal') return 'horizontal';
+  if (normalized === 'rectangle') return 'rectangle';
+  if (normalized === 'note') return 'note';
+  return null;
+}
+
+// Componente para renderizar uma tag estilizada
+function TagBadge({ tagName, tagNumber }: { tagName: string; tagNumber?: string }) {
+  const drawingType = getDrawingTypeFromTagName(tagName);
+  
+  if (!drawingType) {
+    // Tag desconhecida - renderiza com estilo genérico
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-500/20 text-zinc-300 border border-zinc-500/30">
+        @{tagName}{tagNumber ? `-${tagNumber}` : ''}
+      </span>
+    );
+  }
+
+  const colors = DRAWING_COLORS[drawingType];
+  const label = tagNumber ? `${tagName}-${tagNumber}` : tagName;
+
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors.tagBg} ${colors.tagText} border ${colors.tagBorder}`}>
+      @{label}
+    </span>
+  );
+}
+
+// Função para parsear texto e substituir tags por componentes
+function parseMessageWithTags(content: string): (string | JSX.Element)[] {
+  const parts: (string | JSX.Element)[] = [];
+  let lastIndex = 0;
+  let match;
+  let keyIndex = 0;
+
+  // Reset regex
+  TAG_REGEX.lastIndex = 0;
+
+  while ((match = TAG_REGEX.exec(content)) !== null) {
+    // Adiciona texto antes da tag
+    if (match.index > lastIndex) {
+      parts.push(content.slice(lastIndex, match.index));
+    }
+
+    // Adiciona a tag como componente
+    const tagName = match[1];
+    const tagNumber = match[2];
+    parts.push(<TagBadge key={`tag-${keyIndex++}`} tagName={tagName} tagNumber={tagNumber} />);
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Adiciona texto restante após a última tag
+  if (lastIndex < content.length) {
+    parts.push(content.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : [content];
+}
 
 interface ChatMessagesProps {
   displayMode?: 'center' | 'sidebar';
@@ -93,41 +162,47 @@ function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
             <div className={`prose prose-sm max-w-none leading-relaxed ${isSidebar ? 'text-[13px]' : 'text-sm'} ${
               theme === 'dark' ? 'prose-invert' : ''
             }`}>
-              <ReactMarkdown
-                components={{
-                  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                  ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
-                  ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
-                  li: ({ children }) => <li className="mb-1">{children}</li>,
-                  code: ({ children }) => (
-                    <code className={`px-1 py-0.5 rounded text-xs ${
-                      theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
-                    }`}>{children}</code>
-                  ),
-                  pre: ({ children }) => (
-                    <pre className={`p-2 rounded overflow-x-auto text-xs mb-2 ${
-                      theme === 'dark' ? 'bg-zinc-900' : 'bg-gray-100'
-                    }`}>{children}</pre>
-                  ),
-                  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                  em: ({ children }) => <em className="italic">{children}</em>,
-                  h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
-                  h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
-                  h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
-                  a: ({ href, children }) => (
-                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:underline">
-                      {children}
-                    </a>
-                  ),
-                  blockquote: ({ children }) => (
-                    <blockquote className={`border-l-2 pl-3 italic mb-2 ${
-                      theme === 'dark' ? 'border-zinc-600 text-zinc-400' : 'border-gray-300 text-gray-600'
-                    }`}>{children}</blockquote>
-                  ),
-                }}
-              >
-                {message.content}
-              </ReactMarkdown>
+              {isUser ? (
+                // Para mensagens do usuário, renderiza tags como badges
+                <p className="mb-0">{parseMessageWithTags(message.content)}</p>
+              ) : (
+                // Para mensagens da IA, usa ReactMarkdown
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                    ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
+                    li: ({ children }) => <li className="mb-1">{children}</li>,
+                    code: ({ children }) => (
+                      <code className={`px-1 py-0.5 rounded text-xs ${
+                        theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
+                      }`}>{children}</code>
+                    ),
+                    pre: ({ children }) => (
+                      <pre className={`p-2 rounded overflow-x-auto text-xs mb-2 ${
+                        theme === 'dark' ? 'bg-zinc-900' : 'bg-gray-100'
+                      }`}>{children}</pre>
+                    ),
+                    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                    em: ({ children }) => <em className="italic">{children}</em>,
+                    h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
+                    a: ({ href, children }) => (
+                      <a href={href} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:underline">
+                        {children}
+                      </a>
+                    ),
+                    blockquote: ({ children }) => (
+                      <blockquote className={`border-l-2 pl-3 italic mb-2 ${
+                        theme === 'dark' ? 'border-zinc-600 text-zinc-400' : 'border-gray-300 text-gray-600'
+                      }`}>{children}</blockquote>
+                    ),
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
+              )}
             </div>
           </div>
           <p className={`mt-1 px-1 transition-colors ${
