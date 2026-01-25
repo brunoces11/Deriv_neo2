@@ -182,28 +182,23 @@ export function ExecutionsSidebar({
       {/* Header */}
       <div className={`p-4 border-b transition-colors ${theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'}`}>
         <div className="flex items-center gap-3">
-          {!showCollapsedContent && (
-            <button 
-              onClick={onToggleCollapse} 
-              className={`p-1.5 rounded-lg transition-colors ${
-                theme === 'dark' ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
-              }`} 
-              title="Collapse sidebar"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          )}
-          {showCollapsedContent && (
-            <button 
-              onClick={onToggleCollapse} 
-              className={`absolute -left-3 top-5 p-1 rounded-full shadow-md transition-colors z-[70] ${
-                theme === 'dark' ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700' : 'bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-700 border border-gray-200'
-              }`} 
-              title="Expand sidebar"
-            >
+          {/* Collapse/Expand button - always on the border */}
+          <button 
+            onClick={onToggleCollapse} 
+            className={`absolute -left-3 top-5 p-1 rounded-full shadow-md transition-colors z-[70] ${
+              theme === 'dark' 
+                ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700' 
+                : 'bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-700 border border-gray-200'
+            }`} 
+            title={showCollapsedContent ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {showCollapsedContent ? (
               <ChevronLeft className="w-3 h-3" />
-            </button>
-          )}
+            ) : (
+              <ChevronRight className="w-3 h-3" />
+            )}
+          </button>
+          
           <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${theme === 'dark' ? 'bg-red-500/10' : 'bg-red-50'}`}>
             <Zap className="w-4 h-4 text-red-500" />
           </div>
