@@ -252,13 +252,13 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
             theme === 'dark' ? 'border-zinc-700/50' : 'border-gray-100'
           }`}>
             {/* Left side: Controls */}
-            <div className="flex items-center gap-2">
-              {/* 1. Auto Mode Switch (first element) */}
-              <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-2 min-w-0">
+              {/* 1. Auto Mode Switch (first element) - SWITCH BUTTON is FIXED SIZE, text can wrap */}
+              <div className="flex items-center gap-1.5 min-w-0">
                 <button
                   type="button"
                   onClick={() => setAutoMode(!autoMode)}
-                  className={`relative w-9 h-5 rounded-full transition-colors ${
+                  className={`relative w-9 h-5 flex-shrink-0 rounded-full transition-colors ${
                     autoMode 
                       ? 'bg-red-500' 
                       : theme === 'dark' ? 'bg-zinc-600' : 'bg-gray-300'
@@ -268,7 +268,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
                     autoMode ? 'left-[18px]' : 'left-0.5'
                   }`} />
                 </button>
-                <span className={`text-xs font-medium ${
+                <span className={`text-xs font-medium min-w-0 ${
                   theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'
                 }`}>
                   Auto Mode
@@ -276,24 +276,24 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
               </div>
 
               {/* Divider */}
-              <div className={`w-px h-5 ${theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'}`} />
+              <div className={`w-px h-5 flex-shrink-0 ${theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'}`} />
 
-              {/* 2. Select Agent Dropdown */}
-              <div className="relative" ref={agentDropdownRef}>
+              {/* 2. Select Agent Dropdown - can shrink and wrap text */}
+              <div className="relative min-w-0" ref={agentDropdownRef}>
                 <button
                   type="button"
                   onClick={() => {
                     setIsAgentDropdownOpen(!isAgentDropdownOpen);
                     setIsProductDropdownOpen(false);
                   }}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors ${
+                  className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-colors min-w-0 ${
                     theme === 'dark'
                       ? 'hover:bg-zinc-700 text-zinc-400'
                       : 'hover:bg-gray-100 text-gray-500'
                   }`}
                 >
-                  <span>Select Agent</span>
-                  <ChevronDown className="w-3 h-3" />
+                  <span className="min-w-0">Select Agent</span>
+                  <ChevronDown className="w-3 h-3 flex-shrink-0" />
                 </button>
 
                 {isAgentDropdownOpen && (
@@ -379,11 +379,11 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
             </div>
 
             {/* Right side: Attachment + Microphone + Send button */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               {/* Attachment */}
               <button
                 type="button"
-                className={`p-1.5 rounded-lg transition-colors ${
+                className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
                   theme === 'dark' 
                     ? 'hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200' 
                     : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
@@ -396,7 +396,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
               {/* Microphone */}
               <button
                 type="button"
-                className={`p-1.5 rounded-lg transition-colors ${
+                className={`p-1.5 rounded-lg transition-colors flex-shrink-0 ${
                   theme === 'dark' 
                     ? 'hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200' 
                     : 'hover:bg-gray-100 text-gray-500 hover:text-gray-700'
