@@ -21,6 +21,10 @@ const MAX_WIDTH = 900;
 const SNAP_THRESHOLD = 100;
 const MIN_WIDTH_GRAPH_MODE = 270;
 
+// Vertical resize constants
+const MIN_EXECUTIONS_HEIGHT = 100;
+const MAX_EXECUTIONS_PERCENT = 70; // Max 70% of available height
+
 export function ExecutionsSidebar({ 
   isCollapsed, 
   width: propWidth,
@@ -34,7 +38,10 @@ export function ExecutionsSidebar({
   const { theme } = useTheme();
   const [localWidth, setLocalWidth] = useState(propWidth);
   const [isResizing, setIsResizing] = useState(false);
+  const [executionsHeight, setExecutionsHeight] = useState(200); // Default height in pixels
+  const [isVerticalResizing, setIsVerticalResizing] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const finalWidthRef = useRef(propWidth);
 
   // Sincronizar com prop width quando não está em resize
@@ -110,6 +117,40 @@ export function ExecutionsSidebar({
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
   }, [localWidth, isCollapsed, onResizeStart, onResizeEnd, onResize, onToggleCollapse]);
+
+  // Vertical resize handler
+  const handleVerticalMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsVerticalResizing(true);
+    
+    const startY = e.clientY;
+    const startHeight = executionsHeight;
+    const containerHeight = contentRef.current?.clientHeight || 500;
+    const maxHeight = containerHeight * (MAX_EXECUTIONS_PERCENT / 100);
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const delta = e.clientY - startY;
+      let newHeight = startHeight + delta;
+      
+      // Clamp to min/max
+      newHeight = Math.max(MIN_EXECUTIONS_HEIGHT, Math.min(maxHeight, newHeight));
+      setExecutionsHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      setIsVerticalResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+  }, [executionsHeight]);
 
   // Width visual: durante resize sempre usa localWidth, senão respeita collapsed
   const displayWidth = isResizing ? localWidth : (isCollapsed ? COLLAPSED_WIDTH : localWidth);
@@ -187,11 +228,12 @@ export function ExecutionsSidebar({
       {/* Cards List - Chat Mode: apenas executions, Graph Mode: executions + chat */}
       {isGraphMode && !showCollapsedContent ? (
         // Graph Mode Layout: 3 seções
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div ref={contentRef} className="flex-1 flex flex-col overflow-hidden">
           {/* Executions Section */}
-          <div className={`max-h-[40%] overflow-y-auto custom-scrollbar p-3 border-b ${
-            theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'
-          }`}>
+          <div 
+            className="overflow-y-auto custom-scrollbar p-3"
+            style={{ height: executionsHeight, minHeight: MIN_EXECUTIONS_HEIGHT }}
+          >
             {activeCards.length === 0 ? (
               <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
                 <Zap className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
@@ -204,6 +246,22 @@ export function ExecutionsSidebar({
                 ))}
               </div>
             )}
+          </div>
+
+          {/* Vertical Resize Handle */}
+          <div
+            onMouseDown={handleVerticalMouseDown}
+            className={`relative h-2 cursor-ns-resize group flex-shrink-0 ${
+              theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-200'
+            }`}
+          >
+            <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-1 rounded-full transition-colors ${
+              isVerticalResizing 
+                ? 'bg-red-500' 
+                : theme === 'dark' 
+                  ? 'bg-zinc-600 group-hover:bg-red-400' 
+                  : 'bg-gray-400 group-hover:bg-red-400'
+            }`} />
           </div>
 
           {/* Chat Messages Section */}
