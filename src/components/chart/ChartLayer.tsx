@@ -51,6 +51,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   const [timeframe] = useState<SupportedTimeframe>('1D');
   const [, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [chartReady, setChartReady] = useState(false);
 
   // Drawing state
   const { activeTool, addDrawing, drawings, setActiveTool, selectDrawing, selectedDrawingId, removeDrawing, addTagToChat } = useDrawingTools();
@@ -186,7 +187,17 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
         close: d.close,
       })));
       
-      chartRef.current?.timeScale().fitContent();
+      // Show last ~70 candles for better readability
+      const visibleBars = 70;
+      const totalBars = data.length;
+      if (totalBars > visibleBars) {
+        chartRef.current?.timeScale().setVisibleLogicalRange({
+          from: totalBars - visibleBars,
+          to: totalBars + 5, // Small offset for right padding
+        });
+      } else {
+        chartRef.current?.timeScale().fitContent();
+      }
     } catch (err) {
       console.error('Failed to load data:', err);
       setError('Failed to load data. Using mock data.');
@@ -195,7 +206,18 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
       if (seriesRef.current) {
         const mockData = generateMockCandlestickData();
         seriesRef.current.setData(mockData);
-        chartRef.current?.timeScale().fitContent();
+        
+        // Show last ~70 candles for better readability
+        const visibleBars = 70;
+        const totalBars = mockData.length;
+        if (totalBars > visibleBars) {
+          chartRef.current?.timeScale().setVisibleLogicalRange({
+            from: totalBars - visibleBars,
+            to: totalBars + 5,
+          });
+        } else {
+          chartRef.current?.timeScale().fitContent();
+        }
       }
     } finally {
       setIsLoading(false);
@@ -445,8 +467,8 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
         timeVisible: true,
         secondsVisible: false,
         rightOffset: 12,
-        barSpacing: 8,
-        minBarSpacing: 2,
+        barSpacing: 14, // Increased for better visibility (~70 candles)
+        minBarSpacing: 4,
         visible: true, // Show time scale on main chart
       },
       handleScroll: {
@@ -479,6 +501,10 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     });
 
     seriesRef.current = candlestickSeries;
+    
+    // Mark chart as ready for event listeners
+    setChartReady(true);
+    console.log('[ChartLayer] Chart marked as ready');
 
     // Load initial data
     loadData();
@@ -506,6 +532,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     return () => {
       window.removeEventListener('resize', handleResize);
       chart.timeScale().unsubscribeVisibleLogicalRangeChange(updateMenuPosition);
+      setChartReady(false);
       if (chartRef.current) {
         chartRef.current.remove();
         chartRef.current = null;
@@ -524,12 +551,19 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     }
   }, [sidebarWidth]);
 
-  // Attach click and mousemove handlers
+  // Attach click and mousemove handlers - wait for chart to be ready
   useEffect(() => {
     const container = chartContainerRef.current;
-    console.log('[ChartLayer] Attaching event listeners, container:', !!container);
-    if (!container) {
-      console.warn('[ChartLayer] No container ref, cannot attach event listeners');
+    
+    console.log('[ChartLayer] Attaching event listeners check:', {
+      container: !!container,
+      chartReady,
+      isVisible
+    });
+    
+    // Only attach listeners when chart is fully initialized
+    if (!container || !chartReady) {
+      console.warn('[ChartLayer] Chart not ready yet, skipping event listener attachment');
       return;
     }
 
@@ -542,7 +576,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
       container.removeEventListener('click', handleChartClick);
       container.removeEventListener('mousemove', handleChartMouseMove);
     };
-  }, [handleChartClick, handleChartMouseMove]);
+  }, [handleChartClick, handleChartMouseMove, chartReady]);
 
   // Clean up preview when tool changes
   useEffect(() => {
