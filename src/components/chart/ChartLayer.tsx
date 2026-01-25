@@ -9,6 +9,7 @@ import { useChat } from '../../store/ChatContext';
 import { TrendLinePrimitive } from './primitives/TrendLinePrimitive';
 import { HorizontalLinePrimitive } from './primitives/HorizontalLinePrimitive';
 import { RectanglePrimitive } from './primitives/RectanglePrimitive';
+import { NotePrimitive } from './primitives/NotePrimitive';
 import type { DrawingPoint } from './primitives/types';
 import { MessageSquare, Trash2 } from 'lucide-react';
 
@@ -36,7 +37,7 @@ interface ChartLayerProps {
   theme: 'dark' | 'light';
 }
 
-type PrimitiveInstance = TrendLinePrimitive | HorizontalLinePrimitive | RectanglePrimitive;
+type PrimitiveInstance = TrendLinePrimitive | HorizontalLinePrimitive | RectanglePrimitive | NotePrimitive;
 
 export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   console.log('[ChartLayer] Render, isVisible:', isVisible);
@@ -64,6 +65,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   const [pendingPoint, setPendingPoint] = useState<DrawingPoint | null>(null);
   const [previewPrimitive, setPreviewPrimitive] = useState<PrimitiveInstance | null>(null);
   const [menuUpdateTrigger, setMenuUpdateTrigger] = useState(0);
+  const [noteInputText, setNoteInputText] = useState('');
   const activeToolRef = useRef(activeTool);
   const pendingPointRef = useRef(pendingPoint);
   const drawingsRef = useRef(drawings);
@@ -113,6 +115,13 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
       if (priceY === null) return null;
       menuX = containerRect.width / 2; // Position at center
       menuY = priceY;
+    } else if (selectedDrawing.type === 'note' && selectedDrawing.points.length >= 1) {
+      // For note, position to the right of the note icon (offset by 25px to not overlap)
+      const x = timeScale.timeToCoordinate(selectedDrawing.points[0].time as Time);
+      const y = series.priceToCoordinate(selectedDrawing.points[0].price);
+      if (x === null || y === null) return null;
+      menuX = x + 25; // Position to the right of the note icon
+      menuY = y - 20; // Slightly above center
     } else if (selectedDrawing.type === 'trendline' && selectedDrawing.points.length >= 2) {
       // For trendline, position at the second point (end point)
       const x2 = timeScale.timeToCoordinate(selectedDrawing.points[1].time as Time);
@@ -270,6 +279,16 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
         if (drawingY !== null && Math.abs(localY - drawingY) < threshold) {
           return drawing.id;
         }
+      } else if (drawing.type === 'note' && drawing.points.length >= 1) {
+        // Note is a point - check if click is within note icon area (20x20 pixels)
+        const noteX = timeScale.timeToCoordinate(drawing.points[0].time as Time);
+        const noteY = series.priceToCoordinate(drawing.points[0].price);
+        if (noteX !== null && noteY !== null) {
+          const noteThreshold = 15; // Larger threshold for note icon
+          if (Math.abs(localX - noteX) < noteThreshold && Math.abs(localY - noteY) < noteThreshold) {
+            return drawing.id;
+          }
+        }
       } else if (drawing.type === 'trendline' && drawing.points.length >= 2) {
         const x1 = timeScale.timeToCoordinate(drawing.points[0].time as Time);
         const y1 = series.priceToCoordinate(drawing.points[0].price);
@@ -343,6 +362,23 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
       } else {
         console.warn('No session ID available for drawing persistence');
       }
+    } else if (tool === 'note') {
+      // Note needs only 1 click - creates a note at the clicked position
+      const newDrawing = addDrawing({
+        type: 'note',
+        points: [{ time: coords.time as number, price: coords.price }],
+        color: DRAWING_COLORS.note.color,
+        text: '', // Empty text initially, user will edit
+      });
+      // Select the note immediately so user can edit it
+      selectDrawing(newDrawing.id);
+      // Persist to session if active
+      if (sessionIdForPersistence) {
+        console.log('Persisting note drawing to session:', sessionIdForPersistence);
+        addDrawingToSession(newDrawing);
+      } else {
+        console.warn('No session ID available for drawing persistence');
+      }
     } else if (tool === 'trendline' || tool === 'rectangle') {
       // Trend line and rectangle need 2 clicks
       const pending = pendingPointRef.current;
@@ -380,7 +416,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     const pending = pendingPointRef.current;
     
     if (tool === 'none' || !pending) return;
-    if (tool === 'horizontal') return; // No preview for horizontal
+    if (tool === 'horizontal' || tool === 'note') return; // No preview for horizontal or note
 
     const coords = pixelToChartCoords(e.clientX, e.clientY);
     if (!coords) return;
@@ -651,6 +687,13 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
           lineWidth: isSelected ? selectedLineWidth : 1,
           showHandles: isSelected,
         });
+      } else if (drawing.type === 'note' && drawing.points.length >= 1) {
+        primitive = new NotePrimitive(drawing.id, {
+          point: { time: drawing.points[0].time as Time, price: drawing.points[0].price },
+          color: displayColor,
+          text: drawing.text || '',
+          showHandles: isSelected,
+        });
       }
 
       if (primitive) {
@@ -754,56 +797,93 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
       />
 
       {/* Floating menu for selected drawing */}
-      {selectedDrawingId && floatingMenuPosition && (
-        <div
-          className={`absolute z-30 pointer-events-auto flex items-center gap-1 p-1 rounded-full shadow-lg transition-all ${
-            theme === 'dark'
-              ? 'bg-zinc-800 border border-zinc-700/50'
-              : 'bg-white border border-gray-200'
-          }`}
-          style={{
-            left: `${floatingMenuPosition.x}px`,
-            top: `${floatingMenuPosition.y}px`,
-          }}
-        >
-          {/* Send to Chat button */}
-          <button
-            onClick={handleSendToChat}
-            className={`group relative flex items-center justify-center w-7 h-7 rounded-full transition-all ${
+      {selectedDrawingId && floatingMenuPosition && (() => {
+        const selectedDrawing = drawings.find(d => d.id === selectedDrawingId);
+        const isNote = selectedDrawing?.type === 'note';
+        
+        return (
+          <div
+            className={`absolute z-30 pointer-events-auto flex flex-col gap-2 transition-all ${
               theme === 'dark'
-                ? 'text-zinc-300 hover:text-blue-400 hover:bg-zinc-700'
-                : 'text-gray-600 hover:text-blue-500 hover:bg-gray-100'
-            }`}
+                ? 'bg-zinc-800 border border-zinc-700/50'
+                : 'bg-white border border-gray-200'
+            } ${isNote ? 'rounded-lg p-2' : 'rounded-full p-1'}`}
+            style={{
+              left: `${floatingMenuPosition.x}px`,
+              top: `${floatingMenuPosition.y}px`,
+            }}
           >
-            <MessageSquare className="w-4 h-4" />
-            {/* Tooltip */}
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-zinc-900 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              Send to Chat
-              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900" />
-            </div>
-          </button>
+            {/* Action buttons row */}
+            <div className="flex items-center gap-1">
+              {/* Send to Chat button */}
+              <button
+                onClick={handleSendToChat}
+                className={`group relative flex items-center justify-center w-7 h-7 rounded-full transition-all ${
+                  theme === 'dark'
+                    ? 'text-zinc-300 hover:text-blue-400 hover:bg-zinc-700'
+                    : 'text-gray-600 hover:text-blue-500 hover:bg-gray-100'
+                }`}
+              >
+                <MessageSquare className="w-4 h-4" />
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-zinc-900 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  Send to Chat
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900" />
+                </div>
+              </button>
 
-          {/* Divider */}
-          <div className={`w-px h-5 ${theme === 'dark' ? 'bg-zinc-600' : 'bg-gray-300'}`} />
+              {/* Divider */}
+              <div className={`w-px h-5 ${theme === 'dark' ? 'bg-zinc-600' : 'bg-gray-300'}`} />
 
-          {/* Delete button */}
-          <button
-            onClick={handleDeleteDrawing}
-            className={`group relative flex items-center justify-center w-7 h-7 rounded-full transition-all ${
-              theme === 'dark'
-                ? 'text-zinc-300 hover:text-red-400 hover:bg-zinc-700'
-                : 'text-gray-600 hover:text-red-500 hover:bg-gray-100'
-            }`}
-          >
-            <Trash2 className="w-4 h-4" />
-            {/* Tooltip */}
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-zinc-900 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              Delete
-              <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900" />
+              {/* Delete button */}
+              <button
+                onClick={handleDeleteDrawing}
+                className={`group relative flex items-center justify-center w-7 h-7 rounded-full transition-all ${
+                  theme === 'dark'
+                    ? 'text-zinc-300 hover:text-red-400 hover:bg-zinc-700'
+                    : 'text-gray-600 hover:text-red-500 hover:bg-gray-100'
+                }`}
+              >
+                <Trash2 className="w-4 h-4" />
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-zinc-900 text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                  Delete
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-900" />
+                </div>
+              </button>
             </div>
-          </button>
-        </div>
-      )}
+            
+            {/* Note text input - only for notes */}
+            {isNote && (
+              <div className="flex flex-col gap-1.5">
+                <textarea
+                  value={noteInputText || selectedDrawing?.text || ''}
+                  onChange={(e) => setNoteInputText(e.target.value)}
+                  placeholder="Add a note..."
+                  className={`w-40 h-16 px-2 py-1.5 text-xs rounded-md resize-none focus:outline-none focus:ring-1 ${
+                    theme === 'dark'
+                      ? 'bg-zinc-700 text-white placeholder-zinc-500 focus:ring-purple-500'
+                      : 'bg-gray-100 text-gray-900 placeholder-gray-400 focus:ring-purple-500'
+                  }`}
+                />
+                <button
+                  onClick={() => {
+                    // Update the note text in the drawing
+                    if (selectedDrawing) {
+                      // For now, just log - we'll need to add updateDrawing to context
+                      console.log('Save note:', noteInputText);
+                    }
+                    setNoteInputText('');
+                  }}
+                  className="px-2 py-1 text-xs font-medium rounded-md bg-purple-500 text-white hover:bg-purple-600 transition-colors"
+                >
+                  Save
+                </button>
+              </div>
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }

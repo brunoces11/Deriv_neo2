@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, Minus, Square, Trash2 } from 'lucide-react';
+import { TrendingUp, Minus, Square, Trash2, StickyNote } from 'lucide-react';
 import { useTheme } from '../../store/ThemeContext';
 import { useDrawingTools, type DrawingTool } from '../../store/DrawingToolsContext';
 
@@ -12,10 +12,10 @@ function Tooltip({ text, visible }: TooltipProps) {
   if (!visible) return null;
   
   return (
-    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-2.5 py-1.5 rounded-md bg-zinc-800 text-white text-xs font-medium whitespace-nowrap shadow-lg z-50 pointer-events-none">
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1.5 rounded-md bg-zinc-800 text-white text-xs font-medium whitespace-nowrap shadow-lg z-50 pointer-events-none">
       {text}
-      {/* Arrow */}
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-zinc-800" />
+      {/* Arrow pointing down */}
+      <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-800" />
     </div>
   );
 }
@@ -67,6 +67,7 @@ export function DrawingToolsPanel() {
     { tool: 'trendline', icon: <TrendingUp className="w-[18px] h-[18px]" />, label: 'Trend Line' },
     { tool: 'horizontal', icon: <Minus className="w-[18px] h-[18px]" />, label: 'Support/Resistance' },
     { tool: 'rectangle', icon: <Square className="w-[18px] h-[18px]" />, label: 'Rectangle Selection' },
+    { tool: 'note', icon: <StickyNote className="w-[18px] h-[18px]" />, label: 'Add Note' },
   ];
 
   return (

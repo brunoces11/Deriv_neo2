@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 
 // Types
-export type DrawingTool = 'none' | 'trendline' | 'horizontal' | 'rectangle';
+export type DrawingTool = 'none' | 'trendline' | 'horizontal' | 'rectangle' | 'note';
 
 export interface Drawing {
   id: string;
@@ -9,6 +9,7 @@ export interface Drawing {
   points: { time: number; price: number }[];
   color: string;
   createdAt: number;
+  text?: string; // For note type
 }
 
 export interface DrawingTag {
@@ -89,6 +90,16 @@ export const DRAWING_COLORS: Record<Exclude<DrawingTool, 'none'>, {
     tagBorder: 'border-cyan-500/30',
     tagBorderSelected: 'border-cyan-900/80',
   },
+  note: {
+    color: '#a855f7',           // Purple
+    selectedColor: '#c084fc',   // Purple mais claro quando selecionado
+    tagBg: 'bg-purple-500/20',
+    tagBgSelected: 'bg-purple-600/30',
+    tagText: 'text-purple-300',
+    tagTextSelected: 'text-purple-200',
+    tagBorder: 'border-purple-500/30',
+    tagBorderSelected: 'border-purple-900/80',
+  },
 };
 
 // Helper to generate label
@@ -97,6 +108,7 @@ function generateLabel(type: Exclude<DrawingTool, 'none'>): string {
     trendline: 'TrendLine',
     horizontal: 'Horizontal',
     rectangle: 'Rectangle',
+    note: 'Note',
   };
   return labels[type];
 }
