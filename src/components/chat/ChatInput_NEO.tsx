@@ -19,10 +19,12 @@ const AGENTS = [
 
 const PRODUCTS = [
   'Forex',
-  'Cryptocurrency',
-  'Digital Options',
+  'Derived Indices',
+  'Stocks',
+  'Stock Indices',
   'Commodities',
-  'Synthetic Indices',
+  'Cryptocurrencies',
+  'ETFs',
 ];
 
 interface ChatInput_NEOProps {
@@ -339,7 +341,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
                       : 'hover:bg-gray-100 text-gray-500'
                   }`}
                 >
-                  <span>Select Product</span>
+                  <span>Markets</span>
                   <ChevronDown className="w-3 h-3" />
                 </button>
 
