@@ -117,8 +117,13 @@ function loadFromStorage(): { currentMode: ViewMode; userPoints: Record<ViewMode
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (parsed.currentMode && parsed.userPoints) {
-        return parsed;
+      if (parsed.userPoints) {
+        // Only restore userPoints (sidebar widths, collapsed states)
+        // Always start in 'chat' mode - don't restore currentMode
+        return {
+          currentMode: 'chat', // Always start in chat mode
+          userPoints: parsed.userPoints,
+        };
       }
     }
   } catch {

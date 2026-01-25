@@ -29,22 +29,23 @@ export function SessionSyncProvider({ children }: SessionSyncProviderProps) {
     }
     
     if (currentSessionId) {
-      // Session loaded - sync drawings and tags
+      // Session loaded - sync drawings and tags from database
+      // If session has no drawings, preserve any local drawings (user may have drawn before sending first message)
+      const preserveLocal = sessionDrawings.length === 0;
       console.log('SessionSync: Syncing session data', { 
         sessionId: currentSessionId, 
         drawings: sessionDrawings.length, 
         tags: sessionTags.length,
-        sessionChanged
+        sessionChanged,
+        preserveLocal
       });
-      setDrawingsFromSession(sessionDrawings);
+      setDrawingsFromSession(sessionDrawings, preserveLocal);
       setTagsFromSession(sessionTags);
-    } else if (!currentSessionId && sessionChanged) {
-      // No session (new chat) - clear everything
-      console.log('SessionSync: Clearing session data');
-      clearAllDrawings();
-      clearChatTags();
     }
-  }, [currentSessionId, sessionDrawings, sessionTags, isLoading, setDrawingsFromSession, setTagsFromSession, clearAllDrawings, clearChatTags]);
+    // Note: When there's no session (new chat), we DON'T clear drawings.
+    // This allows users to draw on the chart before starting a conversation.
+    // Drawings will be persisted when the user sends their first message (which creates a session).
+  }, [currentSessionId, sessionDrawings, sessionTags, isLoading, setDrawingsFromSession, setTagsFromSession]);
 
   return <>{children}</>;
 }

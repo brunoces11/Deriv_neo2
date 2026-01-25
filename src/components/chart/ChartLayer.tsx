@@ -39,6 +39,8 @@ interface ChartLayerProps {
 type PrimitiveInstance = TrendLinePrimitive | HorizontalLinePrimitive | RectanglePrimitive;
 
 export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
+  console.log('[ChartLayer] Render, isVisible:', isVisible);
+  
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
@@ -202,7 +204,14 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
 
   // Convert pixel coordinates to chart coordinates
   const pixelToChartCoords = useCallback((x: number, y: number): { time: Time; price: number } | null => {
-    if (!chartRef.current || !seriesRef.current || !chartContainerRef.current) return null;
+    if (!chartRef.current || !seriesRef.current || !chartContainerRef.current) {
+      console.warn('[ChartLayer] pixelToChartCoords: refs not ready', {
+        chart: !!chartRef.current,
+        series: !!seriesRef.current,
+        container: !!chartContainerRef.current
+      });
+      return null;
+    }
 
     const rect = chartContainerRef.current.getBoundingClientRect();
     const localX = x - rect.left;
@@ -212,7 +221,12 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     const time = timeScale.coordinateToTime(localX);
     const price = seriesRef.current.coordinateToPrice(localY);
 
-    if (time === null || price === null) return null;
+    if (time === null || price === null) {
+      console.warn('[ChartLayer] pixelToChartCoords: could not convert coordinates', {
+        time, price, localX, localY
+      });
+      return null;
+    }
 
     return { time, price };
   }, []);
@@ -270,6 +284,12 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
 
   // Handle chart click for drawing or selection
   const handleChartClick = useCallback((e: MouseEvent) => {
+    // Ensure chart is initialized before processing clicks
+    if (!chartRef.current || !seriesRef.current) {
+      console.warn('[ChartLayer] Chart not ready yet, ignoring click');
+      return;
+    }
+    
     const tool = activeToolRef.current;
     
     // If no tool is active, try to select a drawing
@@ -384,8 +404,10 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
 
   // Initialize chart
   useEffect(() => {
+    console.log('[ChartLayer] Init useEffect, isVisible:', isVisible, 'container:', !!chartContainerRef.current);
     if (!isVisible || !chartContainerRef.current) return;
 
+    console.log('[ChartLayer] Creating chart...');
     // Main candlestick chart
     const chart = createChart(chartContainerRef.current, {
       layout: {
@@ -505,12 +527,18 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   // Attach click and mousemove handlers
   useEffect(() => {
     const container = chartContainerRef.current;
-    if (!container) return;
+    console.log('[ChartLayer] Attaching event listeners, container:', !!container);
+    if (!container) {
+      console.warn('[ChartLayer] No container ref, cannot attach event listeners');
+      return;
+    }
 
+    console.log('[ChartLayer] Event listeners attached successfully');
     container.addEventListener('click', handleChartClick);
     container.addEventListener('mousemove', handleChartMouseMove);
 
     return () => {
+      console.log('[ChartLayer] Removing event listeners');
       container.removeEventListener('click', handleChartClick);
       container.removeEventListener('mousemove', handleChartMouseMove);
     };

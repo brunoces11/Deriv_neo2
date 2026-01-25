@@ -49,6 +49,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
     currentSessionId, 
     createNewSession,
     addTagToSession,
+    addDrawingToSession,
   } = useChat();
   const { theme } = useTheme();
   const { chatTags, removeTagFromChat, clearChatTags, selectDrawing, selectedDrawingId, drawings } = useDrawingTools();
@@ -95,6 +96,14 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
       if (!sessionId) {
         sessionId = await createNewSession(messageContent);
         if (!sessionId) throw new Error('Failed to create session');
+        
+        // Persist any existing drawings to the new session
+        if (drawings.length > 0) {
+          console.log('[ChatInput] Persisting existing drawings to new session:', drawings.length);
+          for (const drawing of drawings) {
+            await addDrawingToSession(drawing);
+          }
+        }
       }
 
       if (tagsToSave.length > 0) {
