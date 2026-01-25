@@ -163,8 +163,8 @@ function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
               theme === 'dark' ? 'prose-invert' : ''
             }`}>
               {isUser ? (
-                // Para mensagens do usuário, renderiza tags como badges
-                <p className="mb-0">{parseMessageWithTags(message.content)}</p>
+                // Para mensagens do usuário, renderiza tags como badges (line-height aumentado para tags)
+                <p className="mb-0 leading-[1.77]">{parseMessageWithTags(message.content)}</p>
               ) : (
                 // Para mensagens da IA, usa ReactMarkdown
                 <ReactMarkdown
