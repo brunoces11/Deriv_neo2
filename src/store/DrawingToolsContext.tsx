@@ -35,6 +35,7 @@ interface DrawingToolsContextValue {
   setActiveTool: (tool: DrawingTool) => void;
   toggleTool: (tool: Exclude<DrawingTool, 'none'>) => void;
   addDrawing: (drawing: Omit<Drawing, 'id' | 'createdAt'>) => Drawing;
+  updateDrawing: (id: string, updates: Partial<Pick<Drawing, 'text'>>) => void;
   removeDrawing: (id: string) => void;
   clearAllDrawings: () => void;
   selectDrawing: (id: string | null) => void;
@@ -133,6 +134,12 @@ export function DrawingToolsProvider({ children }: { children: ReactNode }) {
     setDrawings(current => [...current, newDrawing]);
     setActiveTool('none');
     return newDrawing;
+  }, []);
+
+  const updateDrawing = useCallback((id: string, updates: Partial<Pick<Drawing, 'text'>>) => {
+    setDrawings(current => current.map(d => 
+      d.id === id ? { ...d, ...updates } : d
+    ));
   }, []);
 
   const removeDrawing = useCallback((id: string) => {
@@ -243,6 +250,7 @@ export function DrawingToolsProvider({ children }: { children: ReactNode }) {
         setActiveTool,
         toggleTool,
         addDrawing,
+        updateDrawing,
         removeDrawing,
         clearAllDrawings,
         selectDrawing,

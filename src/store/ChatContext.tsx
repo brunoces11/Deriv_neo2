@@ -202,6 +202,7 @@ interface ChatContextValue extends ChatState {
   refreshSessions: () => Promise<void>;
   // Drawing persistence
   addDrawingToSession: (drawing: Drawing) => Promise<boolean>;
+  updateDrawingInSession: (drawingId: string, text: string) => Promise<boolean>;
   removeDrawingFromSession: (drawingId: string) => Promise<boolean>;
   // Tag persistence
   addTagToSession: (tag: DrawingTag, drawing: Drawing) => Promise<ChatTagWithSnapshot | null>;
@@ -415,6 +416,11 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     return success;
   }, []);
 
+  const updateDrawingInSession = useCallback(async (drawingId: string, text: string): Promise<boolean> => {
+    const success = await supabaseService.updateSessionDrawingText(drawingId, text);
+    return success;
+  }, []);
+
   // Tag persistence functions
   const addTagToSession = useCallback(async (
     tag: DrawingTag,
@@ -465,6 +471,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       deleteSession,
       refreshSessions,
       addDrawingToSession,
+      updateDrawingInSession,
       removeDrawingFromSession,
       addTagToSession,
       removeTagFromSession,
@@ -485,6 +492,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       deleteSession,
       refreshSessions,
       addDrawingToSession,
+      updateDrawingInSession,
       removeDrawingFromSession,
       addTagToSession,
       removeTagFromSession,

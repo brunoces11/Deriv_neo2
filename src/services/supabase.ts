@@ -21,6 +21,7 @@ export interface ChatDrawing {
   type: Exclude<DrawingTool, 'none'>;
   points: { time: number; price: number }[];
   color: string;
+  text?: string;
   created_at: Date;
 }
 
@@ -45,6 +46,7 @@ export async function getSessionDrawings(sessionId: string): Promise<Drawing[]> 
     type: d.type as Exclude<DrawingTool, 'none'>,
     points: d.points || [],
     color: d.color,
+    text: d.text || undefined,
     createdAt: new Date(d.created_at).getTime(),
   }));
 }
@@ -62,6 +64,7 @@ export async function addSessionDrawing(
       type: drawing.type,
       points: drawing.points,
       color: drawing.color,
+      text: drawing.text || null,
     })
     .select();
 
@@ -82,6 +85,20 @@ export async function deleteSessionDrawing(drawingId: string): Promise<boolean> 
 
   if (error) {
     console.error('Error deleting session drawing:', error);
+    return false;
+  }
+
+  return true;
+}
+
+export async function updateSessionDrawingText(drawingId: string, text: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('chat_drawings')
+    .update({ text })
+    .eq('id', drawingId);
+
+  if (error) {
+    console.error('Error updating drawing text:', error);
     return false;
   }
 

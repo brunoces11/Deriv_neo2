@@ -55,8 +55,8 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   const [chartReady, setChartReady] = useState(false);
 
   // Drawing state
-  const { activeTool, addDrawing, drawings, setActiveTool, selectDrawing, selectedDrawingId, removeDrawing, addTagToChat } = useDrawingTools();
-  const { currentSessionId, addDrawingToSession } = useChat();
+  const { activeTool, addDrawing, updateDrawing, drawings, setActiveTool, selectDrawing, selectedDrawingId, removeDrawing, addTagToChat } = useDrawingTools();
+  const { currentSessionId, addDrawingToSession, updateDrawingInSession } = useChat();
   const { executionsSidebarWidth, executionsSidebarCollapsed, updateUserPoint } = useViewMode();
   
   // Get sidebar width from ViewMode context
@@ -901,11 +901,15 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
                 <button
                   onClick={() => {
                     // Update the note text in the drawing
-                    if (selectedDrawing) {
-                      // For now, just log - we'll need to add updateDrawing to context
-                      console.log('Save note:', noteInputText);
+                    if (selectedDrawing && noteInputText.trim()) {
+                      updateDrawing(selectedDrawing.id, { text: noteInputText.trim() });
+                      // Persist to database
+                      if (currentSessionId) {
+                        updateDrawingInSession(selectedDrawing.id, noteInputText.trim());
+                      }
                     }
                     setNoteInputText('');
+                    selectDrawing(null);
                   }}
                   className="px-2 py-1 text-xs font-medium rounded-md bg-purple-500 text-white hover:bg-purple-600 transition-colors"
                 >
