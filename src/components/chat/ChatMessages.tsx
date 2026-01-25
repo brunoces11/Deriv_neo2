@@ -1,9 +1,12 @@
 import { useRef, useEffect } from 'react';
-import { User, Bot, Loader2 } from 'lucide-react';
+import { Bot, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import type { ChatMessage } from '../../types';
+
+// URL da foto do usuário (mesma usada no UserProfile)
+const USER_AVATAR_URL = "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=200";
 
 interface ChatMessagesProps {
   displayMode?: 'center' | 'sidebar';
@@ -41,21 +44,29 @@ function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
   return (
     <div className="animate-slide-up opacity-0">
       <div className={`flex ${isSidebar ? 'gap-2' : 'gap-4'} ${isUser ? 'flex-row-reverse' : ''}`}>
-        <div
-          className={`flex-shrink-0 rounded-lg flex items-center justify-center ${
-            isSidebar ? 'w-7 h-7' : 'w-8 h-8'
-          } ${
-            isUser
-              ? theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-300'
-              : 'bg-gradient-to-br from-red-500 to-rose-600'
-          }`}
-        >
-          {isUser ? (
-            <User className={`${isSidebar ? 'w-3.5 h-3.5' : 'w-4 h-4'} ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-600'}`} />
-          ) : (
-            <Bot className={`${isSidebar ? 'w-3.5 h-3.5' : 'w-4 h-4'} text-white`} />
-          )}
-        </div>
+        {isUser ? (
+          <div
+            className={`flex-shrink-0 rounded-lg overflow-hidden ${
+              isSidebar ? 'w-8 h-8' : 'w-[37px] h-[37px]'
+            }`}
+          >
+            <img
+              src={USER_AVATAR_URL}
+              alt="User"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : (
+          <div
+            className={`flex-shrink-0 rounded-lg flex items-center justify-center ${
+              isSidebar ? 'w-8 h-8' : 'w-[37px] h-[37px]'
+            } ${
+              theme === 'dark' ? 'bg-zinc-600' : 'bg-zinc-500'
+            }`}
+          >
+            <Bot className={`${isSidebar ? 'w-4 h-4' : 'w-[18px] h-[18px]'} text-white`} />
+          </div>
+        )}
 
         <div className={`flex-1 ${isUser ? 'text-right' : ''}`}>
           <div
@@ -141,10 +152,12 @@ function TypingIndicator({ isSidebar = false }: TypingIndicatorProps) {
 
   return (
     <div className={`flex animate-fade-in ${isSidebar ? 'gap-2' : 'gap-4'}`}>
-      <div className={`flex-shrink-0 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center ${
-        isSidebar ? 'w-7 h-7' : 'w-8 h-8'
+      <div className={`flex-shrink-0 rounded-lg flex items-center justify-center ${
+        isSidebar ? 'w-8 h-8' : 'w-[37px] h-[37px]'
+      } ${
+        theme === 'dark' ? 'bg-zinc-600' : 'bg-zinc-500'
       }`}>
-        <Bot className={`${isSidebar ? 'w-3.5 h-3.5' : 'w-4 h-4'} text-white`} />
+        <Bot className={`${isSidebar ? 'w-4 h-4' : 'w-[18px] h-[18px]'} text-white`} />
       </div>
       <div className={`flex items-center gap-2 rounded-2xl rounded-tl-md transition-colors ${
         isSidebar ? 'px-3 py-2' : 'px-4 py-3'
@@ -153,7 +166,7 @@ function TypingIndicator({ isSidebar = false }: TypingIndicatorProps) {
           ? isSidebar ? 'bg-zinc-800' : 'bg-zinc-800/50' 
           : isSidebar ? 'bg-gray-200' : 'bg-gray-50'
       }`}>
-        <Loader2 className={`text-red-500 animate-spin ${isSidebar ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+        <Loader2 className={`text-zinc-400 animate-spin ${isSidebar ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
         <span className={`transition-colors ${
           isSidebar ? 'text-[13px]' : 'text-sm'
         } ${
