@@ -32,9 +32,14 @@ export function MainArea({ isGraphMode }: MainAreaProps) {
         theme === 'dark' ? 'border-zinc-800/30' : 'border-gray-100'
       } ${isGraphMode ? 'border-transparent' : ''}`} style={{ marginTop: '7px' }}>
         <ModeToggle />
-        {/* Drawing Tools - só aparece em Graph Mode, à direita do ModeToggle */}
-        {isGraphMode && <DrawingToolsPanel />}
       </div>
+
+      {/* Drawing Tools Panel - positioned at bottom center in Graph Mode */}
+      {isGraphMode && (
+        <div className="absolute bottom-[110px] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+          <DrawingToolsPanel />
+        </div>
+      )}
 
       <div className={`flex-1 flex flex-col relative z-10 overflow-hidden ${isGraphMode ? 'pointer-events-none' : ''}`}>
         {isGraphMode ? (
