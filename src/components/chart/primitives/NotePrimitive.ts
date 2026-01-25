@@ -195,4 +195,9 @@ export class NotePrimitive implements ISeriesPrimitive<any> {
     this._options.text = text;
     this._requestUpdate?.();
   }
+
+  setData(options: NoteOptions) {
+    this._options = options;
+    this._requestUpdate?.();
+  }
 }

@@ -626,6 +626,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   }, [activeTool, previewPrimitive]);
 
   // Sync drawings with primitives (including selection state)
+  // OPTIMIZED: Update existing primitives in-place instead of detach/attach cycle
   useEffect(() => {
     if (!seriesRef.current) return;
 
@@ -649,19 +650,50 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
       const isSelected = drawing.id === selectedDrawingId;
       const existingPrimitive = primitivesRef.current.get(drawing.id);
       
-      // If selection state changed, recreate the primitive
-      if (existingPrimitive) {
-        // Remove and recreate to update visual state
-        series.detachPrimitive(existingPrimitive);
-        primitivesRef.current.delete(drawing.id);
-      }
-
-      let primitive: PrimitiveInstance | null = null;
-      
       // Get colors for this drawing type
       const colors = DRAWING_COLORS[drawing.type];
       const displayColor = isSelected ? colors.selectedColor : colors.color;
       const selectedLineWidth = 3;
+
+      // UPDATE existing primitive in-place (no flicker)
+      if (existingPrimitive) {
+        if (drawing.type === 'trendline' && existingPrimitive instanceof TrendLinePrimitive) {
+          existingPrimitive.setData({
+            p1: { time: drawing.points[0].time as Time, price: drawing.points[0].price },
+            p2: { time: drawing.points[1].time as Time, price: drawing.points[1].price },
+            color: displayColor,
+            lineWidth: isSelected ? selectedLineWidth : 2,
+            showHandles: isSelected,
+          });
+        } else if (drawing.type === 'horizontal' && existingPrimitive instanceof HorizontalLinePrimitive) {
+          existingPrimitive.setData({
+            price: drawing.points[0].price,
+            color: displayColor,
+            lineWidth: isSelected ? selectedLineWidth : 2,
+            showHandles: isSelected,
+          });
+        } else if (drawing.type === 'rectangle' && existingPrimitive instanceof RectanglePrimitive) {
+          existingPrimitive.setData({
+            p1: { time: drawing.points[0].time as Time, price: drawing.points[0].price },
+            p2: { time: drawing.points[1].time as Time, price: drawing.points[1].price },
+            fillColor: isSelected ? `${colors.selectedColor}26` : `${colors.color}1a`,
+            borderColor: displayColor,
+            lineWidth: isSelected ? selectedLineWidth : 1,
+            showHandles: isSelected,
+          });
+        } else if (drawing.type === 'note' && existingPrimitive instanceof NotePrimitive) {
+          existingPrimitive.setData({
+            point: { time: drawing.points[0].time as Time, price: drawing.points[0].price },
+            color: displayColor,
+            text: drawing.text || '',
+            showHandles: isSelected,
+          });
+        }
+        continue; // Skip creation, primitive updated in-place
+      }
+
+      // CREATE new primitive only if it doesn't exist
+      let primitive: PrimitiveInstance | null = null;
 
       if (drawing.type === 'trendline' && drawing.points.length >= 2) {
         primitive = new TrendLinePrimitive(drawing.id, {
@@ -682,7 +714,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
         primitive = new RectanglePrimitive(drawing.id, {
           p1: { time: drawing.points[0].time as Time, price: drawing.points[0].price },
           p2: { time: drawing.points[1].time as Time, price: drawing.points[1].price },
-          fillColor: isSelected ? `${colors.selectedColor}26` : `${colors.color}1a`, // 15% or 10% opacity
+          fillColor: isSelected ? `${colors.selectedColor}26` : `${colors.color}1a`,
           borderColor: displayColor,
           lineWidth: isSelected ? selectedLineWidth : 1,
           showHandles: isSelected,

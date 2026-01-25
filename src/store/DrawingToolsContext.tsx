@@ -42,7 +42,7 @@ interface DrawingToolsContextValue {
   removeTagFromChat: (drawingId: string) => void;
   clearChatTags: () => void;
   // Session sync functions
-  setDrawingsFromSession: (drawings: Drawing[], preserveLocal?: boolean) => void;
+  setDrawingsFromSession: (drawings: Drawing[]) => void;
   setTagsFromSession: (tags: DrawingTagWithSnapshot[]) => void;
   restoreDrawingFromSnapshot: (snapshot: DrawingTagWithSnapshot) => Drawing;
 }
@@ -193,15 +193,8 @@ export function DrawingToolsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Session sync functions
-  const setDrawingsFromSession = useCallback((sessionDrawings: Drawing[], preserveLocal: boolean = false) => {
-    console.log('DrawingToolsContext: setDrawingsFromSession called', { count: sessionDrawings.length, preserveLocal });
-    
-    if (preserveLocal && sessionDrawings.length === 0) {
-      // Don't clear local drawings if session has none and we want to preserve
-      console.log('DrawingToolsContext: Preserving local drawings (session empty)');
-      return;
-    }
-    
+  const setDrawingsFromSession = useCallback((sessionDrawings: Drawing[]) => {
+    // Replace all drawings with session drawings (clean swap like Photoshop layers)
     setDrawings(sessionDrawings);
     setSelectedDrawingId(null);
     setActiveTool('none');
