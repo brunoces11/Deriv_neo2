@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronDown, Sun, Moon, LayoutGrid, Wrench } from 'lucide-react';
+import { ChevronDown, Sun, Moon, LayoutGrid, Wrench, Settings } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../../store/ThemeContext';
+import { UserPreferencesModal } from './UserPreferencesModal';
 
 type Period = 'daily' | 'weekly' | 'monthly';
 type AccountMode = 'demo' | 'real';
@@ -17,6 +18,7 @@ export function UserProfile({ isCollapsed = false }: UserProfileProps) {
   const [accountMode] = useState<AccountMode>('demo');
   const [isPeriodOpen, setIsPeriodOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
 
   const periodRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -123,6 +125,28 @@ export function UserProfile({ isCollapsed = false }: UserProfileProps) {
                   <button
                     type="button"
                     onClick={() => {
+                      setIsProfileOpen(false);
+                      setIsPreferencesOpen(true);
+                    }}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
+                      theme === 'dark' ? 'hover:bg-zinc-900' : 'hover:bg-gray-100'
+                    }`}
+                  >
+                    <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                      theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-brand-green/10 text-brand-green'
+                    }`}>
+                      <Settings className="w-3.5 h-3.5" />
+                    </div>
+                    <span className={`text-sm font-medium ${
+                      theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
+                    }`}>
+                      User Preferences
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
                       toggleTheme();
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
@@ -156,6 +180,11 @@ export function UserProfile({ isCollapsed = false }: UserProfileProps) {
             )}
           </div>
         </div>
+        
+        <UserPreferencesModal 
+          isOpen={isPreferencesOpen} 
+          onClose={() => setIsPreferencesOpen(false)} 
+        />
       </div>
     );
   }
@@ -231,6 +260,28 @@ export function UserProfile({ isCollapsed = false }: UserProfileProps) {
                     theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
                   }`}>
                     Component Builder
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    setIsPreferencesOpen(true);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors cursor-pointer ${
+                    theme === 'dark' ? 'hover:bg-zinc-900' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                    theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-brand-green/10 text-brand-green'
+                  }`}>
+                    <Settings className="w-3.5 h-3.5" />
+                  </div>
+                  <span className={`text-sm font-medium ${
+                    theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
+                  }`}>
+                    User Preferences
                   </span>
                 </button>
 
@@ -328,6 +379,11 @@ export function UserProfile({ isCollapsed = false }: UserProfileProps) {
           </div>
         </div>
       </div>
+      
+      <UserPreferencesModal 
+        isOpen={isPreferencesOpen} 
+        onClose={() => setIsPreferencesOpen(false)} 
+      />
     </div>
   );
 }
