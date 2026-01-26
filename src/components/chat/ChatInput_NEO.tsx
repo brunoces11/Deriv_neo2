@@ -27,8 +27,8 @@ const PRODUCTS = [
   'ETFs',
 ];
 
-// Regex para detectar tags no formato [@TagName-N]
-const TAG_REGEX = /\[@([A-Za-z]+)-(\d+)\]/g;
+// Regex para detectar tags no formato [@TagName-N] ou [@TagName]
+const TAG_REGEX = /\[@([A-Za-z0-9\s]+?)(?:-(\d+))?\]/g;
 
 // Mapeia nomes de tags para tipos de drawing
 function getDrawingTypeFromTagName(tagName: string): 'trendline' | 'horizontal' | 'rectangle' | 'note' | null {
@@ -40,6 +40,16 @@ function getDrawingTypeFromTagName(tagName: string): 'trendline' | 'horizontal' 
   return null;
 }
 
+// Verifica se é uma tag de agente
+function isAgentTag(tagName: string): boolean {
+  return AGENTS.some(a => a.toLowerCase().replace(/\s+/g, '') === tagName.toLowerCase().replace(/\s+/g, ''));
+}
+
+// Verifica se é uma tag de market
+function isMarketTag(tagName: string): boolean {
+  return PRODUCTS.some(p => p.toLowerCase().replace(/\s+/g, '') === tagName.toLowerCase().replace(/\s+/g, ''));
+}
+
 // Cores inline para tags - todas usam o mesmo azul
 // Texto azul bem escuro (#1e3a5f) para melhor legibilidade
 const TAG_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -47,25 +57,40 @@ const TAG_COLORS: Record<string, { bg: string; text: string; border: string }> =
   horizontal: { bg: 'rgba(59, 130, 246, 0.25)', text: '#1e3a5f', border: 'rgba(59, 130, 246, 0.4)' },
   rectangle: { bg: 'rgba(59, 130, 246, 0.25)', text: '#1e3a5f', border: 'rgba(59, 130, 246, 0.4)' },
   note: { bg: 'rgba(59, 130, 246, 0.25)', text: '#1e3a5f', border: 'rgba(59, 130, 246, 0.4)' },
+  // Agent tags - vermelho com texto vermelho escuro
+  agent: { bg: 'rgba(239, 68, 68, 0.25)', text: '#5c1a1a', border: 'rgba(239, 68, 68, 0.4)' },
+  // Market tags - roxo com texto roxo escuro
+  market: { bg: 'rgba(147, 51, 234, 0.25)', text: '#3b1a5c', border: 'rgba(147, 51, 234, 0.4)' },
 };
 
 // Gera HTML para uma tag estilizada
-function generateTagHTML(tagName: string, tagNumber: string, theme: 'dark' | 'light'): string {
+function generateTagHTML(tagName: string, tagNumber: string | null): string {
   const drawingType = getDrawingTypeFromTagName(tagName);
-  const label = `${tagName}-${tagNumber}`;
+  const label = tagNumber ? `${tagName}-${tagNumber}` : tagName;
+  
+  // Verificar se é tag de agente ou market
+  if (isAgentTag(tagName)) {
+    const c = TAG_COLORS.agent;
+    return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 0px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; line-height: 1.4; background: ${c.bg}; color: ${c.text}; border: 1px solid ${c.border}; margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
+  }
+  
+  if (isMarketTag(tagName)) {
+    const c = TAG_COLORS.market;
+    return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 0px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; line-height: 1.4; background: ${c.bg}; color: ${c.text}; border: 1px solid ${c.border}; margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
+  }
   
   if (!drawingType) {
-    // Tag desconhecida - estilo genérico (altura reduzida 12%)
-    return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; background: rgba(113, 113, 122, 0.25); color: #3d3d3d; border: 1px solid rgba(113, 113, 122, 0.4); margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
+    // Tag desconhecida - estilo genérico
+    return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 0px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; line-height: 1.4; background: rgba(113, 113, 122, 0.25); color: #3d3d3d; border: 1px solid rgba(113, 113, 122, 0.4); margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
   }
 
   const c = TAG_COLORS[drawingType];
   
-  return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; background: ${c.bg}; color: ${c.text}; border: 1px solid ${c.border}; margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
+  return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 0px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; line-height: 1.4; background: ${c.bg}; color: ${c.text}; border: 1px solid ${c.border}; margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
 }
 
 // Converte texto com tags para HTML renderizado
-function textToHTML(text: string, theme: 'dark' | 'light'): string {
+function textToHTML(text: string): string {
   if (!text) return '';
   
   let result = text;
@@ -73,7 +98,7 @@ function textToHTML(text: string, theme: 'dark' | 'light'): string {
   
   // Substituir tags por HTML
   result = result.replace(TAG_REGEX, (_match, tagName, tagNumber) => {
-    return generateTagHTML(tagName, tagNumber, theme);
+    return generateTagHTML(tagName, tagNumber || null);
   });
   
   // Preservar quebras de linha
@@ -115,8 +140,8 @@ interface ChatInput_NEOProps {
 export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
   const [plainText, setPlainText] = useState('');
   const [autoMode, setAutoMode] = useState(true);
-  const [selectedAgent, setSelectedAgent] = useState<string | null>(null);
-  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+  const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false);
   const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
   
@@ -138,6 +163,92 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
   const { chatTags, clearChatTags, drawings } = useDrawingTools();
 
   const isSidebar = displayMode === 'sidebar';
+
+  // Função para inserir tag no editor
+  const insertTagInEditor = useCallback((tagLabel: string) => {
+    if (!editorRef.current) return;
+    
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      
+      // Criar elemento de tag
+      const tagHTML = generateTagHTML(tagLabel, null);
+      const temp = document.createElement('div');
+      temp.innerHTML = tagHTML + ' ';
+      const tagElement = temp.firstChild as Node;
+      const spaceNode = document.createTextNode(' ');
+      
+      range.deleteContents();
+      range.insertNode(spaceNode);
+      range.insertNode(tagElement);
+      
+      // Mover cursor após a tag
+      range.setStartAfter(spaceNode);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      
+      // Atualizar plainText
+      setPlainText(htmlToText(editorRef.current.innerHTML));
+    } else {
+      // Fallback: adicionar no final
+      const tagText = `[@${tagLabel}] `;
+      setPlainText(prev => prev + tagText);
+      if (editorRef.current) {
+        editorRef.current.innerHTML = textToHTML(plainText + tagText);
+      }
+    }
+    
+    editorRef.current.focus();
+  }, [plainText]);
+
+  // Função para remover tag do editor
+  const removeTagFromEditor = useCallback((tagLabel: string) => {
+    if (!editorRef.current) return;
+    
+    const tags = editorRef.current.querySelectorAll('.inline-tag');
+    tags.forEach(tag => {
+      if (tag.getAttribute('data-tag') === tagLabel) {
+        // Remover a tag e o espaço após ela
+        const nextSibling = tag.nextSibling;
+        if (nextSibling && nextSibling.nodeType === Node.TEXT_NODE && nextSibling.textContent === ' ') {
+          nextSibling.remove();
+        }
+        tag.remove();
+      }
+    });
+    
+    setPlainText(htmlToText(editorRef.current.innerHTML));
+  }, []);
+
+  // Toggle agent selection
+  const toggleAgent = useCallback((agent: string) => {
+    const agentTag = agent.replace(/\s+/g, '');
+    setSelectedAgents(prev => {
+      if (prev.includes(agent)) {
+        removeTagFromEditor(agentTag);
+        return prev.filter(a => a !== agent);
+      } else {
+        insertTagInEditor(agentTag);
+        return [...prev, agent];
+      }
+    });
+  }, [insertTagInEditor, removeTagFromEditor]);
+
+  // Toggle product selection
+  const toggleProduct = useCallback((product: string) => {
+    const productTag = product.replace(/\s+/g, '');
+    setSelectedProducts(prev => {
+      if (prev.includes(product)) {
+        removeTagFromEditor(productTag);
+        return prev.filter(p => p !== product);
+      } else {
+        insertTagInEditor(productTag);
+        return [...prev, product];
+      }
+    });
+  }, [insertTagInEditor, removeTagFromEditor]);
 
   // Salvar posição do cursor
   const saveCaretPosition = useCallback(() => {
@@ -228,8 +339,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
         // Criar elemento de tag
         const tagHTML = generateTagHTML(
           newTag.label.split('-')[0], 
-          newTag.label.split('-')[1], 
-          theme
+          newTag.label.split('-')[1]
         );
         const temp = document.createElement('div');
         temp.innerHTML = tagHTML + ' ';
@@ -252,14 +362,14 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
         // Fallback: adicionar no final
         setPlainText(prev => prev + tagText);
         if (editorRef.current) {
-          editorRef.current.innerHTML = textToHTML(plainText + tagText, theme);
+          editorRef.current.innerHTML = textToHTML(plainText + tagText);
         }
       }
       
       editorRef.current.focus();
     }
     lastTagCountRef.current = chatTags.length;
-  }, [chatTags, theme, plainText]);
+  }, [chatTags, plainText]);
 
   // Sincronizar HTML quando plainText muda externamente
   useEffect(() => {
@@ -293,7 +403,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
     // Re-renderizar tags se o usuário digitou uma tag manualmente
     if (text.includes('[@') && text.includes(']')) {
       const caretPos = saveCaretPosition();
-      const newHTML = textToHTML(text, theme);
+      const newHTML = textToHTML(text);
       
       if (newHTML !== html) {
         editorRef.current.innerHTML = newHTML;
@@ -302,7 +412,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
         }
       }
     }
-  }, [theme, saveCaretPosition, restoreCaretPosition]);
+  }, [saveCaretPosition, restoreCaretPosition]);
 
   const handleSubmit = async () => {
     if (!plainText.trim() || isTyping) return;
@@ -326,6 +436,8 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
       editorRef.current.innerHTML = '';
     }
     clearChatTags();
+    setSelectedAgents([]);
+    setSelectedProducts([]);
     setTyping(true);
 
     try {
@@ -478,22 +590,33 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
                     theme === 'dark' ? 'hover:bg-zinc-700 text-zinc-400' : 'hover:bg-gray-100 text-gray-500'
                   }`}
                 >
-                  <span className="min-w-0">Select Agent</span>
+                  <span className="min-w-0">Select Agent{selectedAgents.length > 0 ? ` (${selectedAgents.length})` : ''}</span>
                   <ChevronDown className="w-3 h-3 flex-shrink-0" />
                 </button>
                 {isAgentDropdownOpen && (
-                  <div className={`absolute bottom-full left-0 mb-1 w-48 rounded-lg shadow-lg border overflow-hidden z-50 ${
+                  <div className={`absolute bottom-full left-0 mb-1 w-52 rounded-lg shadow-lg border overflow-hidden z-50 ${
                     theme === 'dark' ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-gray-200'
                   }`}>
                     {AGENTS.map((agent) => (
                       <button key={agent} type="button"
-                        onClick={() => { setSelectedAgent(agent === selectedAgent ? null : agent); setIsAgentDropdownOpen(false); }}
-                        className={`w-full px-3 py-2 text-left text-xs transition-colors ${
-                          selectedAgent === agent
-                            ? theme === 'dark' ? 'bg-zinc-700 text-white' : 'bg-gray-100 text-gray-900'
-                            : theme === 'dark' ? 'text-zinc-300 hover:bg-zinc-700/50' : 'text-gray-700 hover:bg-gray-50'
+                        onClick={() => toggleAgent(agent)}
+                        className={`w-full px-3 py-2 text-left text-xs transition-colors flex items-center gap-2 ${
+                          theme === 'dark' ? 'text-zinc-300 hover:bg-zinc-700/50' : 'text-gray-700 hover:bg-gray-50'
                         }`}
-                      >{agent}</button>
+                      >
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${
+                          selectedAgents.includes(agent)
+                            ? 'bg-red-500 border-red-500'
+                            : theme === 'dark' ? 'border-zinc-600' : 'border-gray-300'
+                        }`}>
+                          {selectedAgents.includes(agent) && (
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span>{agent}</span>
+                      </button>
                     ))}
                   </div>
                 )}
@@ -507,22 +630,33 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
                     theme === 'dark' ? 'hover:bg-zinc-700 text-zinc-400' : 'hover:bg-gray-100 text-gray-500'
                   }`}
                 >
-                  <span>Markets</span>
+                  <span>Markets{selectedProducts.length > 0 ? ` (${selectedProducts.length})` : ''}</span>
                   <ChevronDown className="w-3 h-3" />
                 </button>
                 {isProductDropdownOpen && (
-                  <div className={`absolute bottom-full left-0 mb-1 w-40 rounded-lg shadow-lg border overflow-hidden z-50 ${
+                  <div className={`absolute bottom-full left-0 mb-1 w-44 rounded-lg shadow-lg border overflow-hidden z-50 ${
                     theme === 'dark' ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-gray-200'
                   }`}>
                     {PRODUCTS.map((product) => (
                       <button key={product} type="button"
-                        onClick={() => { setSelectedProduct(product === selectedProduct ? null : product); setIsProductDropdownOpen(false); }}
-                        className={`w-full px-3 py-2 text-left text-xs transition-colors ${
-                          selectedProduct === product
-                            ? theme === 'dark' ? 'bg-zinc-700 text-white' : 'bg-gray-100 text-gray-900'
-                            : theme === 'dark' ? 'text-zinc-300 hover:bg-zinc-700/50' : 'text-gray-700 hover:bg-gray-50'
+                        onClick={() => toggleProduct(product)}
+                        className={`w-full px-3 py-2 text-left text-xs transition-colors flex items-center gap-2 ${
+                          theme === 'dark' ? 'text-zinc-300 hover:bg-zinc-700/50' : 'text-gray-700 hover:bg-gray-50'
                         }`}
-                      >{product}</button>
+                      >
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 ${
+                          selectedProducts.includes(product)
+                            ? 'bg-purple-500 border-purple-500'
+                            : theme === 'dark' ? 'border-zinc-600' : 'border-gray-300'
+                        }`}>
+                          {selectedProducts.includes(product) && (
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </div>
+                        <span>{product}</span>
+                      </button>
                     ))}
                   </div>
                 )}

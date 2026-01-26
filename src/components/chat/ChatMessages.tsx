@@ -9,7 +9,28 @@ import type { ChatMessage } from '../../types';
 const USER_AVATAR_URL = "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=200";
 
 // Regex para detectar tags no formato [@TagName-N] ou [@TagName]
-const TAG_REGEX = /\[@([A-Za-z]+)(?:-(\d+))?\]/g;
+const TAG_REGEX = /\[@([A-Za-z0-9\s]+?)(?:-(\d+))?\]/g;
+
+// Lista de agentes e markets para identificação
+const AGENTS = [
+  'RiskAnalysisAgent',
+  'PortfolioManagerAgent',
+  'TraderAgent',
+  'BotCreatorAgent',
+  'MarketAgent',
+  'SupportAgent',
+  'TrainerAgent',
+];
+
+const MARKETS = [
+  'Forex',
+  'DerivedIndices',
+  'Stocks',
+  'StockIndices',
+  'Commodities',
+  'Cryptocurrencies',
+  'ETFs',
+];
 
 // Mapeia nomes de tags para tipos de drawing
 function getDrawingTypeFromTagName(tagName: string): 'trendline' | 'horizontal' | 'rectangle' | 'note' | null {
@@ -21,24 +42,74 @@ function getDrawingTypeFromTagName(tagName: string): 'trendline' | 'horizontal' 
   return null;
 }
 
+// Verifica se é uma tag de agente
+function isAgentTag(tagName: string): boolean {
+  const normalized = tagName.replace(/\s+/g, '');
+  return AGENTS.some(a => a.toLowerCase() === normalized.toLowerCase());
+}
+
+// Verifica se é uma tag de market
+function isMarketTag(tagName: string): boolean {
+  const normalized = tagName.replace(/\s+/g, '');
+  return MARKETS.some(m => m.toLowerCase() === normalized.toLowerCase());
+}
+
 // Componente para renderizar uma tag estilizada
 function TagBadge({ tagName, tagNumber }: { tagName: string; tagNumber?: string }) {
+  const label = tagNumber ? `${tagName}-${tagNumber}` : tagName;
+  
+  // Verificar se é tag de agente (vermelho)
+  if (isAgentTag(tagName)) {
+    return (
+      <span 
+        className="inline-flex items-center px-2 rounded-full text-xs font-medium" 
+        style={{ 
+          paddingTop: '0px', 
+          paddingBottom: '0px', 
+          lineHeight: '1.4',
+          background: 'rgba(239, 68, 68, 0.25)',
+          color: '#5c1a1a',
+          border: '1px solid rgba(239, 68, 68, 0.4)'
+        }}
+      >
+        @{label}
+      </span>
+    );
+  }
+  
+  // Verificar se é tag de market (roxo)
+  if (isMarketTag(tagName)) {
+    return (
+      <span 
+        className="inline-flex items-center px-2 rounded-full text-xs font-medium" 
+        style={{ 
+          paddingTop: '0px', 
+          paddingBottom: '0px', 
+          lineHeight: '1.4',
+          background: 'rgba(147, 51, 234, 0.25)',
+          color: '#3b1a5c',
+          border: '1px solid rgba(147, 51, 234, 0.4)'
+        }}
+      >
+        @{label}
+      </span>
+    );
+  }
+  
   const drawingType = getDrawingTypeFromTagName(tagName);
   
   if (!drawingType) {
     // Tag desconhecida - renderiza com estilo genérico
     return (
-      <span className="inline-flex items-center px-2 py-px rounded-full text-xs font-medium bg-zinc-500/25 text-zinc-800 border border-zinc-500/40">
-        @{tagName}{tagNumber ? `-${tagNumber}` : ''}
+      <span className="inline-flex items-center px-2 rounded-full text-xs font-medium bg-zinc-500/25 text-zinc-800 border border-zinc-500/40" style={{ paddingTop: '0px', paddingBottom: '0px', lineHeight: '1.4' }}>
+        @{label}
       </span>
     );
   }
 
-  const label = tagNumber ? `${tagName}-${tagNumber}` : tagName;
-
-  // Todas as tags usam azul com texto escuro para legibilidade
+  // Tags de desenho usam azul com texto escuro para legibilidade
   return (
-    <span className="inline-flex items-center px-2 py-px rounded-full text-xs font-medium bg-blue-500/25 text-blue-900 border border-blue-500/40">
+    <span className="inline-flex items-center px-2 rounded-full text-xs font-medium bg-blue-500/25 text-blue-900 border border-blue-500/40" style={{ paddingTop: '0px', paddingBottom: '0px', lineHeight: '1.4' }}>
       @{label}
     </span>
   );
