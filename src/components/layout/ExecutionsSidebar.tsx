@@ -159,7 +159,7 @@ export function ExecutionsSidebar({
   return (
     <aside 
       ref={sidebarRef}
-      className={`relative z-40 border-l flex flex-col h-full ${
+      className={`relative z-30 border-l flex flex-col h-full ${
         isResizing ? '' : 'transition-all duration-300'
       } ${theme === 'dark' ? 'bg-zinc-950 border-zinc-800/50' : 'bg-gray-50 border-gray-200'}`}
       style={{ width: displayWidth }}

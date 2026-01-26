@@ -7,7 +7,6 @@ interface AgentPreference {
   name: string;
   icon: React.ReactNode;
   description: string;
-  details: string;
   preferences: string;
 }
 
@@ -21,40 +20,35 @@ const AGENTS: AgentPreference[] = [
     id: 'risk',
     name: 'Risk Analysis Agent',
     icon: <ShieldCheck className="w-5 h-5" />,
-    description: 'Monitors and controls your exposure to market risks',
-    details: 'Define your risk tolerance level, maximum loss per trade, daily loss limits, stop-loss rules, and position sizing preferences. This agent will alert you before risky operations.',
+    description: 'Define your risk tolerance level, maximum loss per trade, daily loss limits, stop-loss rules and position sizing. Get alerts before risky operations.',
     preferences: '',
   },
   {
     id: 'portfolio',
     name: 'Portfolio Manager',
     icon: <Briefcase className="w-5 h-5" />,
-    description: 'Manages asset allocation and portfolio balance',
-    details: 'Set target allocations per asset class, rebalancing triggers, diversification rules, and concentration limits. The agent tracks your portfolio health and suggests adjustments.',
+    description: 'Set target allocations per asset class, rebalancing triggers, diversification rules and concentration limits. Track portfolio health automatically.',
     preferences: '',
   },
   {
     id: 'trader',
     name: 'Trader Agent',
     icon: <TrendingUp className="w-5 h-5" />,
-    description: 'Executes trades based on your strategy preferences',
-    details: 'Configure preferred order types (market, limit, stop), execution timing, slippage tolerance, and trading hours. Define which markets and instruments you want to trade.',
+    description: 'Configure preferred order types (market, limit, stop), execution timing, slippage tolerance and trading hours for your operations.',
     preferences: '',
   },
   {
     id: 'bot',
     name: 'Bot Creator Agent',
     icon: <Bot className="w-5 h-5" />,
-    description: 'Builds and manages automated trading strategies',
-    details: 'Set automation rules, entry/exit conditions, profit targets, and alert thresholds. Define how aggressive or conservative your bots should behave in different market conditions.',
+    description: 'Set automation rules, entry/exit conditions, profit targets and alert thresholds. Define how aggressive or conservative your bots should behave.',
     preferences: '',
   },
   {
     id: 'market',
     name: 'Market Analysis Agent',
     icon: <BarChart3 className="w-5 h-5" />,
-    description: 'Analyzes market trends and generates insights',
-    details: 'Choose preferred technical indicators, analysis timeframes, signal sensitivity, and news sources. Configure which market events and patterns you want to be notified about.',
+    description: 'Choose preferred technical indicators, analysis timeframes, signal sensitivity and news sources. Get notified about relevant market events.',
     preferences: '',
   },
 ];
@@ -96,11 +90,11 @@ export function UserPreferencesModal({ isOpen, onClose }: UserPreferencesModalPr
       />
       
       {/* Modal */}
-      <div className={`relative w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl overflow-hidden ${
+      <div className={`relative w-full max-w-5xl max-h-[85vh] rounded-2xl shadow-2xl flex flex-col ${
         theme === 'dark' ? 'bg-zinc-900' : 'bg-white'
       }`}>
         {/* Header */}
-        <div className={`flex items-center justify-between px-6 py-4 border-b ${
+        <div className={`flex-shrink-0 flex items-center justify-between px-6 py-4 border-b ${
           theme === 'dark' ? 'border-zinc-800' : 'border-gray-200'
         }`}>
           <div>
@@ -109,10 +103,10 @@ export function UserPreferencesModal({ isOpen, onClose }: UserPreferencesModalPr
             }`}>
               User Preferences
             </h2>
-            <p className={`text-sm mt-1 leading-relaxed max-w-md ${
+            <p className={`text-sm mt-1 leading-relaxed max-w-xl ${
               theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'
             }`}>
-              Customize each AI agent to match your trading style and goals. Write your own rules or use the AI Wizard anytime to help you define the best preferences for your profile.
+              Customize each AI agent to match your trading style. Write your own rules or use the AI Wizard to define preferences.
             </p>
           </div>
           <button
@@ -128,7 +122,8 @@ export function UserPreferencesModal({ isOpen, onClose }: UserPreferencesModalPr
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto max-h-[calc(85vh-140px)] p-6 space-y-4">
+        <div className="flex-1 overflow-y-auto p-6 min-h-0">
+          <div className="grid grid-cols-2 gap-4">
           {AGENTS.map((agent) => (
             <div
               key={agent.id}
@@ -161,15 +156,10 @@ export function UserPreferencesModal({ isOpen, onClose }: UserPreferencesModalPr
                         {agentPreferences[agent.id] ? 'Configured' : 'Default'}
                       </div>
                     </div>
-                    <p className={`text-sm ${
+                    <p className={`text-xs mt-1 ${
                       theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'
                     }`}>
                       {agent.description}
-                    </p>
-                    <p className={`text-xs mt-1.5 leading-relaxed ${
-                      theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'
-                    }`}>
-                      {agent.details}
                     </p>
                     
                     {/* Action Buttons */}
@@ -187,7 +177,7 @@ export function UserPreferencesModal({ isOpen, onClose }: UserPreferencesModalPr
                       </button>
                       <button
                         onClick={() => handleGenerateWithAI(agent.id)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-gradient-to-r from-red-500 to-rose-500 text-white hover:from-red-600 hover:to-rose-600 transition-all hover:shadow-md hover:shadow-red-500/25"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium bg-zinc-700 text-white hover:bg-zinc-600 transition-all"
                       >
                         <Sparkles className="w-3.5 h-3.5" />
                         Generate with AI
@@ -232,10 +222,11 @@ export function UserPreferencesModal({ isOpen, onClose }: UserPreferencesModalPr
               )}
             </div>
           ))}
+          </div>
         </div>
 
         {/* Footer */}
-        <div className={`flex items-center justify-end gap-3 px-6 py-4 border-t ${
+        <div className={`flex-shrink-0 flex items-center justify-end gap-3 px-6 py-4 border-t ${
           theme === 'dark' ? 'border-zinc-800' : 'border-gray-200'
         }`}>
           <button
