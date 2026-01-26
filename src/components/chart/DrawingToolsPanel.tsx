@@ -39,7 +39,7 @@ function ToolButton({ icon, label, isActive, onClick, theme, onHover }: ToolButt
       onMouseLeave={() => { setShowTooltip(false); onHover(false); }}
       className={`relative flex items-center justify-center w-8 h-8 rounded-full transition-all ${
         isActive
-          ? 'bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-lg shadow-red-500/20'
+          ? 'bg-zinc-600 text-white shadow-lg shadow-zinc-600/20'
           : theme === 'dark'
             ? 'text-zinc-400 hover:text-white hover:bg-zinc-700'
             : 'text-gray-500 hover:text-gray-900 hover:bg-gray-300'

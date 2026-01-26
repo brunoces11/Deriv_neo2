@@ -480,17 +480,17 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
       crosshair: {
         mode: CrosshairMode.Normal,
         vertLine: {
-          color: '#ff444f',
+          color: '#52525b',
           width: 1,
           style: 2,
-          labelBackgroundColor: '#ff444f',
+          labelBackgroundColor: '#52525b',
           labelVisible: true,
         },
         horzLine: {
-          color: '#ff444f',
+          color: '#52525b',
           width: 1,
           style: 2,
-          labelBackgroundColor: '#ff444f',
+          labelBackgroundColor: '#52525b',
           labelVisible: true,
         },
       },
