@@ -65,28 +65,23 @@ const TAG_COLORS: Record<string, { bg: string; text: string; border: string }> =
 
 // Gera HTML para uma tag estilizada
 function generateTagHTML(tagName: string, tagNumber: string | null): string {
-  const drawingType = getDrawingTypeFromTagName(tagName);
   const label = tagNumber ? `${tagName}-${tagNumber}` : tagName;
   
-  // Verificar se é tag de agente ou market
+  // Determinar cor baseado no tipo de tag
+  let colors: { bg: string; text: string; border: string };
+  
   if (isAgentTag(tagName)) {
-    const c = TAG_COLORS.agent;
-    return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 0px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; line-height: 1.4; background: ${c.bg}; color: ${c.text}; border: 1px solid ${c.border}; margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
+    colors = TAG_COLORS.agent;
+  } else if (isMarketTag(tagName)) {
+    colors = TAG_COLORS.market;
+  } else {
+    const drawingType = getDrawingTypeFromTagName(tagName);
+    colors = drawingType 
+      ? TAG_COLORS[drawingType] 
+      : { bg: 'rgba(113, 113, 122, 0.25)', text: '#3d3d3d', border: 'rgba(113, 113, 122, 0.4)' };
   }
   
-  if (isMarketTag(tagName)) {
-    const c = TAG_COLORS.market;
-    return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 0px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; line-height: 1.4; background: ${c.bg}; color: ${c.text}; border: 1px solid ${c.border}; margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
-  }
-  
-  if (!drawingType) {
-    // Tag desconhecida - estilo genérico
-    return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 0px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; line-height: 1.4; background: rgba(113, 113, 122, 0.25); color: #3d3d3d; border: 1px solid rgba(113, 113, 122, 0.4); margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
-  }
-
-  const c = TAG_COLORS[drawingType];
-  
-  return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 0px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; line-height: 1.4; background: ${c.bg}; color: ${c.text}; border: 1px solid ${c.border}; margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
+  return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 0px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; line-height: 1.4; background: ${colors.bg}; color: ${colors.text}; border: 1px solid ${colors.border}; margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
 }
 
 // Converte texto com tags para HTML renderizado
@@ -140,6 +135,7 @@ interface ChatInput_NEOProps {
 export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
   const [plainText, setPlainText] = useState('');
   const [autoMode, setAutoMode] = useState(true);
+  const [userReactivatedAutoMode, setUserReactivatedAutoMode] = useState(false); // Rastreia se usuário reativou manualmente
   const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false);
@@ -148,6 +144,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const agentDropdownRef = useRef<HTMLDivElement>(null);
   const productDropdownRef = useRef<HTMLDivElement>(null);
+  const lastCursorRangeRef = useRef<Range | null>(null); // Salva última posição do cursor no editor
   
   const { 
     addMessage, 
@@ -164,44 +161,67 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
 
   const isSidebar = displayMode === 'sidebar';
 
-  // Função para inserir tag no editor
-  const insertTagInEditor = useCallback((tagLabel: string) => {
+  // Salvar posição do cursor quando o editor perde foco ou quando há mudança de seleção
+  const saveCursorPosition = useCallback(() => {
     if (!editorRef.current) return;
-    
     const selection = window.getSelection();
     if (selection && selection.rangeCount > 0) {
       const range = selection.getRangeAt(0);
-      
-      // Criar elemento de tag
-      const tagHTML = generateTagHTML(tagLabel, null);
-      const temp = document.createElement('div');
-      temp.innerHTML = tagHTML + ' ';
-      const tagElement = temp.firstChild as Node;
-      const spaceNode = document.createTextNode(' ');
-      
+      if (editorRef.current.contains(range.commonAncestorContainer)) {
+        lastCursorRangeRef.current = range.cloneRange();
+      }
+    }
+  }, []);
+
+  // Função para inserir tag no editor na última posição conhecida do cursor
+  const insertTagInEditor = useCallback((tagLabel: string) => {
+    if (!editorRef.current) return;
+    
+    const tagHTML = generateTagHTML(tagLabel, null);
+    const temp = document.createElement('div');
+    temp.innerHTML = tagHTML;
+    const tagElement = temp.firstChild as Node;
+    const spaceNode = document.createTextNode(' ');
+    
+    // Tentar usar a última posição salva do cursor
+    if (lastCursorRangeRef.current && editorRef.current.contains(lastCursorRangeRef.current.commonAncestorContainer)) {
+      const range = lastCursorRangeRef.current;
       range.deleteContents();
       range.insertNode(spaceNode);
       range.insertNode(tagElement);
       
-      // Mover cursor após a tag
+      // Mover cursor após a tag e salvar nova posição
       range.setStartAfter(spaceNode);
       range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
+      lastCursorRangeRef.current = range.cloneRange();
       
-      // Atualizar plainText
-      setPlainText(htmlToText(editorRef.current.innerHTML));
+      // Restaurar seleção visual
+      editorRef.current.focus();
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
     } else {
-      // Fallback: adicionar no final
-      const tagText = `[@${tagLabel}] `;
-      setPlainText(prev => prev + tagText);
-      if (editorRef.current) {
-        editorRef.current.innerHTML = textToHTML(plainText + tagText);
+      // Fallback: adicionar no final do editor
+      editorRef.current.innerHTML += tagHTML + ' ';
+      editorRef.current.focus();
+      
+      // Posicionar cursor no final
+      const selection = window.getSelection();
+      if (selection) {
+        const range = document.createRange();
+        range.selectNodeContents(editorRef.current);
+        range.collapse(false);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        lastCursorRangeRef.current = range.cloneRange();
       }
     }
     
-    editorRef.current.focus();
-  }, [plainText]);
+    // Atualizar plainText
+    setPlainText(htmlToText(editorRef.current.innerHTML));
+  }, []);
 
   // Função para remover tag do editor
   const removeTagFromEditor = useCallback((tagLabel: string) => {
@@ -223,15 +243,22 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
   }, []);
 
   // Toggle agent selection - agentes ficam no header, não no editor
+  // Quando seleciona um agente, desativa autoMode automaticamente (apenas se usuário não reativou manualmente)
   const toggleAgent = useCallback((agent: string) => {
     setSelectedAgents(prev => {
       if (prev.includes(agent)) {
         return prev.filter(a => a !== agent);
       } else {
+        // Só desativa autoMode se o usuário ainda não reativou manualmente
+        if (!userReactivatedAutoMode) {
+          setAutoMode(false);
+        }
         return [...prev, agent];
       }
     });
-  }, []);
+    // Fechar dropdown após selecionar/desselecionar
+    setIsAgentDropdownOpen(false);
+  }, [userReactivatedAutoMode]);
 
   // Toggle product selection
   const toggleProduct = useCallback((product: string) => {
@@ -440,6 +467,8 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
     clearChatTags();
     setSelectedAgents([]);
     setSelectedProducts([]);
+    setUserReactivatedAutoMode(false); // Reset para próximo chat
+    setAutoMode(true); // Reset auto mode para próximo chat
     setTyping(true);
 
     try {
@@ -589,6 +618,9 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
               contentEditable={!isTyping}
               onInput={handleInput}
               onKeyDown={handleKeyDown}
+              onBlur={saveCursorPosition}
+              onMouseUp={saveCursorPosition}
+              onKeyUp={saveCursorPosition}
               data-placeholder={isSidebar ? "Message..." : "Message FlowChat..."}
               className={`chat-editor w-full bg-transparent py-2 min-h-[24px] max-h-[150px] overflow-y-auto leading-[1.77] ${
                 isSidebar ? 'text-xs' : 'text-sm'
@@ -607,7 +639,15 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
               <div className="flex items-center gap-1.5 min-w-0">
                 <button
                   type="button"
-                  onClick={() => setAutoMode(!autoMode)}
+                  onClick={() => {
+                    const newAutoMode = !autoMode;
+                    setAutoMode(newAutoMode);
+                    // Se usuário está reativando o autoMode enquanto tem agentes selecionados,
+                    // marca que ele quer usar ambos (auto mode + agentes específicos)
+                    if (newAutoMode && selectedAgents.length > 0) {
+                      setUserReactivatedAutoMode(true);
+                    }
+                  }}
                   className={`relative w-9 h-5 flex-shrink-0 rounded-full transition-colors ${
                     autoMode ? 'bg-red-500' : theme === 'dark' ? 'bg-zinc-600' : 'bg-gray-300'
                   }`}
