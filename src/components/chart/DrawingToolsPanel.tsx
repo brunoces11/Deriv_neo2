@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, Minus, Square, Trash2, StickyNote } from 'lucide-react';
+import { TrendingUp, Minus, Square, Trash2, FileText } from 'lucide-react';
 import { useTheme } from '../../store/ThemeContext';
 import { useDrawingTools, type DrawingTool } from '../../store/DrawingToolsContext';
 
@@ -67,7 +67,7 @@ export function DrawingToolsPanel() {
     { tool: 'trendline', icon: <TrendingUp className="w-[18px] h-[18px]" />, label: 'Trend Line' },
     { tool: 'horizontal', icon: <Minus className="w-[18px] h-[18px]" />, label: 'Support/Resistance' },
     { tool: 'rectangle', icon: <Square className="w-[18px] h-[18px]" />, label: 'Rectangle Selection' },
-    { tool: 'note', icon: <StickyNote className="w-[18px] h-[18px]" />, label: 'Add Note' },
+    { tool: 'note', icon: <FileText className="w-[18px] h-[18px]" />, label: 'Add Note' },
   ];
 
   return (

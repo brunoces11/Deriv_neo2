@@ -890,7 +890,18 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
               <div className="flex flex-col gap-1.5">
                 <textarea
                   value={noteInputText || selectedDrawing?.text || ''}
-                  onChange={(e) => setNoteInputText(e.target.value)}
+                  onChange={(e) => {
+                    const newText = e.target.value;
+                    setNoteInputText(newText);
+                    // Auto-save on change
+                    if (selectedDrawing) {
+                      updateDrawing(selectedDrawing.id, { text: newText });
+                      // Persist to database
+                      if (currentSessionId) {
+                        updateDrawingInSession(selectedDrawing.id, newText);
+                      }
+                    }
+                  }}
                   placeholder="Add a note..."
                   className={`w-40 h-16 px-2 py-1.5 text-xs rounded-md resize-none focus:outline-none focus:ring-1 ${
                     theme === 'dark'
@@ -898,23 +909,6 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
                       : 'bg-gray-100 text-gray-900 placeholder-gray-400 focus:ring-purple-500'
                   }`}
                 />
-                <button
-                  onClick={() => {
-                    // Update the note text in the drawing
-                    if (selectedDrawing && noteInputText.trim()) {
-                      updateDrawing(selectedDrawing.id, { text: noteInputText.trim() });
-                      // Persist to database
-                      if (currentSessionId) {
-                        updateDrawingInSession(selectedDrawing.id, noteInputText.trim());
-                      }
-                    }
-                    setNoteInputText('');
-                    selectDrawing(null);
-                  }}
-                  className="px-2 py-1 text-xs font-medium rounded-md bg-purple-500 text-white hover:bg-purple-600 transition-colors"
-                >
-                  Save
-                </button>
               </div>
             )}
           </div>
