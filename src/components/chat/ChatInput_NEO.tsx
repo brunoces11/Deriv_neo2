@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Loader2, Paperclip, Mic, ChevronDown } from 'lucide-react';
+import { Send, Loader2, Paperclip, Mic, ChevronDown, X } from 'lucide-react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import { useDrawingTools } from '../../store/DrawingToolsContext';
@@ -222,19 +222,16 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
     setPlainText(htmlToText(editorRef.current.innerHTML));
   }, []);
 
-  // Toggle agent selection
+  // Toggle agent selection - agentes ficam no header, não no editor
   const toggleAgent = useCallback((agent: string) => {
-    const agentTag = agent.replace(/\s+/g, '');
     setSelectedAgents(prev => {
       if (prev.includes(agent)) {
-        removeTagFromEditor(agentTag);
         return prev.filter(a => a !== agent);
       } else {
-        insertTagInEditor(agentTag);
         return [...prev, agent];
       }
     });
-  }, [insertTagInEditor, removeTagFromEditor]);
+  }, []);
 
   // Toggle product selection
   const toggleProduct = useCallback((product: string) => {
@@ -417,7 +414,12 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
   const handleSubmit = async () => {
     if (!plainText.trim() || isTyping) return;
 
-    const messageContent = plainText.trim();
+    // Construir conteúdo da mensagem com agentes no início (se houver)
+    let messageContent = plainText.trim();
+    if (selectedAgents.length > 0) {
+      const agentTags = selectedAgents.map(a => `[@${a.replace(/\s+/g, '')}]`).join(' ');
+      messageContent = `${agentTags} ${messageContent}`;
+    }
     
     // Extrair tags do texto para salvar na sessão
     const tagsInMessage: { label: string; drawingId: string; type: string }[] = [];
@@ -541,6 +543,45 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
             ? isSidebar ? 'bg-zinc-800 border-zinc-600' : 'bg-zinc-900 border-zinc-700/50'
             : 'bg-white border-gray-200'
         }`}>
+          {/* Agent Tags Header - aparece quando há agentes selecionados */}
+          {selectedAgents.length > 0 && (
+            <div className={`flex items-center gap-2 px-3 py-2 border-b ${
+              theme === 'dark' ? 'border-zinc-700/50 bg-zinc-800/50' : 'border-gray-100 bg-gray-50/50'
+            }`}>
+              <span className={`text-xs font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                Invoking:
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {selectedAgents.map((agent) => {
+                  const agentTag = agent.replace(/\s+/g, '');
+                  return (
+                    <span
+                      key={agent}
+                      className="inline-flex items-center gap-1 px-2 rounded-full text-xs font-medium"
+                      style={{
+                        background: 'rgba(239, 68, 68, 0.25)',
+                        color: '#5c1a1a',
+                        border: '1px solid rgba(239, 68, 68, 0.4)',
+                        lineHeight: '1.4',
+                        paddingTop: '2px',
+                        paddingBottom: '2px',
+                      }}
+                    >
+                      @{agentTag}
+                      <button
+                        type="button"
+                        onClick={() => toggleAgent(agent)}
+                        className="hover:opacity-70 transition-opacity"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Contenteditable Editor */}
           <div className="px-3 pt-2">
             <div
