@@ -20,6 +20,7 @@ const COLLAPSED_WIDTH = 54;
 const MAX_WIDTH = 960;
 const SNAP_THRESHOLD = 100;
 const MIN_WIDTH_GRAPH_MODE = 425;
+const DEFAULT_EXPAND_WIDTH_GRAPH_MODE = 780;
 
 // Vertical resize constants
 const MIN_EXECUTIONS_HEIGHT = 100;
@@ -156,6 +157,15 @@ export function ExecutionsSidebar({
   const displayWidth = isResizing ? localWidth : (isCollapsed ? COLLAPSED_WIDTH : localWidth);
   const showCollapsedContent = displayWidth <= COLLAPSED_WIDTH;
 
+  // Custom toggle handler - applies 780px default when expanding in Graph Mode
+  const handleToggleCollapse = useCallback(() => {
+    if (isCollapsed && isGraphMode) {
+      // Expanding in Graph Mode - set to 780px
+      onResize(DEFAULT_EXPAND_WIDTH_GRAPH_MODE);
+    }
+    onToggleCollapse();
+  }, [isCollapsed, isGraphMode, onResize, onToggleCollapse]);
+
   return (
     <aside 
       ref={sidebarRef}
@@ -184,7 +194,7 @@ export function ExecutionsSidebar({
         <div className="flex items-center gap-3">
           {/* Collapse/Expand button - always on the border */}
           <button 
-            onClick={onToggleCollapse} 
+            onClick={handleToggleCollapse} 
             className={`absolute -left-3 top-5 p-1 rounded-full shadow-md transition-colors z-[70] ${
               theme === 'dark' 
                 ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700' 
