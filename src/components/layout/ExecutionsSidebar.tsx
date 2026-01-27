@@ -17,7 +17,7 @@ interface ExecutionsSidebarProps {
 }
 
 const COLLAPSED_WIDTH = 54;
-const MAX_WIDTH = 900;
+const MAX_WIDTH = 960;
 const SNAP_THRESHOLD = 100;
 const MIN_WIDTH_GRAPH_MODE = 425;
 

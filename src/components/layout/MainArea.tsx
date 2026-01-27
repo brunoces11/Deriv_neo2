@@ -59,7 +59,7 @@ export function MainArea({ isGraphMode }: MainAreaProps) {
           <WelcomeScreen />
         ) : (
           <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <div className="max-w-3xl mx-auto w-full px-4">
+            <div className="mx-auto w-full px-4 chat-content-width">
               <ChatMessages />
               <ActiveCards />
             </div>
@@ -73,7 +73,7 @@ export function MainArea({ isGraphMode }: MainAreaProps) {
             ? 'border-zinc-800/50 bg-zinc-900/80'
             : 'border-gray-200 bg-white/80'
         }`}>
-          <div className="max-w-3xl mx-auto w-full px-4 py-4">
+          <div className="mx-auto w-full px-4 py-4 chat-content-width">
             <ChatInput_NEO />
           </div>
         </div>

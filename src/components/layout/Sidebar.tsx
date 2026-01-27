@@ -96,7 +96,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
 
   return (
     <aside className={`relative z-40 border-r flex flex-col h-full transition-all duration-300 ${
-      isCollapsed ? 'w-16' : 'w-72'
+      isCollapsed ? 'w-16' : 'w-[280px]'
     } ${
       theme === 'dark'
         ? 'bg-zinc-950 border-zinc-800/50'
