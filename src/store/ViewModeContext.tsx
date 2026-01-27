@@ -5,8 +5,8 @@ type ViewMode = 'chat' | 'graph';
 
 interface UserPoint {
   sidebarCollapsed?: boolean;
-  executionsSidebarCollapsed?: boolean;
-  executionsSidebarWidth?: number;
+  cardsSidebarCollapsed?: boolean;
+  cardsSidebarWidth?: number;
 }
 
 interface ViewModeState {
@@ -19,14 +19,14 @@ interface ViewModeState {
 const START_POINTS: Record<ViewMode, Required<Omit<UserPoint, never>> & { chartVisible: boolean }> = {
   chat: {
     sidebarCollapsed: false,
-    executionsSidebarCollapsed: false,
-    executionsSidebarWidth: 660,
+    cardsSidebarCollapsed: false,
+    cardsSidebarWidth: 660,
     chartVisible: false,
   },
   graph: {
     sidebarCollapsed: true,
-    executionsSidebarCollapsed: false,
-    executionsSidebarWidth: 840,
+    cardsSidebarCollapsed: false,
+    cardsSidebarWidth: 840,
     chartVisible: true,
   },
 };
@@ -36,8 +36,8 @@ function computeConfig(mode: ViewMode, userPoint: UserPoint) {
   const start = START_POINTS[mode];
   return {
     sidebarCollapsed: userPoint.sidebarCollapsed ?? start.sidebarCollapsed,
-    executionsSidebarCollapsed: userPoint.executionsSidebarCollapsed ?? start.executionsSidebarCollapsed,
-    executionsSidebarWidth: userPoint.executionsSidebarWidth ?? start.executionsSidebarWidth,
+    cardsSidebarCollapsed: userPoint.cardsSidebarCollapsed ?? start.cardsSidebarCollapsed,
+    cardsSidebarWidth: userPoint.cardsSidebarWidth ?? start.cardsSidebarWidth,
     chartVisible: start.chartVisible, // Chart visibility não é customizável pelo usuário
   };
 }
@@ -47,8 +47,8 @@ interface ViewModeContextValue {
   currentMode: ViewMode;
   isResizing: boolean;
   sidebarCollapsed: boolean;
-  executionsSidebarCollapsed: boolean;
-  executionsSidebarWidth: number;
+  cardsSidebarCollapsed: boolean;
+  cardsSidebarWidth: number;
   chartVisible: boolean;
   toggleMode: () => void;
   setMode: (mode: ViewMode) => void;

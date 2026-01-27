@@ -57,10 +57,10 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   // Drawing state
   const { activeTool, addDrawing, updateDrawing, drawings, setActiveTool, selectDrawing, selectedDrawingId, removeDrawing, addTagToChat } = useDrawingTools();
   const { currentSessionId, addDrawingToSession, updateDrawingInSession } = useChat();
-  const { executionsSidebarWidth, executionsSidebarCollapsed, updateUserPoint } = useViewMode();
+  const { cardsSidebarWidth, cardsSidebarCollapsed, updateUserPoint } = useViewMode();
   
   // Get sidebar width from ViewMode context
-  const sidebarWidth = executionsSidebarCollapsed ? 54 : executionsSidebarWidth;
+  const sidebarWidth = cardsSidebarCollapsed ? 54 : cardsSidebarWidth;
 
   const [pendingPoint, setPendingPoint] = useState<DrawingPoint | null>(null);
   const [previewPrimitive, setPreviewPrimitive] = useState<PrimitiveInstance | null>(null);
@@ -157,15 +157,15 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     addTagToChat(selectedDrawing);
     
     // Expand sidebar if needed
-    if (executionsSidebarCollapsed || executionsSidebarWidth < 500) {
+    if (cardsSidebarCollapsed || cardsSidebarWidth < 500) {
       updateUserPoint({ 
-        executionsSidebarCollapsed: false,
-        executionsSidebarWidth: 500 
+        cardsSidebarCollapsed: false,
+        cardsSidebarWidth: 500 
       });
     }
     
     selectDrawing(null);
-  }, [selectedDrawingId, drawings, addTagToChat, executionsSidebarCollapsed, executionsSidebarWidth, updateUserPoint, selectDrawing]);
+  }, [selectedDrawingId, drawings, addTagToChat, cardsSidebarCollapsed, cardsSidebarWidth, updateUserPoint, selectDrawing]);
 
   // Handle delete drawing action
   const handleDeleteDrawing = useCallback(() => {

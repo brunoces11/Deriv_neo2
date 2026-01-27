@@ -6,7 +6,7 @@ import { ExecutionCard } from './ExecutionCard';
 import { ChatMessages } from '../chat/ChatMessages';
 import { ChatInput_NEO } from '../chat/ChatInput_NEO';
 
-interface ExecutionsSidebarProps {
+interface CardsSidebarProps {
   isCollapsed: boolean;
   width: number;
   isGraphMode: boolean;
@@ -23,10 +23,10 @@ const MIN_WIDTH_GRAPH_MODE = 425;
 const DEFAULT_EXPAND_WIDTH_GRAPH_MODE = 780;
 
 // Vertical resize constants
-const MIN_EXECUTIONS_HEIGHT = 100;
-const MAX_EXECUTIONS_PERCENT = 70; // Max 70% of available height
+const MIN_CARDS_HEIGHT = 100;
+const MAX_CARDS_PERCENT = 70; // Max 70% of available height
 
-export function ExecutionsSidebar({ 
+export function CardsSidebar({ 
   isCollapsed, 
   width: propWidth,
   isGraphMode,
@@ -34,12 +34,12 @@ export function ExecutionsSidebar({
   onResize,
   onResizeStart,
   onResizeEnd,
-}: ExecutionsSidebarProps) {
+}: CardsSidebarProps) {
   const { activeCards } = useChat();
   const { theme } = useTheme();
   const [localWidth, setLocalWidth] = useState(propWidth);
   const [isResizing, setIsResizing] = useState(false);
-  const [executionsHeight, setExecutionsHeight] = useState(200); // Default height in pixels
+  const [cardsHeight, setCardsHeight] = useState(200); // Default height in pixels
   const [isVerticalResizing, setIsVerticalResizing] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -126,17 +126,17 @@ export function ExecutionsSidebar({
     setIsVerticalResizing(true);
     
     const startY = e.clientY;
-    const startHeight = executionsHeight;
+    const startHeight = cardsHeight;
     const containerHeight = contentRef.current?.clientHeight || 500;
-    const maxHeight = containerHeight * (MAX_EXECUTIONS_PERCENT / 100);
+    const maxHeight = containerHeight * (MAX_CARDS_PERCENT / 100);
 
     const handleMouseMove = (e: MouseEvent) => {
       const delta = e.clientY - startY;
       let newHeight = startHeight + delta;
       
       // Clamp to min/max
-      newHeight = Math.max(MIN_EXECUTIONS_HEIGHT, Math.min(maxHeight, newHeight));
-      setExecutionsHeight(newHeight);
+      newHeight = Math.max(MIN_CARDS_HEIGHT, Math.min(maxHeight, newHeight));
+      setCardsHeight(newHeight);
     };
 
     const handleMouseUp = () => {
@@ -151,7 +151,7 @@ export function ExecutionsSidebar({
     document.addEventListener('mouseup', handleMouseUp);
     document.body.style.cursor = 'ns-resize';
     document.body.style.userSelect = 'none';
-  }, [executionsHeight]);
+  }, [cardsHeight]);
 
   // Width visual: durante resize sempre usa localWidth, senão respeita collapsed
   const displayWidth = isResizing ? localWidth : (isCollapsed ? COLLAPSED_WIDTH : localWidth);
@@ -216,7 +216,7 @@ export function ExecutionsSidebar({
             <>
               <div className="flex-1 min-w-0">
                 <h2 className={`text-sm font-medium transition-colors truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  Executions
+                  Cards
                 </h2>
                 <p className={`text-xs transition-colors ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
                   {activeCards.length} active
@@ -230,19 +230,19 @@ export function ExecutionsSidebar({
         </div>
       </div>
 
-      {/* Cards List - Chat Mode: apenas executions, Graph Mode: executions + chat */}
+      {/* Cards List - Chat Mode: apenas cards, Graph Mode: cards + chat */}
       {isGraphMode && !showCollapsedContent ? (
         // Graph Mode Layout: 3 seções
         <div ref={contentRef} className="flex-1 flex flex-col overflow-hidden">
-          {/* Executions Section */}
+          {/* Cards Section */}
           <div 
             className="overflow-y-auto custom-scrollbar p-3"
-            style={{ height: executionsHeight, minHeight: MIN_EXECUTIONS_HEIGHT }}
+            style={{ height: cardsHeight, minHeight: MIN_CARDS_HEIGHT }}
           >
             {activeCards.length === 0 ? (
               <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
                 <Zap className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
-                <p className="text-xs">No executions</p>
+                <p className="text-xs">No cards</p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -282,7 +282,7 @@ export function ExecutionsSidebar({
           </div>
         </div>
       ) : (
-        // Chat Mode Layout: apenas executions (comportamento original)
+        // Chat Mode Layout: apenas cards (comportamento original)
         <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
           {showCollapsedContent ? (
             <div className="flex flex-col items-center space-y-2">
@@ -310,7 +310,7 @@ export function ExecutionsSidebar({
           ) : activeCards.length === 0 ? (
             <div className={`text-center py-8 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
               <Zap className={`w-8 h-8 mx-auto mb-2 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
-              <p className="text-sm">No executions yet</p>
+              <p className="text-sm">No cards yet</p>
               <p className="text-xs mt-1">Cards will appear here as you chat</p>
             </div>
           ) : (

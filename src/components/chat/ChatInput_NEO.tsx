@@ -540,6 +540,51 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
       e.preventDefault();
       handleSubmit();
     }
+    
+    // Handle Home key - move cursor to absolute beginning of editor
+    if (e.key === 'Home' && !e.shiftKey) {
+      e.preventDefault();
+      if (!editorRef.current) return;
+      
+      const selection = window.getSelection();
+      if (!selection) return;
+      
+      const range = document.createRange();
+      
+      // Find the first text node or position at the very start
+      const firstChild = editorRef.current.firstChild;
+      if (firstChild) {
+        if (firstChild.nodeType === Node.TEXT_NODE) {
+          range.setStart(firstChild, 0);
+        } else {
+          range.setStartBefore(firstChild);
+        }
+      } else {
+        range.setStart(editorRef.current, 0);
+      }
+      range.collapse(true);
+      
+      selection.removeAllRanges();
+      selection.addRange(range);
+      lastCursorRangeRef.current = range.cloneRange();
+    }
+    
+    // Handle End key - move cursor to absolute end of editor
+    if (e.key === 'End' && !e.shiftKey) {
+      e.preventDefault();
+      if (!editorRef.current) return;
+      
+      const selection = window.getSelection();
+      if (!selection) return;
+      
+      const range = document.createRange();
+      range.selectNodeContents(editorRef.current);
+      range.collapse(false); // Collapse to end
+      
+      selection.removeAllRanges();
+      selection.addRange(range);
+      lastCursorRangeRef.current = range.cloneRange();
+    }
   };
 
   return (
