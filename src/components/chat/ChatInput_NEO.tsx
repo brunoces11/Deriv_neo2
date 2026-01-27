@@ -50,17 +50,20 @@ function isMarketTag(tagName: string): boolean {
   return PRODUCTS.some(p => p.toLowerCase().replace(/\s+/g, '') === tagName.toLowerCase().replace(/\s+/g, ''));
 }
 
-// Cores inline para tags - todas usam o mesmo azul
-// Texto azul bem escuro (#1e3a5f) para melhor legibilidade
-const TAG_COLORS: Record<string, { bg: string; text: string; border: string }> = {
-  trendline: { bg: 'rgba(59, 130, 246, 0.25)', text: '#1e3a5f', border: 'rgba(59, 130, 246, 0.4)' },
-  horizontal: { bg: 'rgba(59, 130, 246, 0.25)', text: '#1e3a5f', border: 'rgba(59, 130, 246, 0.4)' },
-  rectangle: { bg: 'rgba(59, 130, 246, 0.25)', text: '#1e3a5f', border: 'rgba(59, 130, 246, 0.4)' },
-  note: { bg: 'rgba(59, 130, 246, 0.25)', text: '#1e3a5f', border: 'rgba(59, 130, 246, 0.4)' },
-  // Agent tags - vermelho com texto vermelho escuro
-  agent: { bg: 'rgba(239, 68, 68, 0.25)', text: '#5c1a1a', border: 'rgba(239, 68, 68, 0.4)' },
-  // Market tags - roxo com texto roxo escuro
-  market: { bg: 'rgba(147, 51, 234, 0.25)', text: '#3b1a5c', border: 'rgba(147, 51, 234, 0.4)' },
+// Cores inline para tags - com versões light e dark
+// Light mode: texto escuro para contraste
+// Dark mode: texto claro para contraste
+const TAG_COLORS: Record<string, { bg: string; textLight: string; textDark: string; border: string }> = {
+  trendline: { bg: 'rgba(59, 130, 246, 0.25)', textLight: '#1e3a5f', textDark: '#93c5fd', border: 'rgba(59, 130, 246, 0.4)' },
+  horizontal: { bg: 'rgba(59, 130, 246, 0.25)', textLight: '#1e3a5f', textDark: '#93c5fd', border: 'rgba(59, 130, 246, 0.4)' },
+  rectangle: { bg: 'rgba(59, 130, 246, 0.25)', textLight: '#1e3a5f', textDark: '#93c5fd', border: 'rgba(59, 130, 246, 0.4)' },
+  note: { bg: 'rgba(59, 130, 246, 0.25)', textLight: '#1e3a5f', textDark: '#93c5fd', border: 'rgba(59, 130, 246, 0.4)' },
+  // Agent tags - vermelho
+  agent: { bg: 'rgba(239, 68, 68, 0.25)', textLight: '#5c1a1a', textDark: '#fca5a5', border: 'rgba(239, 68, 68, 0.4)' },
+  // Market tags - roxo
+  market: { bg: 'rgba(147, 51, 234, 0.25)', textLight: '#3b1a5c', textDark: '#d8b4fe', border: 'rgba(147, 51, 234, 0.4)' },
+  // Default - cinza
+  default: { bg: 'rgba(113, 113, 122, 0.25)', textLight: '#3d3d3d', textDark: '#d4d4d8', border: 'rgba(113, 113, 122, 0.4)' },
 };
 
 // Gera HTML para uma tag estilizada
@@ -68,7 +71,7 @@ function generateTagHTML(tagName: string, tagNumber: string | null): string {
   const label = tagNumber ? `${tagName}-${tagNumber}` : tagName;
   
   // Determinar cor baseado no tipo de tag
-  let colors: { bg: string; text: string; border: string };
+  let colors: { bg: string; textLight: string; textDark: string; border: string };
   
   if (isAgentTag(tagName)) {
     colors = TAG_COLORS.agent;
@@ -78,10 +81,11 @@ function generateTagHTML(tagName: string, tagNumber: string | null): string {
     const drawingType = getDrawingTypeFromTagName(tagName);
     colors = drawingType 
       ? TAG_COLORS[drawingType] 
-      : { bg: 'rgba(113, 113, 122, 0.25)', text: '#3d3d3d', border: 'rgba(113, 113, 122, 0.4)' };
+      : TAG_COLORS.default;
   }
   
-  return `<span class="inline-tag" data-tag="${label}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 0px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; line-height: 1.4; background: ${colors.bg}; color: ${colors.text}; border: 1px solid ${colors.border}; margin: 0 2px; user-select: all; cursor: default;">@${label}</span>`;
+  // Usar CSS custom properties para alternar entre light/dark
+  return `<span class="inline-tag" data-tag="${label}" data-text-light="${colors.textLight}" data-text-dark="${colors.textDark}" contenteditable="false" style="display: inline-flex; align-items: center; padding: 0px 8px; border-radius: 9999px; font-size: 12px; font-weight: 500; line-height: 1.4; background: ${colors.bg}; border: 1px solid ${colors.border}; margin: 0 4px; user-select: all; cursor: default;">@${label}</span>`;
 }
 
 // Converte texto com tags para HTML renderizado
@@ -161,6 +165,20 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
 
   const isSidebar = displayMode === 'sidebar';
 
+  // Atualizar cores das tags quando o tema muda
+  useEffect(() => {
+    if (!editorRef.current) return;
+    
+    const tags = editorRef.current.querySelectorAll('.inline-tag');
+    tags.forEach(tag => {
+      const textLight = tag.getAttribute('data-text-light');
+      const textDark = tag.getAttribute('data-text-dark');
+      if (textLight && textDark) {
+        (tag as HTMLElement).style.color = theme === 'dark' ? textDark : textLight;
+      }
+    });
+  }, [theme]);
+
   // Salvar posição do cursor quando o editor perde foco ou quando há mudança de seleção
   const saveCursorPosition = useCallback(() => {
     if (!editorRef.current) return;
@@ -180,8 +198,15 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
     const tagHTML = generateTagHTML(tagLabel, null);
     const temp = document.createElement('div');
     temp.innerHTML = tagHTML;
-    const tagElement = temp.firstChild as Node;
+    const tagElement = temp.firstChild as HTMLElement;
     const spaceNode = document.createTextNode(' ');
+    
+    // Aplicar cor correta baseada no tema atual
+    const textLight = tagElement.getAttribute('data-text-light');
+    const textDark = tagElement.getAttribute('data-text-dark');
+    if (textLight && textDark) {
+      tagElement.style.color = theme === 'dark' ? textDark : textLight;
+    }
     
     // Tentar usar a última posição salva do cursor
     if (lastCursorRangeRef.current && editorRef.current.contains(lastCursorRangeRef.current.commonAncestorContainer)) {
@@ -205,6 +230,15 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
     } else {
       // Fallback: adicionar no final do editor
       editorRef.current.innerHTML += tagHTML + ' ';
+      // Aplicar cor às tags recém adicionadas
+      const newTags = editorRef.current.querySelectorAll('.inline-tag');
+      newTags.forEach(tag => {
+        const tl = tag.getAttribute('data-text-light');
+        const td = tag.getAttribute('data-text-dark');
+        if (tl && td) {
+          (tag as HTMLElement).style.color = theme === 'dark' ? td : tl;
+        }
+      });
       editorRef.current.focus();
       
       // Posicionar cursor no final
@@ -221,7 +255,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
     
     // Atualizar plainText
     setPlainText(htmlToText(editorRef.current.innerHTML));
-  }, []);
+  }, [theme]);
 
   // Função para remover tag do editor
   const removeTagFromEditor = useCallback((tagLabel: string) => {
@@ -367,8 +401,15 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
         );
         const temp = document.createElement('div');
         temp.innerHTML = tagHTML + ' ';
-        const tagElement = temp.firstChild as Node;
+        const tagElement = temp.firstChild as HTMLElement;
         const spaceNode = document.createTextNode(' ');
+        
+        // Aplicar cor correta baseada no tema atual
+        const textLight = tagElement.getAttribute('data-text-light');
+        const textDark = tagElement.getAttribute('data-text-dark');
+        if (textLight && textDark) {
+          tagElement.style.color = theme === 'dark' ? textDark : textLight;
+        }
         
         range.deleteContents();
         range.insertNode(spaceNode);
@@ -387,13 +428,22 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
         setPlainText(prev => prev + tagText);
         if (editorRef.current) {
           editorRef.current.innerHTML = textToHTML(plainText + tagText);
+          // Aplicar cores às tags
+          const tags = editorRef.current.querySelectorAll('.inline-tag');
+          tags.forEach(tag => {
+            const tl = tag.getAttribute('data-text-light');
+            const td = tag.getAttribute('data-text-dark');
+            if (tl && td) {
+              (tag as HTMLElement).style.color = theme === 'dark' ? td : tl;
+            }
+          });
         }
       }
       
       editorRef.current.focus();
     }
     lastTagCountRef.current = chatTags.length;
-  }, [chatTags, plainText]);
+  }, [chatTags, plainText, theme]);
 
   // Sincronizar HTML quando plainText muda externamente
   useEffect(() => {
@@ -431,12 +481,21 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
       
       if (newHTML !== html) {
         editorRef.current.innerHTML = newHTML;
+        // Aplicar cores às tags baseado no tema
+        const tags = editorRef.current.querySelectorAll('.inline-tag');
+        tags.forEach(tag => {
+          const tl = tag.getAttribute('data-text-light');
+          const td = tag.getAttribute('data-text-dark');
+          if (tl && td) {
+            (tag as HTMLElement).style.color = theme === 'dark' ? td : tl;
+          }
+        });
         if (caretPos !== null) {
           restoreCaretPosition(caretPos);
         }
       }
     }
-  }, [saveCaretPosition, restoreCaretPosition]);
+  }, [saveCaretPosition, restoreCaretPosition, theme]);
 
   const handleSubmit = async () => {
     if (!plainText.trim() || isTyping) return;
@@ -634,7 +693,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
                       className="inline-flex items-center gap-1 px-2 rounded-full text-xs font-medium"
                       style={{
                         background: 'rgba(239, 68, 68, 0.25)',
-                        color: '#5c1a1a',
+                        color: theme === 'dark' ? '#fca5a5' : '#5c1a1a',
                         border: '1px solid rgba(239, 68, 68, 0.4)',
                         lineHeight: '1.4',
                         paddingTop: '2px',
