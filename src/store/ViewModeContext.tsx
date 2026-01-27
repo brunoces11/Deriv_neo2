@@ -20,13 +20,13 @@ const START_POINTS: Record<ViewMode, Required<Omit<UserPoint, never>> & { chartV
   chat: {
     sidebarCollapsed: false,
     executionsSidebarCollapsed: false,
-    executionsSidebarWidth: 288, // w-72
+    executionsSidebarWidth: 660,
     chartVisible: false,
   },
   graph: {
     sidebarCollapsed: true,
-    executionsSidebarCollapsed: false,  // Sidebar expandido por padrão no Graph Mode
-    executionsSidebarWidth: 669,        // Largura padrão 669px no Graph Mode
+    executionsSidebarCollapsed: false,
+    executionsSidebarWidth: 840,
     chartVisible: true,
   },
 };
@@ -117,8 +117,13 @@ function loadFromStorage(): { currentMode: ViewMode; userPoints: Record<ViewMode
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (parsed.currentMode && parsed.userPoints) {
-        return parsed;
+      if (parsed.userPoints) {
+        // Only restore userPoints (sidebar widths, collapsed states)
+        // Always start in 'chat' mode - don't restore currentMode
+        return {
+          currentMode: 'chat', // Always start in chat mode
+          userPoints: parsed.userPoints,
+        };
       }
     }
   } catch {

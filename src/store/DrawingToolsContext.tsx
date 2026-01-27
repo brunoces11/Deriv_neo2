@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
 
 // Types
-export type DrawingTool = 'none' | 'trendline' | 'horizontal' | 'rectangle';
+export type DrawingTool = 'none' | 'trendline' | 'horizontal' | 'rectangle' | 'note';
 
 export interface Drawing {
   id: string;
@@ -9,6 +9,7 @@ export interface Drawing {
   points: { time: number; price: number }[];
   color: string;
   createdAt: number;
+  text?: string; // For note type
 }
 
 export interface DrawingTag {
@@ -34,6 +35,7 @@ interface DrawingToolsContextValue {
   setActiveTool: (tool: DrawingTool) => void;
   toggleTool: (tool: Exclude<DrawingTool, 'none'>) => void;
   addDrawing: (drawing: Omit<Drawing, 'id' | 'createdAt'>) => Drawing;
+  updateDrawing: (id: string, updates: Partial<Pick<Drawing, 'text'>>) => void;
   removeDrawing: (id: string) => void;
   clearAllDrawings: () => void;
   selectDrawing: (id: string | null) => void;
@@ -48,7 +50,18 @@ interface DrawingToolsContextValue {
 
 const DrawingToolsContext = createContext<DrawingToolsContextValue | null>(null);
 
-// Drawing colors by type
+// Drawing colors by type - ALL use the same blue color
+const BLUE_COLOR = {
+  color: '#3b82f6',           // Blue vivo
+  selectedColor: '#60a5fa',   // Blue mais claro quando selecionado
+  tagBg: 'bg-blue-500/20',
+  tagBgSelected: 'bg-blue-600/30',
+  tagText: 'text-blue-300',
+  tagTextSelected: 'text-blue-200',
+  tagBorder: 'border-blue-500/30',
+  tagBorderSelected: 'border-blue-900/80',
+};
+
 export const DRAWING_COLORS: Record<Exclude<DrawingTool, 'none'>, { 
   color: string; 
   selectedColor: string; 
@@ -59,36 +72,10 @@ export const DRAWING_COLORS: Record<Exclude<DrawingTool, 'none'>, {
   tagBorderSelected: string;
   tagBgSelected: string;
 }> = {
-  trendline: {
-    color: '#3b82f6',           // Blue escuro
-    selectedColor: '#60a5fa',   // Blue mais claro quando selecionado
-    tagBg: 'bg-blue-500/20',
-    tagBgSelected: 'bg-blue-600/30',
-    tagText: 'text-blue-300',   // 13% mais escuro que text-blue-400
-    tagTextSelected: 'text-blue-200',
-    tagBorder: 'border-blue-500/30',
-    tagBorderSelected: 'border-blue-900/80',
-  },
-  horizontal: {
-    color: '#a1a1aa',           // Cinza 50%
-    selectedColor: '#d4d4d8',   // Cinza mais claro quando selecionado
-    tagBg: 'bg-zinc-500/20',
-    tagBgSelected: 'bg-zinc-600/30',
-    tagText: 'text-zinc-400',
-    tagTextSelected: 'text-zinc-300',
-    tagBorder: 'border-zinc-500/30',
-    tagBorderSelected: 'border-zinc-800/80',
-  },
-  rectangle: {
-    color: '#22d3ee',           // Cyan claro
-    selectedColor: '#67e8f9',   // Cyan mais claro quando selecionado
-    tagBg: 'bg-cyan-500/20',
-    tagBgSelected: 'bg-cyan-600/30',
-    tagText: 'text-cyan-300',   // 18% mais escuro que text-cyan-400
-    tagTextSelected: 'text-cyan-200',
-    tagBorder: 'border-cyan-500/30',
-    tagBorderSelected: 'border-cyan-900/80',
-  },
+  trendline: BLUE_COLOR,
+  horizontal: BLUE_COLOR,
+  rectangle: BLUE_COLOR,
+  note: BLUE_COLOR,
 };
 
 // Helper to generate label
@@ -97,6 +84,7 @@ function generateLabel(type: Exclude<DrawingTool, 'none'>): string {
     trendline: 'TrendLine',
     horizontal: 'Horizontal',
     rectangle: 'Rectangle',
+    note: 'Note',
   };
   return labels[type];
 }
@@ -121,6 +109,12 @@ export function DrawingToolsProvider({ children }: { children: ReactNode }) {
     setDrawings(current => [...current, newDrawing]);
     setActiveTool('none');
     return newDrawing;
+  }, []);
+
+  const updateDrawing = useCallback((id: string, updates: Partial<Pick<Drawing, 'text'>>) => {
+    setDrawings(current => current.map(d => 
+      d.id === id ? { ...d, ...updates } : d
+    ));
   }, []);
 
   const removeDrawing = useCallback((id: string) => {
@@ -182,7 +176,7 @@ export function DrawingToolsProvider({ children }: { children: ReactNode }) {
 
   // Session sync functions
   const setDrawingsFromSession = useCallback((sessionDrawings: Drawing[]) => {
-    console.log('DrawingToolsContext: setDrawingsFromSession called', { count: sessionDrawings.length, drawings: sessionDrawings });
+    // Replace all drawings with session drawings (clean swap like Photoshop layers)
     setDrawings(sessionDrawings);
     setSelectedDrawingId(null);
     setActiveTool('none');
@@ -231,6 +225,7 @@ export function DrawingToolsProvider({ children }: { children: ReactNode }) {
         setActiveTool,
         toggleTool,
         addDrawing,
+        updateDrawing,
         removeDrawing,
         clearAllDrawings,
         selectDrawing,

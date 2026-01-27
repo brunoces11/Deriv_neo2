@@ -96,7 +96,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
 
   return (
     <aside className={`relative z-40 border-r flex flex-col h-full transition-all duration-300 ${
-      isCollapsed ? 'w-16' : 'w-72'
+      isCollapsed ? 'w-16' : 'w-[280px]'
     } ${
       theme === 'dark'
         ? 'bg-zinc-950 border-zinc-800/50'
@@ -129,20 +129,20 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
           {onToggleCollapse && !isCollapsed && (
             <button
               onClick={onToggleCollapse}
-              className={`p-1.5 rounded-lg transition-colors ${
+              className={`absolute -right-3 top-5 p-1 rounded-full shadow-md transition-colors z-[70] ${
                 theme === 'dark'
-                  ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
-                  : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+                  ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700'
+                  : 'bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-700 border border-gray-200'
               }`}
               title="Collapse sidebar"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3 h-3" />
             </button>
           )}
           {onToggleCollapse && isCollapsed && (
             <button
               onClick={onToggleCollapse}
-              className={`absolute -right-3 top-5 p-1 rounded-full shadow-md transition-colors ${
+              className={`absolute -right-3 top-5 p-1 rounded-full shadow-md transition-colors z-[70] ${
                 theme === 'dark'
                   ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700'
                   : 'bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-700 border border-gray-200'

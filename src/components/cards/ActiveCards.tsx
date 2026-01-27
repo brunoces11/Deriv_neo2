@@ -4,6 +4,9 @@ import { ActionTicketCard } from './ActionTicketCard';
 import { BotCard } from './BotCard';
 import { PortfolioSnapshotCard } from './PortfolioSnapshotCard';
 import { PortfolioTableCard } from './PortfolioTableCard';
+import { PortfolioSidebarCard } from './PortfolioSidebarCard';
+import { PortfolioTableCardExpanded } from './PortfolioTableCardExpanded';
+import { PortfolioTableCardComplete } from './PortfolioTableCardComplete';
 import type { BaseCard } from '../../types';
 
 const cardComponents = {
@@ -12,6 +15,9 @@ const cardComponents = {
   'bot': BotCard,
   'portfolio-snapshot': PortfolioSnapshotCard,
   'portfolio-table': PortfolioTableCard,
+  'portfolio-sidebar': PortfolioSidebarCard,
+  'portfolio-table-expanded': PortfolioTableCardExpanded,
+  'portfolio-table-complete': PortfolioTableCardComplete,
 };
 
 export function ActiveCards() {

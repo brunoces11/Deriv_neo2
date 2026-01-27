@@ -1,8 +1,9 @@
 import { ChatMessages } from '../chat/ChatMessages';
-import { ChatInput } from '../chat/ChatInput';
+import { ChatInput_NEO } from '../chat/ChatInput_NEO';
 import { ActiveCards } from '../cards/ActiveCards';
 import { ModeToggle } from './ModeToggle';
 import { DrawingToolsPanel } from '../chart/DrawingToolsPanel';
+import { AssetSelector } from '../chart/AssetSelector';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 
@@ -27,14 +28,28 @@ export function MainArea({ isGraphMode }: MainAreaProps) {
         }`} />
       )}
 
-      {/* Mode Toggle - sempre interativo */}
-      <div className={`relative z-10 flex justify-end items-center gap-3 px-4 py-2 border-b pointer-events-auto ${
+      {/* Header row - Mode Toggle centralizado + Asset Selector à esquerda (apenas graph mode) */}
+      <div className={`relative z-10 flex items-center px-4 py-2 border-b pointer-events-auto ${
         theme === 'dark' ? 'border-zinc-800/30' : 'border-gray-100'
       } ${isGraphMode ? 'border-transparent' : ''}`} style={{ marginTop: '7px' }}>
-        {/* Drawing Tools - só aparece em Graph Mode, à esquerda do ModeToggle */}
-        {isGraphMode && <DrawingToolsPanel />}
-        <ModeToggle />
+        {/* Asset Selector - esquerda, apenas no Graph Mode */}
+        {isGraphMode && (
+          <div className="absolute left-4">
+            <AssetSelector />
+          </div>
+        )}
+        {/* Mode Toggle - centralizado */}
+        <div className="flex-1 flex justify-center">
+          <ModeToggle />
+        </div>
       </div>
+
+      {/* Drawing Tools Panel - positioned at bottom center in Graph Mode */}
+      {isGraphMode && (
+        <div className="absolute bottom-[110px] left-1/2 -translate-x-1/2 z-20 pointer-events-auto">
+          <DrawingToolsPanel />
+        </div>
+      )}
 
       <div className={`flex-1 flex flex-col relative z-10 overflow-hidden ${isGraphMode ? 'pointer-events-none' : ''}`}>
         {isGraphMode ? (
@@ -44,7 +59,7 @@ export function MainArea({ isGraphMode }: MainAreaProps) {
           <WelcomeScreen />
         ) : (
           <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <div className="max-w-3xl mx-auto w-full px-4">
+            <div className="mx-auto w-full px-4 chat-content-width">
               <ChatMessages />
               <ActiveCards />
             </div>
@@ -58,8 +73,8 @@ export function MainArea({ isGraphMode }: MainAreaProps) {
             ? 'border-zinc-800/50 bg-zinc-900/80'
             : 'border-gray-200 bg-white/80'
         }`}>
-          <div className="max-w-3xl mx-auto w-full px-4 py-4">
-            <ChatInput />
+          <div className="mx-auto w-full px-4 py-4 chat-content-width">
+            <ChatInput_NEO />
           </div>
         </div>
       )}

@@ -1,8 +1,151 @@
 import { useRef, useEffect } from 'react';
-import { User, Bot, Loader2 } from 'lucide-react';
+import { Bot, Loader2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import type { ChatMessage } from '../../types';
+
+// URL da foto do usuário (mesma usada no UserProfile)
+const USER_AVATAR_URL = "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=200";
+
+// Regex para detectar tags no formato [@TagName-N] ou [@TagName]
+const TAG_REGEX = /\[@([A-Za-z0-9\s]+?)(?:-(\d+))?\]/g;
+
+// Lista de agentes e markets para identificação
+const AGENTS = [
+  'RiskAnalysisAgent',
+  'PortfolioManagerAgent',
+  'TraderAgent',
+  'BotCreatorAgent',
+  'MarketAgent',
+  'SupportAgent',
+  'TrainerAgent',
+];
+
+const MARKETS = [
+  'Forex',
+  'DerivedIndices',
+  'Stocks',
+  'StockIndices',
+  'Commodities',
+  'Cryptocurrencies',
+  'ETFs',
+];
+
+// Mapeia nomes de tags para tipos de drawing
+function getDrawingTypeFromTagName(tagName: string): 'trendline' | 'horizontal' | 'rectangle' | 'note' | null {
+  const normalized = tagName.toLowerCase();
+  if (normalized === 'trendline') return 'trendline';
+  if (normalized === 'horizontal') return 'horizontal';
+  if (normalized === 'rectangle') return 'rectangle';
+  if (normalized === 'note') return 'note';
+  return null;
+}
+
+// Verifica se é uma tag de agente
+function isAgentTag(tagName: string): boolean {
+  const normalized = tagName.replace(/\s+/g, '');
+  return AGENTS.some(a => a.toLowerCase() === normalized.toLowerCase());
+}
+
+// Verifica se é uma tag de market
+function isMarketTag(tagName: string): boolean {
+  const normalized = tagName.replace(/\s+/g, '');
+  return MARKETS.some(m => m.toLowerCase() === normalized.toLowerCase());
+}
+
+// Componente para renderizar uma tag estilizada
+function TagBadge({ tagName, tagNumber }: { tagName: string; tagNumber?: string }) {
+  const label = tagNumber ? `${tagName}-${tagNumber}` : tagName;
+  
+  // Verificar se é tag de agente (vermelho)
+  if (isAgentTag(tagName)) {
+    return (
+      <span 
+        className="inline-flex items-center px-2 rounded-full text-xs font-medium" 
+        style={{ 
+          paddingTop: '0px', 
+          paddingBottom: '0px', 
+          lineHeight: '1.4',
+          background: 'rgba(239, 68, 68, 0.25)',
+          color: '#5c1a1a',
+          border: '1px solid rgba(239, 68, 68, 0.4)'
+        }}
+      >
+        @{label}
+      </span>
+    );
+  }
+  
+  // Verificar se é tag de market (roxo)
+  if (isMarketTag(tagName)) {
+    return (
+      <span 
+        className="inline-flex items-center px-2 rounded-full text-xs font-medium" 
+        style={{ 
+          paddingTop: '0px', 
+          paddingBottom: '0px', 
+          lineHeight: '1.4',
+          background: 'rgba(147, 51, 234, 0.25)',
+          color: '#3b1a5c',
+          border: '1px solid rgba(147, 51, 234, 0.4)'
+        }}
+      >
+        @{label}
+      </span>
+    );
+  }
+  
+  const drawingType = getDrawingTypeFromTagName(tagName);
+  
+  if (!drawingType) {
+    // Tag desconhecida - renderiza com estilo genérico
+    return (
+      <span className="inline-flex items-center px-2 rounded-full text-xs font-medium bg-zinc-500/25 text-zinc-800 border border-zinc-500/40" style={{ paddingTop: '0px', paddingBottom: '0px', lineHeight: '1.4' }}>
+        @{label}
+      </span>
+    );
+  }
+
+  // Tags de desenho usam azul com texto escuro para legibilidade
+  return (
+    <span className="inline-flex items-center px-2 rounded-full text-xs font-medium bg-blue-500/25 text-blue-900 border border-blue-500/40" style={{ paddingTop: '0px', paddingBottom: '0px', lineHeight: '1.4' }}>
+      @{label}
+    </span>
+  );
+}
+
+// Função para parsear texto e substituir tags por componentes
+function parseMessageWithTags(content: string): (string | JSX.Element)[] {
+  const parts: (string | JSX.Element)[] = [];
+  let lastIndex = 0;
+  let match;
+  let keyIndex = 0;
+
+  // Reset regex
+  TAG_REGEX.lastIndex = 0;
+
+  while ((match = TAG_REGEX.exec(content)) !== null) {
+    // Adiciona texto antes da tag
+    if (match.index > lastIndex) {
+      parts.push(content.slice(lastIndex, match.index));
+    }
+
+    // Adiciona a tag como componente
+    const tagName = match[1];
+    const tagNumber = match[2];
+    parts.push(<TagBadge key={`tag-${keyIndex++}`} tagName={tagName} tagNumber={tagNumber} />);
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Adiciona texto restante após a última tag
+  if (lastIndex < content.length) {
+    parts.push(content.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : [content];
+}
 
 interface ChatMessagesProps {
   displayMode?: 'center' | 'sidebar';
@@ -40,21 +183,29 @@ function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
   return (
     <div className="animate-slide-up opacity-0">
       <div className={`flex ${isSidebar ? 'gap-2' : 'gap-4'} ${isUser ? 'flex-row-reverse' : ''}`}>
-        <div
-          className={`flex-shrink-0 rounded-lg flex items-center justify-center ${
-            isSidebar ? 'w-7 h-7' : 'w-8 h-8'
-          } ${
-            isUser
-              ? theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-300'
-              : 'bg-gradient-to-br from-red-500 to-rose-600'
-          }`}
-        >
-          {isUser ? (
-            <User className={`${isSidebar ? 'w-3.5 h-3.5' : 'w-4 h-4'} ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-600'}`} />
-          ) : (
-            <Bot className={`${isSidebar ? 'w-3.5 h-3.5' : 'w-4 h-4'} text-white`} />
-          )}
-        </div>
+        {isUser ? (
+          <div
+            className={`flex-shrink-0 rounded-lg overflow-hidden ${
+              isSidebar ? 'w-8 h-8' : 'w-[37px] h-[37px]'
+            }`}
+          >
+            <img
+              src={USER_AVATAR_URL}
+              alt="User"
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : (
+          <div
+            className={`flex-shrink-0 rounded-lg flex items-center justify-center ${
+              isSidebar ? 'w-8 h-8' : 'w-[37px] h-[37px]'
+            } ${
+              theme === 'dark' ? 'bg-zinc-600' : 'bg-zinc-500'
+            }`}
+          >
+            <Bot className={`${isSidebar ? 'w-4 h-4' : 'w-[18px] h-[18px]'} text-white`} />
+          </div>
+        )}
 
         <div className={`flex-1 ${isUser ? 'text-right' : ''}`}>
           <div
@@ -78,9 +229,51 @@ function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
                     : 'bg-gray-50 text-gray-800 rounded-tl-md'
             }`}
           >
-            <p className={`leading-relaxed whitespace-pre-wrap ${isSidebar ? 'text-[13px]' : 'text-sm'}`}>
-              {message.content}
-            </p>
+            <div className={`prose prose-sm max-w-none leading-relaxed ${isSidebar ? 'text-[13px]' : 'text-sm'} ${
+              theme === 'dark' ? 'prose-invert' : ''
+            }`}>
+              {isUser ? (
+                // Para mensagens do usuário, renderiza tags como badges (line-height aumentado para tags)
+                <p className="mb-0 leading-[1.77]">{parseMessageWithTags(message.content)}</p>
+              ) : (
+                // Para mensagens da IA, usa ReactMarkdown
+                <ReactMarkdown
+                  components={{
+                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                    ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
+                    li: ({ children }) => <li className="mb-1">{children}</li>,
+                    code: ({ children }) => (
+                      <code className={`px-1 py-0.5 rounded text-xs ${
+                        theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
+                      }`}>{children}</code>
+                    ),
+                    pre: ({ children }) => (
+                      <pre className={`p-2 rounded overflow-x-auto text-xs mb-2 ${
+                        theme === 'dark' ? 'bg-zinc-900' : 'bg-gray-100'
+                      }`}>{children}</pre>
+                    ),
+                    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                    em: ({ children }) => <em className="italic">{children}</em>,
+                    h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
+                    a: ({ href, children }) => (
+                      <a href={href} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:underline">
+                        {children}
+                      </a>
+                    ),
+                    blockquote: ({ children }) => (
+                      <blockquote className={`border-l-2 pl-3 italic mb-2 ${
+                        theme === 'dark' ? 'border-zinc-600 text-zinc-400' : 'border-gray-300 text-gray-600'
+                      }`}>{children}</blockquote>
+                    ),
+                  }}
+                >
+                  {message.content}
+                </ReactMarkdown>
+              )}
+            </div>
           </div>
           <p className={`mt-1 px-1 transition-colors ${
             isSidebar ? 'text-[10px]' : 'text-xs'
@@ -104,10 +297,12 @@ function TypingIndicator({ isSidebar = false }: TypingIndicatorProps) {
 
   return (
     <div className={`flex animate-fade-in ${isSidebar ? 'gap-2' : 'gap-4'}`}>
-      <div className={`flex-shrink-0 rounded-lg bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center ${
-        isSidebar ? 'w-7 h-7' : 'w-8 h-8'
+      <div className={`flex-shrink-0 rounded-lg flex items-center justify-center ${
+        isSidebar ? 'w-8 h-8' : 'w-[37px] h-[37px]'
+      } ${
+        theme === 'dark' ? 'bg-zinc-600' : 'bg-zinc-500'
       }`}>
-        <Bot className={`${isSidebar ? 'w-3.5 h-3.5' : 'w-4 h-4'} text-white`} />
+        <Bot className={`${isSidebar ? 'w-4 h-4' : 'w-[18px] h-[18px]'} text-white`} />
       </div>
       <div className={`flex items-center gap-2 rounded-2xl rounded-tl-md transition-colors ${
         isSidebar ? 'px-3 py-2' : 'px-4 py-3'
@@ -116,7 +311,7 @@ function TypingIndicator({ isSidebar = false }: TypingIndicatorProps) {
           ? isSidebar ? 'bg-zinc-800' : 'bg-zinc-800/50' 
           : isSidebar ? 'bg-gray-200' : 'bg-gray-50'
       }`}>
-        <Loader2 className={`text-red-500 animate-spin ${isSidebar ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
+        <Loader2 className={`text-zinc-400 animate-spin ${isSidebar ? 'w-3.5 h-3.5' : 'w-4 h-4'}`} />
         <span className={`transition-colors ${
           isSidebar ? 'text-[13px]' : 'text-sm'
         } ${

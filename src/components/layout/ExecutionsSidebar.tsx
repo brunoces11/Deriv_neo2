@@ -4,7 +4,7 @@ import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import { ExecutionCard } from './ExecutionCard';
 import { ChatMessages } from '../chat/ChatMessages';
-import { ChatInput } from '../chat/ChatInput';
+import { ChatInput_NEO } from '../chat/ChatInput_NEO';
 
 interface ExecutionsSidebarProps {
   isCollapsed: boolean;
@@ -17,9 +17,14 @@ interface ExecutionsSidebarProps {
 }
 
 const COLLAPSED_WIDTH = 54;
-const MAX_WIDTH = 900;
+const MAX_WIDTH = 960;
 const SNAP_THRESHOLD = 100;
-const MIN_WIDTH_GRAPH_MODE = 270;
+const MIN_WIDTH_GRAPH_MODE = 425;
+const DEFAULT_EXPAND_WIDTH_GRAPH_MODE = 780;
+
+// Vertical resize constants
+const MIN_EXECUTIONS_HEIGHT = 100;
+const MAX_EXECUTIONS_PERCENT = 70; // Max 70% of available height
 
 export function ExecutionsSidebar({ 
   isCollapsed, 
@@ -34,7 +39,10 @@ export function ExecutionsSidebar({
   const { theme } = useTheme();
   const [localWidth, setLocalWidth] = useState(propWidth);
   const [isResizing, setIsResizing] = useState(false);
+  const [executionsHeight, setExecutionsHeight] = useState(200); // Default height in pixels
+  const [isVerticalResizing, setIsVerticalResizing] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
   const finalWidthRef = useRef(propWidth);
 
   // Sincronizar com prop width quando não está em resize
@@ -111,14 +119,57 @@ export function ExecutionsSidebar({
     document.body.style.userSelect = 'none';
   }, [localWidth, isCollapsed, onResizeStart, onResizeEnd, onResize, onToggleCollapse]);
 
+  // Vertical resize handler
+  const handleVerticalMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsVerticalResizing(true);
+    
+    const startY = e.clientY;
+    const startHeight = executionsHeight;
+    const containerHeight = contentRef.current?.clientHeight || 500;
+    const maxHeight = containerHeight * (MAX_EXECUTIONS_PERCENT / 100);
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const delta = e.clientY - startY;
+      let newHeight = startHeight + delta;
+      
+      // Clamp to min/max
+      newHeight = Math.max(MIN_EXECUTIONS_HEIGHT, Math.min(maxHeight, newHeight));
+      setExecutionsHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      setIsVerticalResizing(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+  }, [executionsHeight]);
+
   // Width visual: durante resize sempre usa localWidth, senão respeita collapsed
   const displayWidth = isResizing ? localWidth : (isCollapsed ? COLLAPSED_WIDTH : localWidth);
   const showCollapsedContent = displayWidth <= COLLAPSED_WIDTH;
 
+  // Custom toggle handler - applies 780px default when expanding in Graph Mode
+  const handleToggleCollapse = useCallback(() => {
+    if (isCollapsed && isGraphMode) {
+      // Expanding in Graph Mode - set to 780px
+      onResize(DEFAULT_EXPAND_WIDTH_GRAPH_MODE);
+    }
+    onToggleCollapse();
+  }, [isCollapsed, isGraphMode, onResize, onToggleCollapse]);
+
   return (
     <aside 
       ref={sidebarRef}
-      className={`relative z-40 border-l flex flex-col h-full ${
+      className={`relative z-30 border-l flex flex-col h-full ${
         isResizing ? '' : 'transition-all duration-300'
       } ${theme === 'dark' ? 'bg-zinc-950 border-zinc-800/50' : 'bg-gray-50 border-gray-200'}`}
       style={{ width: displayWidth }}
@@ -141,28 +192,23 @@ export function ExecutionsSidebar({
       {/* Header */}
       <div className={`p-4 border-b transition-colors ${theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'}`}>
         <div className="flex items-center gap-3">
-          {!showCollapsedContent && (
-            <button 
-              onClick={onToggleCollapse} 
-              className={`p-1.5 rounded-lg transition-colors ${
-                theme === 'dark' ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white' : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
-              }`} 
-              title="Collapse sidebar"
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          )}
-          {showCollapsedContent && (
-            <button 
-              onClick={onToggleCollapse} 
-              className={`absolute -left-3 top-5 p-1 rounded-full shadow-md transition-colors z-[70] ${
-                theme === 'dark' ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700' : 'bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-700 border border-gray-200'
-              }`} 
-              title="Expand sidebar"
-            >
+          {/* Collapse/Expand button - always on the border */}
+          <button 
+            onClick={handleToggleCollapse} 
+            className={`absolute -left-3 top-5 p-1 rounded-full shadow-md transition-colors z-[70] ${
+              theme === 'dark' 
+                ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700' 
+                : 'bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-700 border border-gray-200'
+            }`} 
+            title={showCollapsedContent ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {showCollapsedContent ? (
               <ChevronLeft className="w-3 h-3" />
-            </button>
-          )}
+            ) : (
+              <ChevronRight className="w-3 h-3" />
+            )}
+          </button>
+          
           <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${theme === 'dark' ? 'bg-red-500/10' : 'bg-red-50'}`}>
             <Zap className="w-4 h-4 text-red-500" />
           </div>
@@ -187,11 +233,12 @@ export function ExecutionsSidebar({
       {/* Cards List - Chat Mode: apenas executions, Graph Mode: executions + chat */}
       {isGraphMode && !showCollapsedContent ? (
         // Graph Mode Layout: 3 seções
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div ref={contentRef} className="flex-1 flex flex-col overflow-hidden">
           {/* Executions Section */}
-          <div className={`max-h-[40%] overflow-y-auto custom-scrollbar p-3 border-b ${
-            theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'
-          }`}>
+          <div 
+            className="overflow-y-auto custom-scrollbar p-3"
+            style={{ height: executionsHeight, minHeight: MIN_EXECUTIONS_HEIGHT }}
+          >
             {activeCards.length === 0 ? (
               <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
                 <Zap className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
@@ -206,6 +253,22 @@ export function ExecutionsSidebar({
             )}
           </div>
 
+          {/* Vertical Resize Handle */}
+          <div
+            onMouseDown={handleVerticalMouseDown}
+            className={`relative h-2 cursor-ns-resize group flex-shrink-0 ${
+              theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-200'
+            }`}
+          >
+            <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-1 rounded-full transition-colors ${
+              isVerticalResizing 
+                ? 'bg-red-500' 
+                : theme === 'dark' 
+                  ? 'bg-zinc-600 group-hover:bg-red-400' 
+                  : 'bg-gray-400 group-hover:bg-red-400'
+            }`} />
+          </div>
+
           {/* Chat Messages Section */}
           <div className="flex-1 overflow-y-auto custom-scrollbar px-3">
             <ChatMessages displayMode="sidebar" />
@@ -215,7 +278,7 @@ export function ExecutionsSidebar({
           <div className={`flex-shrink-0 p-[22px] border-t ${
             theme === 'dark' ? 'border-zinc-700 bg-zinc-900/80' : 'border-gray-200 bg-gray-100/50'
           }`}>
-            <ChatInput displayMode="sidebar" />
+            <ChatInput_NEO displayMode="sidebar" />
           </div>
         </div>
       ) : (

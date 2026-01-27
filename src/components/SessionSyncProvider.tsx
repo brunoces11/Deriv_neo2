@@ -17,7 +17,7 @@ export function SessionSyncProvider({ children }: SessionSyncProviderProps) {
   // Track previous session to detect changes
   const prevSessionIdRef = useRef<string | null>(null);
 
-  // Sync drawings from session to DrawingToolsContext when session changes or data loads
+  // Sync drawings from session to DrawingToolsContext when session changes
   useEffect(() => {
     // Skip if still loading
     if (isLoading) return;
@@ -26,23 +26,18 @@ export function SessionSyncProvider({ children }: SessionSyncProviderProps) {
     
     if (sessionChanged) {
       prevSessionIdRef.current = currentSessionId;
-    }
-    
-    if (currentSessionId) {
-      // Session loaded - sync drawings and tags
-      console.log('SessionSync: Syncing session data', { 
-        sessionId: currentSessionId, 
-        drawings: sessionDrawings.length, 
-        tags: sessionTags.length,
-        sessionChanged
-      });
-      setDrawingsFromSession(sessionDrawings);
-      setTagsFromSession(sessionTags);
-    } else if (!currentSessionId && sessionChanged) {
-      // No session (new chat) - clear everything
-      console.log('SessionSync: Clearing session data');
-      clearAllDrawings();
-      clearChatTags();
+      
+      // Session changed - ALWAYS clear old drawings and load new ones
+      // This ensures each chat has its own isolated drawings (like Photoshop layers)
+      if (currentSessionId) {
+        // Load drawings for the new session (may be empty array)
+        setDrawingsFromSession(sessionDrawings);
+        setTagsFromSession(sessionTags);
+      } else {
+        // No session selected (new chat) - clear all drawings
+        clearAllDrawings();
+        clearChatTags();
+      }
     }
   }, [currentSessionId, sessionDrawings, sessionTags, isLoading, setDrawingsFromSession, setTagsFromSession, clearAllDrawings, clearChatTags]);
 

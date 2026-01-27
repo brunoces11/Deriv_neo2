@@ -3,6 +3,7 @@ import { Send, Loader2, X } from 'lucide-react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import { useDrawingTools, DRAWING_COLORS } from '../../store/DrawingToolsContext';
+import { callLangflow } from '../../services/langflowApi';
 import { simulateLangFlowResponse } from '../../services/mockSimulation';
 import type { ChatMessage } from '../../types';
 
@@ -82,7 +83,15 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
       // Pass sessionId explicitly to ensure message is saved to correct session
       await addMessage(userMessage, sessionId);
 
-      const response = await simulateLangFlowResponse(userMessage.content);
+      // Try Langflow API first, fallback to mock simulation
+      let response;
+      try {
+        response = await callLangflow(userMessage.content, sessionId);
+        console.log('[ChatInput] Langflow response received');
+      } catch (langflowError) {
+        console.warn('[ChatInput] Langflow failed, using mock simulation:', langflowError);
+        response = await simulateLangFlowResponse(userMessage.content);
+      }
 
       const assistantMessage: ChatMessage = {
         id: `msg-${Date.now()}`,

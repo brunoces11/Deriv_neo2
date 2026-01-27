@@ -9,6 +9,8 @@ import { MainArea } from './components/layout/MainArea';
 import { ExecutionsSidebar } from './components/layout/ExecutionsSidebar';
 import { ChartLayer } from './components/chart/ChartLayer';
 import { CardsPage } from './pages/CardsPage';
+import { ComponentBuilderPage } from './pages/ComponentBuilderPage';
+import { CashierPage } from './pages/CashierPage';
 
 function MainLayout() {
   const { theme } = useTheme();
@@ -57,6 +59,8 @@ function App() {
                 <Routes>
                   <Route path="/" element={<MainLayout />} />
                   <Route path="/cards" element={<CardsPage />} />
+                  <Route path="/component-builder" element={<ComponentBuilderPage />} />
+                  <Route path="/cashier" element={<CashierPage />} />
                 </Routes>
               </SessionSyncProvider>
             </ChatProvider>
