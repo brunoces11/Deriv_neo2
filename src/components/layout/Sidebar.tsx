@@ -1,4 +1,4 @@
-import { Star, Archive, ChevronDown, ChevronRight, ChevronLeft, MessageSquare } from 'lucide-react';
+import { Star, Archive, ChevronDown, ChevronRight, ChevronLeft, MessageSquare, Target } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
@@ -11,13 +11,17 @@ import derivNeoLight from '../../assets/deriv_neo_light_mode.svg';
 
 const SIDEBAR_STATE_KEY = 'deriv-neo-sidebar-state';
 
+type SidebarTab = 'chats' | 'positions';
+
 interface SidebarState {
+  activeTab: SidebarTab;
   chatsOpen: boolean;
   favoritesOpen: boolean;
   archivedOpen: boolean;
 }
 
 const defaultState: SidebarState = {
+  activeTab: 'chats',
   chatsOpen: true,
   favoritesOpen: false,
   archivedOpen: false,
@@ -86,10 +90,12 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
     });
   }, []);
 
+  const setActiveTab = (tab: SidebarTab) => updateState({ activeTab: tab });
   const setChatsOpen = (open: boolean) => updateState({ chatsOpen: open });
   const setFavoritesOpen = (open: boolean) => updateState({ favoritesOpen: open });
   const setArchivedOpen = (open: boolean) => updateState({ archivedOpen: open });
 
+  const { activeTab } = sidebarState;
   const activeChats = sessions.filter(s => !s.is_archived && !s.is_favorite);
   const favoriteChats = sessions.filter(s => s.is_favorite && !s.is_archived);
   const archivedChats = sessions.filter(s => s.is_archived);
@@ -158,15 +164,36 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
       {isCollapsed ? (
         <div className="flex-1 flex flex-col items-center py-4 space-y-4">
           <button
+            onClick={() => setActiveTab('chats')}
             className={`p-2 rounded-lg transition-colors ${
-              theme === 'dark'
-                ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
-                : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+              activeTab === 'chats'
+                ? theme === 'dark'
+                  ? 'bg-zinc-800 text-brand-green'
+                  : 'bg-gray-200 text-brand-green'
+                : theme === 'dark'
+                  ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
+                  : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
             }`}
             title="Chats"
           >
-            <MessageSquare className="w-5 h-5 text-brand-green" />
+            <MessageSquare className="w-5 h-5" />
           </button>
+          <button
+            onClick={() => setActiveTab('positions')}
+            className={`p-2 rounded-lg transition-colors ${
+              activeTab === 'positions'
+                ? theme === 'dark'
+                  ? 'bg-zinc-800 text-brand-green'
+                  : 'bg-gray-200 text-brand-green'
+                : theme === 'dark'
+                  ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
+                  : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+            }`}
+            title="Positions"
+          >
+            <Target className="w-5 h-5" />
+          </button>
+          <div className={`w-8 h-px ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`} />
           <button
             className={`p-2 rounded-lg transition-colors ${
               theme === 'dark'
@@ -189,7 +216,51 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
           </button>
         </div>
       ) : (
+      <>
+      {/* Tab Navigation */}
+      <div className={`flex border-b ${theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'}`}>
+        <button
+          onClick={() => setActiveTab('chats')}
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative ${
+            activeTab === 'chats'
+              ? theme === 'dark'
+                ? 'text-white'
+                : 'text-gray-900'
+              : theme === 'dark'
+                ? 'text-zinc-500 hover:text-zinc-300'
+                : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <MessageSquare className="w-4 h-4" />
+          <span>Chats</span>
+          {activeTab === 'chats' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('positions')}
+          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors relative ${
+            activeTab === 'positions'
+              ? theme === 'dark'
+                ? 'text-white'
+                : 'text-gray-900'
+              : theme === 'dark'
+                ? 'text-zinc-500 hover:text-zinc-300'
+                : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          <Target className="w-4 h-4" />
+          <span>Positions</span>
+          {activeTab === 'positions' && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
+          )}
+        </button>
+      </div>
+
       <div className="flex-1 overflow-y-auto custom-scrollbar">
+        {activeTab === 'chats' ? (
+          /* Chats Tab Content */
+          <>
         <div className={`p-3 rounded-lg transition-colors ${
           chatsOpen && activeChats.length > 0
             ? theme === 'dark'
@@ -337,7 +408,23 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
             </div>
           )}
         </div>
+          </>
+        ) : (
+          /* Positions Tab Content */
+          <div className="p-3">
+            <div className={`text-center py-8 transition-colors ${
+              theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'
+            }`}>
+              <Target className={`w-8 h-8 mx-auto mb-2 ${
+                theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'
+              }`} />
+              <p className="text-sm">No positions yet</p>
+              <p className="text-xs mt-1">Your open positions will appear here</p>
+            </div>
+          </div>
+        )}
       </div>
+      </>
       )}
 
       {/* User Profile Footer - always visible */}
