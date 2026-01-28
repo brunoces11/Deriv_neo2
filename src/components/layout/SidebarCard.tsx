@@ -11,9 +11,7 @@ interface SidebarCardProps {
 const cardIcons = {
   'bot-card': Bot,
   'portfolio-snapshot': Wallet,
-  'portfolio-table': Table,
   'portfolio-sidebar': Wallet,
-  'portfolio-table-expanded': Table,
   'portfolio-table-complete': Table,
   'create-trade-card': LineChart,
   'trade-card': TrendingUp,
@@ -24,9 +22,7 @@ const cardIcons = {
 const cardLabels = {
   'bot-card': 'Bot',
   'portfolio-snapshot': 'Portfolio',
-  'portfolio-table': 'Portfolio Table',
   'portfolio-sidebar': 'Portfolio',
-  'portfolio-table-expanded': 'Portfolio',
   'portfolio-table-complete': 'Portfolio',
   'create-trade-card': 'Create Trade',
   'trade-card': 'Trade',
@@ -48,11 +44,8 @@ export function SidebarCard({ card, variant }: SidebarCardProps) {
     if (card.type === 'bot-card') {
       return (payload.name as string) || 'Bot';
     }
-    if (card.type === 'portfolio-snapshot' || card.type === 'portfolio-sidebar' || card.type === 'portfolio-table-expanded' || card.type === 'portfolio-table-complete') {
+    if (card.type === 'portfolio-snapshot' || card.type === 'portfolio-sidebar' || card.type === 'portfolio-table-complete') {
       return 'Portfolio';
-    }
-    if (card.type === 'portfolio-table') {
-      return 'Portfolio Table';
     }
     if (card.type === 'create-trade-card') {
       return `Create ${payload.asset || 'Trade'}`;

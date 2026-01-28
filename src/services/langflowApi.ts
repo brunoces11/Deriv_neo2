@@ -71,9 +71,7 @@ function getDefaultPayload(cardType: CardType): Record<string, unknown> {
           { symbol: 'Other', allocation: 10, value: '$4,523.00' },
         ],
       };
-    case 'portfolio-table':
     case 'portfolio-sidebar':
-    case 'portfolio-table-expanded':
     case 'portfolio-table-complete':
       return {
         totalValue: '$45,230.00',
@@ -122,10 +120,8 @@ function findCardsInPayload(payload: string): CardType[] {
   // e.g., "portfolio-table-complete" should be found before "portfolio-table"
   const searchOrder: CardType[] = [
     'portfolio-table-complete',
-    'portfolio-table-expanded',
     'portfolio-sidebar',
     'portfolio-snapshot',
-    'portfolio-table',
     'create-trade-card',
     'trade-card',
     'actions-card',

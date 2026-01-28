@@ -2,8 +2,6 @@ import { useTheme } from '../store/ThemeContext';
 import { ArrowLeft, Zap, Bot, Wallet, Table, CheckCircle, XCircle, TrendingUp, LineChart, Workflow } from 'lucide-react';
 import { BotCard } from '../components/cards/BotCard';
 import { PortfolioSnapshotCard } from '../components/cards/PortfolioSnapshotCard';
-import { PortfolioTableCard } from '../components/cards/PortfolioTableCard';
-import { PortfolioTableCardExpanded } from '../components/cards/PortfolioTableCardExpanded';
 import { PortfolioTableCardComplete } from '../components/cards/PortfolioTableCardComplete';
 import { PortfolioSidebarCard } from '../components/cards/PortfolioSidebarCard';
 import { CreateTradeCard } from '../components/cards/CreateTradeCard';
@@ -52,7 +50,7 @@ const mockPortfolioCard: BaseCard = {
 
 const mockPortfolioTableCard: BaseCard = {
   id: 'demo-portfolio-table-1',
-  type: 'portfolio-table',
+  type: 'portfolio-table-complete',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -181,22 +179,6 @@ const cardsInfo: CardInfo[] = [
     component: <PortfolioSnapshotCard card={mockPortfolioCard} />,
   },
   {
-    name: 'Portfolio Snapshot Table',
-    type: 'portfolio-table',
-    icon: Table,
-    description: 'Tabela detalhada do portfólio com valor aportado, variação e ações.',
-    hasLogic: true,
-    logicDetails: [
-      'Tabela com colunas: Asset, Value, Invested, Change, % Portfolio, Actions',
-      'Exibe nome completo e símbolo de cada ativo',
-      'Mostra valor aportado vs valor atual',
-      'Variação em % com ícone de tendência',
-      'Botões de ação Buy/Sell para cada ativo',
-      'Footer com resumo: 24h change e total de assets',
-    ],
-    component: <PortfolioTableCard card={mockPortfolioTableCard} />,
-  },
-  {
     name: 'Portfolio Sidebar Card',
     type: 'portfolio-sidebar',
     icon: Wallet,
@@ -211,16 +193,6 @@ const cardsInfo: CardInfo[] = [
       'Footer minimalista com 24h change',
     ],
     component: <PortfolioSidebarCard card={mockPortfolioTableCard} />,
-  },
-  {
-    name: 'Portfolio Snapshot Table (Expanded)',
-    type: 'portfolio-table-expanded',
-    icon: Table,
-    description: 'Versão expandida da tabela de portfólio ocupando toda a largura disponível.',
-    hasLogic: true,
-    logicDetails: [],
-    component: <PortfolioTableCardExpanded card={mockPortfolioTableCard} />,
-    expanded: true,
   },
   {
     name: 'Portfolio Snapshot Table (Complete)',
@@ -254,15 +226,14 @@ const cardsInfo: CardInfo[] = [
     name: 'Trade Card',
     type: 'trade-card',
     icon: TrendingUp,
-    description: 'Card compacto de trade ativo/executado. Segundo estágio: exibe trade em andamento após confirmação.',
+    description: 'Card compacto de trade ativo/executado com expand/collapse. Segundo estágio: exibe trade em andamento após confirmação.',
     hasLogic: true,
     logicDetails: [
-      'Header com asset, direção (Higher/Lower) e status',
-      'Grid compacto: Stake, Payout, Barrier, Expiry',
-      'Entry spot e current spot (quando disponível)',
+      'Modo colapsado: ícone + asset/direção + stake→payout + status + botão expand',
+      'Modo expandido: header completo + grid de detalhes + spots + profit/loss',
+      'Botão de seta no canto direito para expandir/colapsar',
       'Status: open (cyan), won (verde), lost (vermelho), sold (amber)',
-      'Profit/Loss para trades finalizados',
-      'Botão "Sell Early" para trades abertos',
+      'Botão "Sell Early" para trades abertos (modo expandido)',
       'Derivado do Create Trade Card após confirmação',
     ],
     component: <TradeCard card={mockTradeCard} />,

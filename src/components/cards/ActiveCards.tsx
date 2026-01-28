@@ -1,9 +1,7 @@
 import { useChat } from '../../store/ChatContext';
 import { BotCard } from './BotCard';
 import { PortfolioSnapshotCard } from './PortfolioSnapshotCard';
-import { PortfolioTableCard } from './PortfolioTableCard';
 import { PortfolioSidebarCard } from './PortfolioSidebarCard';
-import { PortfolioTableCardExpanded } from './PortfolioTableCardExpanded';
 import { PortfolioTableCardComplete } from './PortfolioTableCardComplete';
 import { CreateTradeCard } from './CreateTradeCard';
 import { TradeCard } from './TradeCard';
@@ -14,9 +12,7 @@ import type { BaseCard } from '../../types';
 const cardComponents = {
   'bot-card': BotCard,
   'portfolio-snapshot': PortfolioSnapshotCard,
-  'portfolio-table': PortfolioTableCard,
   'portfolio-sidebar': PortfolioSidebarCard,
-  'portfolio-table-expanded': PortfolioTableCardExpanded,
   'portfolio-table-complete': PortfolioTableCardComplete,
   'create-trade-card': CreateTradeCard,
   'trade-card': TradeCard,

@@ -1,4 +1,4 @@
-export type CardType = 'bot-card' | 'portfolio-snapshot' | 'portfolio-table' | 'portfolio-sidebar' | 'portfolio-table-expanded' | 'portfolio-table-complete' | 'create-trade-card' | 'trade-card' | 'actions-card' | 'bot-creator';
+export type CardType = 'bot-card' | 'portfolio-snapshot' | 'portfolio-sidebar' | 'portfolio-table-complete' | 'create-trade-card' | 'trade-card' | 'actions-card' | 'bot-creator';
 
 export type CardStatus = 'active' | 'archived' | 'hidden';
 
