@@ -440,7 +440,7 @@ export function CardsSidebar({
               theme === 'dark' ? 'border-zinc-800/50 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'
             }`}>
               <Zap className="w-4 h-4 text-red-500" />
-              <span className={`text-xs font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Cards</span>
+              <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Cards</span>
               {activeCards.length > 0 && (
                 <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                   theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
@@ -487,7 +487,7 @@ export function CardsSidebar({
               theme === 'dark' ? 'border-zinc-800/50 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'
             }`}>
               <Play className="w-4 h-4 text-red-500" />
-              <span className={`text-xs font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Actions</span>
+              <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Actions</span>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
               <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
@@ -521,7 +521,7 @@ export function CardsSidebar({
               theme === 'dark' ? 'border-zinc-800/50 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'
             }`}>
               <Bot className="w-4 h-4 text-red-500" />
-              <span className={`text-xs font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Bots</span>
+              <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Bots</span>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
               <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
