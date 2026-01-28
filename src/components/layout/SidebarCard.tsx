@@ -11,7 +11,7 @@ interface SidebarCardProps {
 const cardIcons = {
   'intent-summary': FileText,
   'action-ticket': Zap,
-  'bot': Bot,
+  'bot-card': Bot,
   'portfolio-snapshot': Wallet,
   'portfolio-table': Table,
 };
@@ -19,7 +19,7 @@ const cardIcons = {
 const cardLabels = {
   'intent-summary': 'Intent',
   'action-ticket': 'Action',
-  'bot': 'Bot',
+  'bot-card': 'Bot',
   'portfolio-snapshot': 'Portfolio',
   'portfolio-table': 'Portfolio Table',
 };
@@ -38,7 +38,7 @@ export function SidebarCard({ card, variant }: SidebarCardProps) {
     if (card.type === 'action-ticket') {
       return `${(payload.action as string)?.toUpperCase() || 'Action'} ${payload.asset || ''}`;
     }
-    if (card.type === 'bot') {
+    if (card.type === 'bot-card') {
       return (payload.name as string) || 'Bot';
     }
     if (card.type === 'portfolio-snapshot') {

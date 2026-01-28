@@ -12,7 +12,7 @@ import type { BaseCard } from '../../types';
 const cardComponents = {
   'intent-summary': IntentSummaryCard,
   'action-ticket': ActionTicketCard,
-  'bot': BotCard,
+  'bot-card': BotCard,
   'portfolio-snapshot': PortfolioSnapshotCard,
   'portfolio-table': PortfolioTableCard,
   'portfolio-sidebar': PortfolioSidebarCard,

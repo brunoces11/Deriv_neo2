@@ -75,7 +75,7 @@ const scenarios: MockScenario[] = [
     events: () => [
       {
         type: 'ADD_CARD',
-        cardType: 'bot' as CardType,
+        cardType: 'bot-card' as CardType,
         cardId: generateId(),
         payload: {
           botId: `BOT-${Math.floor(Math.random() * 1000)}`,

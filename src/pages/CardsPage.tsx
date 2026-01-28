@@ -44,7 +44,7 @@ const mockActionTicketCard: BaseCard = {
 
 const mockBotCard: BaseCard = {
   id: 'demo-bot-1',
-  type: 'bot',
+  type: 'bot-card',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -140,7 +140,7 @@ const cardsInfo: CardInfo[] = [
   },
   {
     name: 'Bot Card',
-    type: 'bot',
+    type: 'bot-card',
     icon: Bot,
     description: 'Mostra um trading bot configurado e seu status.',
     hasLogic: true,

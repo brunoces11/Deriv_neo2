@@ -35,7 +35,7 @@ function getDefaultPayload(cardType: CardType): Record<string, unknown> {
         amount: '0.01 BTC',
         status: 'pending',
       };
-    case 'bot':
+    case 'bot-card':
       return {
         botId: `BOT-${Math.floor(Math.random() * 1000)}`,
         name: 'AI Bot',
@@ -112,7 +112,7 @@ function findCardsInPayload(payload: string): CardType[] {
     'portfolio-table',
     'intent-summary',
     'action-ticket',
-    'bot',
+    'bot-card',
   ];
   
   for (const cardType of searchOrder) {
