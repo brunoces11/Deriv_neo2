@@ -1,4 +1,4 @@
-import { Star, X, Zap, Bot, Wallet, FileText, Table, TrendingUp, LineChart, Workflow } from 'lucide-react';
+import { Star, X, Zap, Bot, Wallet, Table, TrendingUp, LineChart, Workflow } from 'lucide-react';
 import type { BaseCard } from '../../types';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
@@ -9,14 +9,12 @@ interface SidebarCardProps {
 }
 
 const cardIcons = {
-  'intent-summary': FileText,
   'bot-card': Bot,
   'portfolio-snapshot': Wallet,
   'portfolio-table': Table,
   'portfolio-sidebar': Wallet,
   'portfolio-table-expanded': Table,
   'portfolio-table-complete': Table,
-  'positions-card': TrendingUp,
   'create-trade-card': LineChart,
   'trade-card': TrendingUp,
   'actions-card': Zap,
@@ -24,14 +22,12 @@ const cardIcons = {
 };
 
 const cardLabels = {
-  'intent-summary': 'Intent',
   'bot-card': 'Bot',
   'portfolio-snapshot': 'Portfolio',
   'portfolio-table': 'Portfolio Table',
   'portfolio-sidebar': 'Portfolio',
   'portfolio-table-expanded': 'Portfolio',
   'portfolio-table-complete': 'Portfolio',
-  'positions-card': 'Positions',
   'create-trade-card': 'Create Trade',
   'trade-card': 'Trade',
   'actions-card': 'Action',
@@ -46,9 +42,6 @@ export function SidebarCard({ card, variant }: SidebarCardProps) {
 
   const getTitle = () => {
     const payload = card.payload as Record<string, unknown>;
-    if (card.type === 'intent-summary') {
-      return (payload.action as string) || 'Intent';
-    }
     if (card.type === 'trade-card') {
       return `${(payload.direction as string)?.toUpperCase() || 'Trade'} ${payload.asset || ''}`;
     }
@@ -60,9 +53,6 @@ export function SidebarCard({ card, variant }: SidebarCardProps) {
     }
     if (card.type === 'portfolio-table') {
       return 'Portfolio Table';
-    }
-    if (card.type === 'positions-card') {
-      return 'Positions';
     }
     if (card.type === 'create-trade-card') {
       return `Create ${payload.asset || 'Trade'}`;

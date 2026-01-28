@@ -1,4 +1,4 @@
-export type CardType = 'intent-summary' | 'bot-card' | 'portfolio-snapshot' | 'portfolio-table' | 'portfolio-sidebar' | 'portfolio-table-expanded' | 'portfolio-table-complete' | 'positions-card' | 'create-trade-card' | 'trade-card' | 'actions-card' | 'bot-creator';
+export type CardType = 'bot-card' | 'portfolio-snapshot' | 'portfolio-table' | 'portfolio-sidebar' | 'portfolio-table-expanded' | 'portfolio-table-complete' | 'create-trade-card' | 'trade-card' | 'actions-card' | 'bot-creator';
 
 export type CardStatus = 'active' | 'archived' | 'hidden';
 
@@ -11,12 +11,7 @@ export interface BaseCard {
   payload: Record<string, unknown>;
 }
 
-export interface IntentSummaryPayload {
-  action: string;
-  asset?: string;
-  value?: string;
-  summary: string;
-}
+
 
 export interface CreateTradeCardPayload {
   asset: string;
@@ -93,22 +88,7 @@ export interface PortfolioTablePayload {
   }>;
 }
 
-export interface Position {
-  id: string;
-  asset: string;
-  assetName: string;
-  contractType: 'higher' | 'lower' | 'rise' | 'fall' | 'touch' | 'no-touch';
-  stake: string;
-  payout: string;
-  expiryTime: string;
-  timeRemaining: string;
-  status: 'open' | 'won' | 'lost';
-  profit?: string;
-}
 
-export interface PositionsCardPayload {
-  positions: Position[];
-}
 
 export interface ActionsCardPayload {
   actionId: string;
@@ -148,13 +128,11 @@ export interface BotCardPayload {
 }
 
 export type CardPayload =
-  | IntentSummaryPayload
   | CreateTradeCardPayload
   | TradeCardPayload
   | BotPayload
   | PortfolioSnapshotPayload
   | PortfolioTablePayload
-  | PositionsCardPayload
   | ActionsCardPayload
   | BotCreatorPayload
   | BotCardPayload;

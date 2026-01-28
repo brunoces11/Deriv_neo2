@@ -1,13 +1,11 @@
 import { useTheme } from '../store/ThemeContext';
-import { ArrowLeft, FileText, Zap, Bot, Wallet, Table, CheckCircle, XCircle, TrendingUp, LineChart, Workflow } from 'lucide-react';
-import { IntentSummaryCard } from '../components/cards/IntentSummaryCard';
+import { ArrowLeft, Zap, Bot, Wallet, Table, CheckCircle, XCircle, TrendingUp, LineChart, Workflow } from 'lucide-react';
 import { BotCard } from '../components/cards/BotCard';
 import { PortfolioSnapshotCard } from '../components/cards/PortfolioSnapshotCard';
 import { PortfolioTableCard } from '../components/cards/PortfolioTableCard';
 import { PortfolioTableCardExpanded } from '../components/cards/PortfolioTableCardExpanded';
 import { PortfolioTableCardComplete } from '../components/cards/PortfolioTableCardComplete';
 import { PortfolioSidebarCard } from '../components/cards/PortfolioSidebarCard';
-import { PositionsCard } from '../components/cards/PositionsCard';
 import { CreateTradeCard } from '../components/cards/CreateTradeCard';
 import { TradeCard } from '../components/cards/TradeCard';
 import { ActionsCard } from '../components/cards/ActionsCard';
@@ -16,20 +14,6 @@ import { UserProfile } from '../components/layout/UserProfile';
 import derivNeoDark from '../assets/deriv_neo_dark_mode.svg';
 import derivNeoLight from '../assets/deriv_neo_light_mode.svg';
 import type { BaseCard } from '../types';
-
-const mockIntentSummaryCard: BaseCard = {
-  id: 'demo-intent-1',
-  type: 'intent-summary',
-  status: 'active',
-  isFavorite: false,
-  createdAt: new Date(),
-  payload: {
-    action: 'Buy',
-    asset: 'BTC',
-    value: '$1,000',
-    summary: 'Purchase Bitcoin with specified amount',
-  },
-};
 
 const mockBotCard: BaseCard = {
   id: 'demo-bot-1',
@@ -81,53 +65,6 @@ const mockPortfolioTableCard: BaseCard = {
       { symbol: 'ETH', name: 'Ethereum', allocation: 30, value: '$13,569.00', invested: '$12,500.00', change: '+$1,069.00', changePercent: '+8.55%' },
       { symbol: 'SOL', name: 'Solana', allocation: 15, value: '$6,784.50', invested: '$7,200.00', change: '-$415.50', changePercent: '-5.77%' },
       { symbol: 'USDT', name: 'Tether', allocation: 10, value: '$4,523.00', invested: '$4,500.00', change: '+$23.00', changePercent: '+0.51%' },
-    ],
-  },
-};
-
-const mockPositionsCard: BaseCard = {
-  id: 'demo-positions-1',
-  type: 'positions-card',
-  status: 'active',
-  isFavorite: false,
-  createdAt: new Date(),
-  payload: {
-    positions: [
-      {
-        id: 'pos-1',
-        asset: 'BTC/USD',
-        assetName: 'Bitcoin',
-        contractType: 'higher',
-        stake: '$100.00',
-        payout: '$195.00',
-        expiryTime: '2025-01-28T15:30:00Z',
-        timeRemaining: '2:45:30',
-        status: 'open',
-      },
-      {
-        id: 'pos-2',
-        asset: 'ETH/USD',
-        assetName: 'Ethereum',
-        contractType: 'lower',
-        stake: '$50.00',
-        payout: '$92.50',
-        expiryTime: '2025-01-28T14:00:00Z',
-        timeRemaining: '0:00:00',
-        status: 'won',
-        profit: '+$42.50',
-      },
-      {
-        id: 'pos-3',
-        asset: 'SOL/USD',
-        assetName: 'Solana',
-        contractType: 'rise',
-        stake: '$75.00',
-        payout: '$140.00',
-        expiryTime: '2025-01-28T13:00:00Z',
-        timeRemaining: '0:00:00',
-        status: 'lost',
-        profit: '-$75.00',
-      },
     ],
   },
 };
@@ -229,21 +166,6 @@ interface CardInfo {
 
 const cardsInfo: CardInfo[] = [
   {
-    name: 'Intent Summary Card',
-    type: 'intent-summary',
-    icon: FileText,
-    description: 'Exibe um resumo da intenção do usuário detectada pela IA.',
-    hasLogic: true,
-    logicDetails: [
-      'Renderiza payload.action como título',
-      'Mostra asset → value com seta visual',
-      'Exibe payload.summary como descrição',
-      'Cor de destaque: cyan',
-      'Suporta favoritar/arquivar via CardWrapper',
-    ],
-    component: <IntentSummaryCard card={mockIntentSummaryCard} />,
-  },
-  {
     name: 'Portfolio Snapshot Card',
     type: 'portfolio-snapshot',
     icon: Wallet,
@@ -309,23 +231,6 @@ const cardsInfo: CardInfo[] = [
     logicDetails: [],
     component: <PortfolioTableCardComplete card={mockPortfolioTableCard} />,
     expanded: true,
-  },
-  {
-    name: 'Positions Card',
-    type: 'positions-card',
-    icon: TrendingUp,
-    description: 'Exibe posições de trade ativas (opções digitais) com status, stake, payout e tempo restante.',
-    hasLogic: true,
-    logicDetails: [
-      'Lista de posições ativas com dados do contrato',
-      'Exibe asset, tipo de contrato (Higher/Lower/Rise/Fall)',
-      'Mostra stake → payout com seta visual',
-      'Status com cores: verde (won), vermelho (lost), cyan (open)',
-      'Tempo restante para posições abertas',
-      'Lucro/prejuízo para posições finalizadas',
-      'Suporta favoritar/arquivar via CardWrapper',
-    ],
-    component: <PositionsCard card={mockPositionsCard} />,
   },
   {
     name: 'Create Trade Card',

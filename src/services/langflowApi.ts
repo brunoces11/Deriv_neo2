@@ -20,13 +20,6 @@ function getDefaultPayload(cardType: CardType): Record<string, unknown> {
   ];
 
   switch (cardType) {
-    case 'intent-summary':
-      return {
-        action: 'Analyze',
-        asset: 'N/A',
-        value: 'N/A',
-        summary: 'Request processed by AI assistant',
-      };
     case 'trade-card':
       return {
         tradeId: `TRD-${Math.floor(Math.random() * 10000)}`,
@@ -133,10 +126,8 @@ function findCardsInPayload(payload: string): CardType[] {
     'portfolio-sidebar',
     'portfolio-snapshot',
     'portfolio-table',
-    'intent-summary',
     'create-trade-card',
     'trade-card',
-    'positions-card',
     'actions-card',
     'bot-creator',
     'bot-card',

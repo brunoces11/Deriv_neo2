@@ -13,66 +13,58 @@ interface MockScenario {
 const scenarios: MockScenario[] = [
   {
     keywords: ['buy', 'comprar', 'purchase'],
-    response: "I understand you want to make a purchase. I've prepared a summary of your intent and created a trade card for this transaction. You can review the details in the cards below.",
+    response: "I understand you want to make a purchase. I've prepared a trade card for this transaction. You can review the details in the card below.",
     events: () => [
       {
         type: 'ADD_CARD',
-        cardType: 'intent-summary' as CardType,
+        cardType: 'create-trade-card' as CardType,
         cardId: generateId(),
         payload: {
-          action: 'Buy',
-          asset: 'BTC',
-          value: '$1,000',
-          summary: 'Purchase Bitcoin with specified amount',
-        },
-      },
-      {
-        type: 'ADD_CARD',
-        cardType: 'trade-card' as CardType,
-        cardId: generateId(),
-        payload: {
-          tradeId: `TRD-${Math.floor(Math.random() * 10000)}`,
           asset: 'BTC/USD',
           assetName: 'Bitcoin',
-          direction: 'higher',
-          stake: '$1,000.00',
-          payout: '$1,950.00',
-          barrier: '42,500.00',
-          expiryDate: '28 Jan 2026, 23:59:59',
-          status: 'open',
+          tradeType: 'higher-lower',
+          duration: {
+            mode: 'duration',
+            unit: 'days',
+            value: 1,
+            range: { min: 1, max: 365 },
+            expiryDate: '28 Jan 2026, 23:59:59 GMT +0',
+          },
+          barrier: { value: 42500.00, spotPrice: 42350.75 },
+          stake: { mode: 'stake', value: 1000, currency: 'USD' },
+          payout: {
+            higher: { amount: '$1,950.00', percentage: '95%' },
+            lower: { amount: '$1,950.00', percentage: '95%' },
+          },
         },
       },
     ],
   },
   {
     keywords: ['sell', 'vender'],
-    response: "I've registered your sell order. Check the trade card below for the transaction details. You can track the status in real-time.",
+    response: "I've prepared a sell order for you. Check the trade card below for the transaction details.",
     events: () => [
       {
         type: 'ADD_CARD',
-        cardType: 'intent-summary' as CardType,
+        cardType: 'create-trade-card' as CardType,
         cardId: generateId(),
         payload: {
-          action: 'Sell',
-          asset: 'ETH',
-          value: '2.5 ETH',
-          summary: 'Sell Ethereum at current market price',
-        },
-      },
-      {
-        type: 'ADD_CARD',
-        cardType: 'trade-card' as CardType,
-        cardId: generateId(),
-        payload: {
-          tradeId: `TRD-${Math.floor(Math.random() * 10000)}`,
           asset: 'ETH/USD',
           assetName: 'Ethereum',
-          direction: 'lower',
-          stake: '$500.00',
-          payout: '$975.00',
-          barrier: '2,350.00',
-          expiryDate: '28 Jan 2026, 23:59:59',
-          status: 'open',
+          tradeType: 'higher-lower',
+          duration: {
+            mode: 'duration',
+            unit: 'days',
+            value: 1,
+            range: { min: 1, max: 365 },
+            expiryDate: '28 Jan 2026, 23:59:59 GMT +0',
+          },
+          barrier: { value: 2350.00, spotPrice: 2340.50 },
+          stake: { mode: 'stake', value: 500, currency: 'USD' },
+          payout: {
+            higher: { amount: '$975.00', percentage: '95%' },
+            lower: { amount: '$975.00', percentage: '95%' },
+          },
         },
       },
     ],
@@ -123,29 +115,25 @@ const scenarios: MockScenario[] = [
     events: () => [
       {
         type: 'ADD_CARD',
-        cardType: 'intent-summary' as CardType,
+        cardType: 'create-trade-card' as CardType,
         cardId: generateId(),
         payload: {
-          action: 'Swap',
-          asset: 'ETH → USDC',
-          value: '1.5 ETH',
-          summary: 'Convert Ethereum to USDC at best available rate',
-        },
-      },
-      {
-        type: 'ADD_CARD',
-        cardType: 'trade-card' as CardType,
-        cardId: generateId(),
-        payload: {
-          tradeId: `TRD-${Math.floor(Math.random() * 10000)}`,
           asset: 'ETH/USDC',
           assetName: 'Ethereum',
-          direction: 'higher',
-          stake: '$2,850.00',
-          payout: '$5,557.50',
-          barrier: '2,400.00',
-          expiryDate: '28 Jan 2026, 23:59:59',
-          status: 'open',
+          tradeType: 'higher-lower',
+          duration: {
+            mode: 'duration',
+            unit: 'days',
+            value: 1,
+            range: { min: 1, max: 365 },
+            expiryDate: '28 Jan 2026, 23:59:59 GMT +0',
+          },
+          barrier: { value: 2400.00, spotPrice: 2380.25 },
+          stake: { mode: 'stake', value: 2850, currency: 'USD' },
+          payout: {
+            higher: { amount: '$5,557.50', percentage: '95%' },
+            lower: { amount: '$5,557.50', percentage: '95%' },
+          },
         },
       },
     ],
@@ -184,16 +172,6 @@ export async function simulateLangFlowResponse(userMessage: string): Promise<Lan
 
   return {
     chat_message: fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)],
-    ui_events: [
-      {
-        type: 'ADD_CARD',
-        cardType: 'intent-summary',
-        cardId: generateId(),
-        payload: {
-          action: 'Analyze',
-          summary: userMessage.slice(0, 100),
-        },
-      },
-    ],
+    ui_events: [],
   };
 }

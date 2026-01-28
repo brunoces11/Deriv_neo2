@@ -1,4 +1,5 @@
-import { TrendingUp, TrendingDown, Clock, Target, DollarSign, XCircle } from 'lucide-react';
+import { useState } from 'react';
+import { TrendingUp, TrendingDown, Clock, Target, DollarSign, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { useTheme } from '../../store/ThemeContext';
 import type { BaseCard, TradeCardPayload } from '../../types';
@@ -10,12 +11,14 @@ interface TradeCardProps {
 /**
  * TradeCard Component
  * 
- * Compact card showing an active/executed trade.
+ * Compact/expandable card showing an active/executed trade.
  * This is the result after confirming a CreateTradeCard.
  * Displays key trade info: asset, direction, stake, payout, barrier, expiry, status.
+ * Can be collapsed to show minimal info or expanded to show full details.
  */
 export function TradeCard({ card }: TradeCardProps) {
   const { theme } = useTheme();
+  const [isExpanded, setIsExpanded] = useState(false);
   const payload = card.payload as unknown as TradeCardPayload;
 
   const tradeId = payload?.tradeId || 'TRD-000';
@@ -48,10 +51,78 @@ export function TradeCard({ card }: TradeCardProps) {
     console.log('[TradeCard] Sell early:', { tradeId, asset, direction });
   };
 
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  // Compact view (collapsed)
+  if (!isExpanded) {
+    return (
+      <CardWrapper card={card} accentColor={isHigher ? 'green' : 'red'}>
+        <div className="flex items-center gap-3">
+          {/* Icon with status indicator */}
+          <div className="relative flex-shrink-0">
+            <div 
+              className="w-10 h-10 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: `${directionColor}20` }}
+            >
+              <DirectionIcon className="w-5 h-5" style={{ color: directionColor }} />
+            </div>
+            {/* Status dot */}
+            <div 
+              className={`absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${
+                theme === 'dark' ? 'border-zinc-900' : 'border-white'
+              } ${status === 'open' ? 'bg-cyan-500' : status === 'won' ? 'bg-[#00d0a0]' : status === 'lost' ? 'bg-[#ff444f]' : 'bg-amber-500'}`}
+            />
+          </div>
+
+          {/* Content - 2 lines */}
+          <div className="flex-1 min-w-0">
+            {/* Line 1: Asset + Direction */}
+            <div className="flex items-center gap-2">
+              <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                {asset}
+              </span>
+              <span 
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                style={{ backgroundColor: `${directionColor}20`, color: directionColor }}
+              >
+                {directionLabel}
+              </span>
+            </div>
+
+            {/* Line 2: Stake → Payout + Status */}
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
+                {stake} → <span className="text-[#00d0a0] font-medium">{payout}</span>
+              </span>
+              <span className={`text-xs font-medium ${currentStatus.color}`}>
+                {currentStatus.label}
+              </span>
+            </div>
+          </div>
+
+          {/* Expand Button */}
+          <button
+            onClick={toggleExpand}
+            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${
+              theme === 'dark'
+                ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
+                : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+            }`}
+          >
+            <ChevronDown className="w-4 h-4" />
+          </button>
+        </div>
+      </CardWrapper>
+    );
+  }
+
+  // Expanded view
   return (
     <CardWrapper card={card} accentColor={isHigher ? 'green' : 'red'}>
       <div className="space-y-3">
-        {/* Header: Asset + Direction + Status */}
+        {/* Header: Asset + Direction + Status + Collapse Button */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div 
@@ -77,10 +148,22 @@ export function TradeCard({ card }: TradeCardProps) {
               </span>
             </div>
           </div>
-          <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${currentStatus.bgColor}`}>
-            <span className={`text-xs font-medium ${currentStatus.color}`}>
-              {currentStatus.label}
-            </span>
+          <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${currentStatus.bgColor}`}>
+              <span className={`text-xs font-medium ${currentStatus.color}`}>
+                {currentStatus.label}
+              </span>
+            </div>
+            <button
+              onClick={toggleExpand}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                theme === 'dark'
+                  ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+              }`}
+            >
+              <ChevronUp className="w-4 h-4" />
+            </button>
           </div>
         </div>
 
