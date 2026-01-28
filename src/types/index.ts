@@ -1,4 +1,4 @@
-export type CardType = 'bot-card' | 'portfolio-snapshot' | 'portfolio-sidebar' | 'portfolio-table-complete' | 'create-trade-card' | 'trade-card' | 'actions-card' | 'bot-creator';
+export type CardType = 'card_portfolio_exemple_compacto' | 'card_portfolio_sidebar' | 'card_portfolio' | 'card_trade_creator' | 'card_trade' | 'card_actions_creator' | 'card_actions' | 'card_bot_creator' | 'card_bot';
 
 export type CardStatus = 'active' | 'archived' | 'hidden';
 
@@ -96,6 +96,29 @@ export interface ActionsCardPayload {
   description: string;
   status: 'active' | 'inactive' | 'error';
   lastExecution?: string;
+}
+
+export interface ActionsCreatorPayload {
+  actionName: string;
+  trigger: {
+    type: 'schedule' | 'price' | 'event';
+    value: string;
+  };
+  action: {
+    type: string;
+    asset?: string;
+    amount?: string;
+  };
+  schedule?: {
+    frequency: 'once' | 'daily' | 'weekly' | 'monthly';
+    time?: string;
+    day?: string;
+  };
+  condition?: {
+    type: string;
+    operator: string;
+    value: string;
+  };
 }
 
 export interface BotCreatorPayload {
