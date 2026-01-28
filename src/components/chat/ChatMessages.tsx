@@ -32,6 +32,14 @@ const MARKETS = [
   'ETFs',
 ];
 
+// Cores para tags - com versões light e dark (mesmo padrão do ChatInput_NEO)
+const TAG_COLORS: Record<string, { bg: string; textLight: string; textDark: string; border: string }> = {
+  drawing: { bg: 'rgba(59, 130, 246, 0.25)', textLight: '#1e3a5f', textDark: '#93c5fd', border: 'rgba(59, 130, 246, 0.4)' },
+  agent: { bg: 'rgba(239, 68, 68, 0.25)', textLight: '#5c1a1a', textDark: '#fca5a5', border: 'rgba(239, 68, 68, 0.4)' },
+  market: { bg: 'rgba(147, 51, 234, 0.25)', textLight: '#3b1a5c', textDark: '#d8b4fe', border: 'rgba(147, 51, 234, 0.4)' },
+  default: { bg: 'rgba(113, 113, 122, 0.25)', textLight: '#3d3d3d', textDark: '#d4d4d8', border: 'rgba(113, 113, 122, 0.4)' },
+};
+
 // Mapeia nomes de tags para tipos de drawing
 function getDrawingTypeFromTagName(tagName: string): 'trendline' | 'horizontal' | 'rectangle' | 'note' | null {
   const normalized = tagName.toLowerCase();
@@ -55,68 +63,41 @@ function isMarketTag(tagName: string): boolean {
 }
 
 // Componente para renderizar uma tag estilizada
-function TagBadge({ tagName, tagNumber }: { tagName: string; tagNumber?: string }) {
+function TagBadge({ tagName, tagNumber, theme }: { tagName: string; tagNumber?: string; theme: 'light' | 'dark' }) {
   const label = tagNumber ? `${tagName}-${tagNumber}` : tagName;
   
-  // Verificar se é tag de agente (vermelho)
+  // Determinar cor baseado no tipo de tag
+  let colors: { bg: string; textLight: string; textDark: string; border: string };
+  
   if (isAgentTag(tagName)) {
-    return (
-      <span 
-        className="inline-flex items-center px-2 rounded-full text-xs font-medium" 
-        style={{ 
-          paddingTop: '0px', 
-          paddingBottom: '0px', 
-          lineHeight: '1.4',
-          background: 'rgba(239, 68, 68, 0.25)',
-          color: '#5c1a1a',
-          border: '1px solid rgba(239, 68, 68, 0.4)'
-        }}
-      >
-        @{label}
-      </span>
-    );
+    colors = TAG_COLORS.agent;
+  } else if (isMarketTag(tagName)) {
+    colors = TAG_COLORS.market;
+  } else if (getDrawingTypeFromTagName(tagName)) {
+    colors = TAG_COLORS.drawing;
+  } else {
+    colors = TAG_COLORS.default;
   }
   
-  // Verificar se é tag de market (roxo)
-  if (isMarketTag(tagName)) {
-    return (
-      <span 
-        className="inline-flex items-center px-2 rounded-full text-xs font-medium" 
-        style={{ 
-          paddingTop: '0px', 
-          paddingBottom: '0px', 
-          lineHeight: '1.4',
-          background: 'rgba(147, 51, 234, 0.25)',
-          color: '#3b1a5c',
-          border: '1px solid rgba(147, 51, 234, 0.4)'
-        }}
-      >
-        @{label}
-      </span>
-    );
-  }
-  
-  const drawingType = getDrawingTypeFromTagName(tagName);
-  
-  if (!drawingType) {
-    // Tag desconhecida - renderiza com estilo genérico
-    return (
-      <span className="inline-flex items-center px-2 rounded-full text-xs font-medium bg-zinc-500/25 text-zinc-800 border border-zinc-500/40" style={{ paddingTop: '0px', paddingBottom: '0px', lineHeight: '1.4' }}>
-        @{label}
-      </span>
-    );
-  }
-
-  // Tags de desenho usam azul com texto escuro para legibilidade
   return (
-    <span className="inline-flex items-center px-2 rounded-full text-xs font-medium bg-blue-500/25 text-blue-900 border border-blue-500/40" style={{ paddingTop: '0px', paddingBottom: '0px', lineHeight: '1.4' }}>
+    <span 
+      className="inline-flex items-center px-2 rounded-full text-xs font-medium" 
+      style={{ 
+        paddingTop: '0px', 
+        paddingBottom: '0px', 
+        lineHeight: '1.4',
+        background: colors.bg,
+        color: theme === 'dark' ? colors.textDark : colors.textLight,
+        border: `1px solid ${colors.border}`
+      }}
+    >
       @{label}
     </span>
   );
 }
 
 // Função para parsear texto e substituir tags por componentes
-function parseMessageWithTags(content: string): (string | JSX.Element)[] {
+function parseMessageWithTags(content: string, theme: 'light' | 'dark'): (string | JSX.Element)[] {
   const parts: (string | JSX.Element)[] = [];
   let lastIndex = 0;
   let match;
@@ -134,7 +115,7 @@ function parseMessageWithTags(content: string): (string | JSX.Element)[] {
     // Adiciona a tag como componente
     const tagName = match[1];
     const tagNumber = match[2];
-    parts.push(<TagBadge key={`tag-${keyIndex++}`} tagName={tagName} tagNumber={tagNumber} />);
+    parts.push(<TagBadge key={`tag-${keyIndex++}`} tagName={tagName} tagNumber={tagNumber} theme={theme} />);
 
     lastIndex = match.index + match[0].length;
   }
@@ -234,7 +215,7 @@ function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
             }`}>
               {isUser ? (
                 // Para mensagens do usuário, renderiza tags como badges (line-height aumentado para tags)
-                <p className="mb-0 leading-[1.77]">{parseMessageWithTags(message.content)}</p>
+                <p className="mb-0 leading-[1.77]">{parseMessageWithTags(message.content, theme)}</p>
               ) : (
                 // Para mensagens da IA, usa ReactMarkdown
                 <ReactMarkdown

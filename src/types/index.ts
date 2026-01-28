@@ -1,4 +1,4 @@
-export type CardType = 'intent-summary' | 'action-ticket' | 'bot' | 'portfolio-snapshot' | 'portfolio-table' | 'portfolio-sidebar' | 'portfolio-table-expanded' | 'portfolio-table-complete';
+export type CardType = 'card_portfolio_exemple_compacto' | 'card_portfolio_sidebar' | 'card_portfolio' | 'card_trade_creator' | 'card_trade' | 'card_actions_creator' | 'card_actions' | 'card_bot_creator' | 'card_bot';
 
 export type CardStatus = 'active' | 'archived' | 'hidden';
 
@@ -11,19 +11,47 @@ export interface BaseCard {
   payload: Record<string, unknown>;
 }
 
-export interface IntentSummaryPayload {
-  action: string;
-  asset?: string;
-  value?: string;
-  summary: string;
+
+
+export interface CreateTradeCardPayload {
+  asset: string;
+  assetName: string;
+  tradeType: 'higher-lower' | 'rise-fall' | 'touch-no-touch';
+  duration: {
+    mode: 'duration' | 'end-time';
+    unit: 'days' | 'hours' | 'minutes' | 'ticks';
+    value: number;
+    range: { min: number; max: number };
+    expiryDate: string;
+  };
+  barrier: {
+    value: number;
+    spotPrice: number;
+  };
+  stake: {
+    mode: 'stake' | 'payout';
+    value: number;
+    currency: string;
+  };
+  payout: {
+    higher: { amount: string; percentage: string };
+    lower: { amount: string; percentage: string };
+  };
 }
 
-export interface ActionTicketPayload {
-  ticketId: string;
-  action: 'buy' | 'sell' | 'transfer' | 'swap';
+export interface TradeCardPayload {
+  tradeId: string;
   asset: string;
-  amount: string;
-  status: 'pending' | 'executing' | 'completed' | 'failed';
+  assetName: string;
+  direction: 'higher' | 'lower' | 'rise' | 'fall';
+  stake: string;
+  payout: string;
+  barrier: string;
+  expiryDate: string;
+  status: 'open' | 'won' | 'lost' | 'sold';
+  profit?: string;
+  entrySpot?: string;
+  currentSpot?: string;
 }
 
 export interface BotPayload {
@@ -60,12 +88,77 @@ export interface PortfolioTablePayload {
   }>;
 }
 
+
+
+export interface ActionsCardPayload {
+  actionId: string;
+  name: string;
+  description: string;
+  status: 'active' | 'inactive' | 'error';
+  lastExecution?: string;
+}
+
+export interface ActionsCreatorPayload {
+  actionName: string;
+  trigger: {
+    type: 'schedule' | 'price' | 'event';
+    value: string;
+  };
+  action: {
+    type: string;
+    asset?: string;
+    amount?: string;
+  };
+  schedule?: {
+    frequency: 'once' | 'daily' | 'weekly' | 'monthly';
+    time?: string;
+    day?: string;
+  };
+  condition?: {
+    type: string;
+    operator: string;
+    value: string;
+  };
+}
+
+export interface BotCreatorPayload {
+  botName: string;
+  trigger: {
+    type: string;
+    value?: string;
+  };
+  action: {
+    type: string;
+    asset: string;
+  };
+  target: {
+    type: string;
+    value: string;
+  };
+  condition?: {
+    type: string;
+    operator: string;
+    value: string;
+  };
+}
+
+export interface BotCardPayload {
+  botId: string;
+  name: string;
+  strategy: string;
+  status: 'active' | 'paused' | 'stopped';
+  performance?: string;
+}
+
 export type CardPayload =
-  | IntentSummaryPayload
-  | ActionTicketPayload
+  | CreateTradeCardPayload
+  | TradeCardPayload
   | BotPayload
   | PortfolioSnapshotPayload
-  | PortfolioTablePayload;
+  | PortfolioTablePayload
+  | ActionsCardPayload
+  | BotCreatorPayload
+  | BotCardPayload;
 
 export interface ChatMessage {
   id: string;

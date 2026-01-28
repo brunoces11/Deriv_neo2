@@ -1,4 +1,4 @@
-import { Star, Archive, Zap, Bot, Wallet, FileText, Table } from 'lucide-react';
+import { Star, Archive, Zap, Bot, Wallet, Table, TrendingUp, LineChart, Workflow, FileText } from 'lucide-react';
 import type { BaseCard } from '../../types';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
@@ -8,19 +8,25 @@ interface ExecutionCardProps {
 }
 
 const cardIcons = {
-  'intent-summary': FileText,
-  'action-ticket': Zap,
-  'bot': Bot,
+  'bot-card': Bot,
   'portfolio-snapshot': Wallet,
-  'portfolio-table': Table,
+  'portfolio-sidebar': Wallet,
+  'portfolio-table-complete': Table,
+  'create-trade-card': LineChart,
+  'trade-card': TrendingUp,
+  'actions-card': Zap,
+  'bot-creator': Workflow,
 };
 
 const cardLabels = {
-  'intent-summary': 'Intent',
-  'action-ticket': 'Action',
-  'bot': 'Bot',
+  'bot-card': 'Bot',
   'portfolio-snapshot': 'Portfolio',
-  'portfolio-table': 'Portfolio Table',
+  'portfolio-sidebar': 'Portfolio',
+  'portfolio-table-complete': 'Portfolio',
+  'create-trade-card': 'Create Trade',
+  'trade-card': 'Trade',
+  'actions-card': 'Action',
+  'bot-creator': 'Bot Creator',
 };
 
 export function ExecutionCard({ card }: ExecutionCardProps) {
@@ -31,20 +37,23 @@ export function ExecutionCard({ card }: ExecutionCardProps) {
 
   const getTitle = () => {
     const payload = card.payload as Record<string, unknown>;
-    if (card.type === 'intent-summary') {
-      return (payload.action as string) || 'Intent';
+    if (card.type === 'trade-card') {
+      return `${(payload.direction as string)?.toUpperCase() || 'Trade'} ${payload.asset || ''}`;
     }
-    if (card.type === 'action-ticket') {
-      return `${(payload.action as string)?.toUpperCase() || 'Action'} ${payload.asset || ''}`;
-    }
-    if (card.type === 'bot') {
+    if (card.type === 'bot-card') {
       return (payload.name as string) || 'Bot';
     }
-    if (card.type === 'portfolio-snapshot') {
+    if (card.type === 'portfolio-snapshot' || card.type === 'portfolio-sidebar' || card.type === 'portfolio-table-complete') {
       return 'Portfolio';
     }
-    if (card.type === 'portfolio-table') {
-      return 'Portfolio Table';
+    if (card.type === 'create-trade-card') {
+      return `Create ${payload.asset || 'Trade'}`;
+    }
+    if (card.type === 'actions-card') {
+      return (payload.name as string) || 'Action';
+    }
+    if (card.type === 'bot-creator') {
+      return (payload.botName as string) || 'New Bot';
     }
     return label;
   };

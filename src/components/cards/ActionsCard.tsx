@@ -1,48 +1,55 @@
-import { Bot, Play, Pause, Pencil, Trash2, Calendar, TrendingUp, TrendingDown } from 'lucide-react';
+import { Zap, Play, Pencil, Trash2, Calendar } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { useTheme } from '../../store/ThemeContext';
-import type { BaseCard, BotCardPayload } from '../../types';
+import type { BaseCard, ActionsCardPayload } from '../../types';
 
-interface BotCardProps {
+interface ActionsCardProps {
   card: BaseCard;
 }
 
 /**
- * BotCard Component
+ * ActionsCard Component
  * 
- * Card for managing active/existing bots.
- * Features 4 action buttons aligned to the right (Play/Pause, Edit, Delete, Schedule).
- * Simplified 2-line layout: Name + Status/Performance
+ * Displays a configured action with management buttons.
+ * Actions can be executed, edited, deleted, or scheduled.
+ * Simplified 2-line layout: Name + Status/LastRun
  */
-export function BotCard({ card }: BotCardProps) {
+export function ActionsCard({ card }: ActionsCardProps) {
   const { theme } = useTheme();
-  const payload = card.payload as unknown as BotCardPayload;
+  const payload = card.payload as unknown as ActionsCardPayload;
 
-  const botId = payload?.botId || 'BOT-000';
-  const name = payload?.name || 'Unnamed Bot';
-  const status = payload?.status || 'stopped';
-  const performance = payload?.performance;
+  const actionId = payload?.actionId || 'ACT-000';
+  const name = payload?.name || 'Unnamed Action';
+  const status = payload?.status || 'inactive';
+  const lastExecution = payload?.lastExecution;
 
   const isActive = status === 'active';
-  const isPositivePerformance = performance?.startsWith('+');
 
-  const statusLabel = status === 'active' ? 'Active' : status === 'paused' ? 'Paused' : 'Stopped';
+  const formatDate = (isoString: string) => {
+    const date = new Date(isoString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
-  const handlePlayPause = () => {
-    const action = status === 'active' ? 'pause' : 'start';
-    console.log(`[BotCard] ${action} bot:`, { botId, name });
+  const handleExecute = () => {
+    console.log('[ActionsCard] Execute action:', { actionId, name });
   };
 
   const handleEdit = () => {
-    console.log('[BotCard] Edit bot:', { botId, name });
+    console.log('[ActionsCard] Edit action:', { actionId, name });
   };
 
   const handleDelete = () => {
-    console.log('[BotCard] Delete bot:', { botId, name });
+    console.log('[ActionsCard] Delete action:', { actionId, name });
   };
 
   const handleSchedule = () => {
-    console.log('[BotCard] Schedule bot:', { botId, name });
+    console.log('[ActionsCard] Schedule action:', { actionId, name });
   };
 
   return (
@@ -51,7 +58,7 @@ export function BotCard({ card }: BotCardProps) {
         {/* Icon with status dot overlay */}
         <div className="relative flex-shrink-0">
           <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-            <Bot className="w-5 h-5 text-amber-500" />
+            <Zap className="w-5 h-5 text-amber-500" />
           </div>
           {/* Status dot - top right */}
           <div 
@@ -68,22 +75,15 @@ export function BotCard({ card }: BotCardProps) {
             {name}
           </h3>
 
-          {/* Line 2: Status + Performance */}
+          {/* Line 2: Status + Last Execution */}
           <div className="flex items-center gap-2 mt-0.5">
             <span className={`text-xs font-medium ${isActive ? 'text-[#00d0a0]' : theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-              {statusLabel}
+              {isActive ? 'Active' : 'Inactive'}
             </span>
-            {performance && (
-              <div className={`flex items-center gap-1 text-xs font-semibold ${
-                isPositivePerformance ? 'text-[#00d0a0]' : 'text-[#ff444f]'
-              }`}>
-                {isPositivePerformance ? (
-                  <TrendingUp className="w-3 h-3" />
-                ) : (
-                  <TrendingDown className="w-3 h-3" />
-                )}
-                {performance}
-              </div>
+            {lastExecution && (
+              <span className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                Last run: {formatDate(lastExecution)}
+              </span>
             )}
           </div>
         </div>
@@ -91,19 +91,15 @@ export function BotCard({ card }: BotCardProps) {
         {/* Action Buttons */}
         <div className="flex items-center gap-1 flex-shrink-0">
           <button
-            onClick={handlePlayPause}
-            title={status === 'active' ? 'Pause' : 'Start'}
+            onClick={handleExecute}
+            title="Execute"
             className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
               theme === 'dark'
                 ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
                 : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
             }`}
           >
-            {status === 'active' ? (
-              <Pause className="w-4 h-4" />
-            ) : (
-              <Play className="w-4 h-4" />
-            )}
+            <Play className="w-4 h-4" />
           </button>
           <button
             onClick={handleEdit}

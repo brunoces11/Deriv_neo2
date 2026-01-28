@@ -1,50 +1,21 @@
 import { useTheme } from '../store/ThemeContext';
-import { ArrowLeft, FileText, Zap, Bot, Wallet, Table, CheckCircle, XCircle } from 'lucide-react';
-import { IntentSummaryCard } from '../components/cards/IntentSummaryCard';
-import { ActionTicketCard } from '../components/cards/ActionTicketCard';
+import { ArrowLeft, Zap, Bot, Wallet, Table, CheckCircle, XCircle, TrendingUp, LineChart, Workflow } from 'lucide-react';
 import { BotCard } from '../components/cards/BotCard';
 import { PortfolioSnapshotCard } from '../components/cards/PortfolioSnapshotCard';
-import { PortfolioTableCard } from '../components/cards/PortfolioTableCard';
-import { PortfolioTableCardExpanded } from '../components/cards/PortfolioTableCardExpanded';
 import { PortfolioTableCardComplete } from '../components/cards/PortfolioTableCardComplete';
 import { PortfolioSidebarCard } from '../components/cards/PortfolioSidebarCard';
+import { CreateTradeCard } from '../components/cards/CreateTradeCard';
+import { TradeCard } from '../components/cards/TradeCard';
+import { ActionsCard } from '../components/cards/ActionsCard';
+import { BotCardCreator } from '../components/cards/BotCardCreator';
 import { UserProfile } from '../components/layout/UserProfile';
 import derivNeoDark from '../assets/deriv_neo_dark_mode.svg';
 import derivNeoLight from '../assets/deriv_neo_light_mode.svg';
 import type { BaseCard } from '../types';
 
-const mockIntentSummaryCard: BaseCard = {
-  id: 'demo-intent-1',
-  type: 'intent-summary',
-  status: 'active',
-  isFavorite: false,
-  createdAt: new Date(),
-  payload: {
-    action: 'Buy',
-    asset: 'BTC',
-    value: '$1,000',
-    summary: 'Purchase Bitcoin with specified amount',
-  },
-};
-
-const mockActionTicketCard: BaseCard = {
-  id: 'demo-action-1',
-  type: 'action-ticket',
-  status: 'active',
-  isFavorite: false,
-  createdAt: new Date(),
-  payload: {
-    ticketId: 'TKT-1234',
-    action: 'buy',
-    asset: 'BTC',
-    amount: '0.025 BTC',
-    status: 'pending',
-  },
-};
-
 const mockBotCard: BaseCard = {
   id: 'demo-bot-1',
-  type: 'bot',
+  type: 'bot-card',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -79,7 +50,7 @@ const mockPortfolioCard: BaseCard = {
 
 const mockPortfolioTableCard: BaseCard = {
   id: 'demo-portfolio-table-1',
-  type: 'portfolio-table',
+  type: 'portfolio-table-complete',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -96,6 +67,90 @@ const mockPortfolioTableCard: BaseCard = {
   },
 };
 
+const mockTradeCard: BaseCard = {
+  id: 'demo-trade-1',
+  type: 'trade-card',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {
+    tradeId: 'TRD-7891',
+    asset: 'BTC/USD',
+    assetName: 'Bitcoin',
+    direction: 'higher',
+    stake: '$100.00',
+    payout: '$357.52',
+    barrier: '772,009.31',
+    expiryDate: '28 Jan 2026, 23:59:59',
+    status: 'open',
+    entrySpot: '771,850.25',
+    currentSpot: '772,105.50',
+  },
+};
+
+const mockCreateTradeCard: BaseCard = {
+  id: 'demo-create-trade-1',
+  type: 'create-trade-card',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {
+    asset: 'BTC/USD',
+    assetName: 'Bitcoin',
+    tradeType: 'higher-lower',
+    duration: {
+      mode: 'duration',
+      unit: 'days',
+      value: 1,
+      range: { min: 1, max: 365 },
+      expiryDate: '28 Jan 2026, 23:59:59 GMT +0',
+    },
+    barrier: {
+      value: 772009.31,
+      spotPrice: 771850.25,
+    },
+    stake: {
+      mode: 'stake',
+      value: 100,
+      currency: 'USD',
+    },
+    payout: {
+      higher: { amount: '$357.52', percentage: '257.52%' },
+      lower: { amount: '$134.39', percentage: '34.39%' },
+    },
+  },
+};
+
+const mockActionsCard: BaseCard = {
+  id: 'demo-actions-1',
+  type: 'actions-card',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {
+    actionId: 'ACT-001',
+    name: 'Weekly BTC Purchase',
+    description: 'Automatically buy $100 of Bitcoin every Monday at 9:00 AM',
+    status: 'active',
+    lastExecution: '2026-01-27T09:00:00Z',
+  },
+};
+
+const mockBotCreator: BaseCard = {
+  id: 'demo-bot-creator-1',
+  type: 'bot-creator',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {
+    botName: 'DCA Bitcoin Strategy',
+    trigger: { type: 'Weekly', value: 'Monday' },
+    action: { type: 'Buy', asset: 'BTC' },
+    target: { type: 'Amount', value: '$100' },
+    condition: { type: 'Price', operator: '<', value: '50000' },
+  },
+};
+
 interface CardInfo {
   name: string;
   type: string;
@@ -108,51 +163,6 @@ interface CardInfo {
 }
 
 const cardsInfo: CardInfo[] = [
-  {
-    name: 'Intent Summary Card',
-    type: 'intent-summary',
-    icon: FileText,
-    description: 'Exibe um resumo da intenção do usuário detectada pela IA.',
-    hasLogic: true,
-    logicDetails: [
-      'Renderiza payload.action como título',
-      'Mostra asset → value com seta visual',
-      'Exibe payload.summary como descrição',
-      'Cor de destaque: cyan',
-      'Suporta favoritar/arquivar via CardWrapper',
-    ],
-    component: <IntentSummaryCard card={mockIntentSummaryCard} />,
-  },
-  {
-    name: 'Action Ticket Card',
-    type: 'action-ticket',
-    icon: Zap,
-    description: 'Representa um ticket de operação (buy/sell/transfer/swap).',
-    hasLogic: true,
-    logicDetails: [
-      'Ícone dinâmico por tipo de ação (buy=ArrowUpRight, sell=ArrowDownRight)',
-      'Cor dinâmica por ação (buy=red, sell=rose, transfer=amber, swap=cyan)',
-      'Status badge com ícone animado (pending/executing = spinner)',
-      'Exibe ticketId, asset, amount',
-      'Estados: pending, executing, completed, failed',
-    ],
-    component: <ActionTicketCard card={mockActionTicketCard} />,
-  },
-  {
-    name: 'Bot Card',
-    type: 'bot',
-    icon: Bot,
-    description: 'Mostra um trading bot configurado e seu status.',
-    hasLogic: true,
-    logicDetails: [
-      'Dot pulsante quando status=active',
-      'Ícone de status dinâmico (Play/Pause/Square)',
-      'Exibe nome, estratégia e performance',
-      'Cor de destaque: amber',
-      'Estados: active, paused, stopped',
-    ],
-    component: <BotCard card={mockBotCard} />,
-  },
   {
     name: 'Portfolio Snapshot Card',
     type: 'portfolio-snapshot',
@@ -167,22 +177,6 @@ const cardsInfo: CardInfo[] = [
       'Cor de destaque: red',
     ],
     component: <PortfolioSnapshotCard card={mockPortfolioCard} />,
-  },
-  {
-    name: 'Portfolio Snapshot Table',
-    type: 'portfolio-table',
-    icon: Table,
-    description: 'Tabela detalhada do portfólio com valor aportado, variação e ações.',
-    hasLogic: true,
-    logicDetails: [
-      'Tabela com colunas: Asset, Value, Invested, Change, % Portfolio, Actions',
-      'Exibe nome completo e símbolo de cada ativo',
-      'Mostra valor aportado vs valor atual',
-      'Variação em % com ícone de tendência',
-      'Botões de ação Buy/Sell para cada ativo',
-      'Footer com resumo: 24h change e total de assets',
-    ],
-    component: <PortfolioTableCard card={mockPortfolioTableCard} />,
   },
   {
     name: 'Portfolio Sidebar Card',
@@ -201,16 +195,6 @@ const cardsInfo: CardInfo[] = [
     component: <PortfolioSidebarCard card={mockPortfolioTableCard} />,
   },
   {
-    name: 'Portfolio Snapshot Table (Expanded)',
-    type: 'portfolio-table-expanded',
-    icon: Table,
-    description: 'Versão expandida da tabela de portfólio ocupando toda a largura disponível.',
-    hasLogic: true,
-    logicDetails: [],
-    component: <PortfolioTableCardExpanded card={mockPortfolioTableCard} />,
-    expanded: true,
-  },
-  {
     name: 'Portfolio Snapshot Table (Complete)',
     type: 'portfolio-table-complete',
     icon: Table,
@@ -219,6 +203,90 @@ const cardsInfo: CardInfo[] = [
     logicDetails: [],
     component: <PortfolioTableCardComplete card={mockPortfolioTableCard} />,
     expanded: true,
+  },
+  {
+    name: 'Create Trade Card',
+    type: 'create-trade-card',
+    icon: LineChart,
+    description: 'Card de criação de trade completo pré-preenchido pela IA. Primeiro estágio: configurar e confirmar trade.',
+    hasLogic: true,
+    logicDetails: [
+      'Header com tipo de trade (Higher/Lower) e link "Learn about"',
+      'Seção Duration: toggle Duration/End time, seletor de unidade, input numérico',
+      'Exibe range válido e data de expiração calculada',
+      'Seção Barrier: input com valor e spot price de referência',
+      'Seção Stake: toggle Stake/Payout, botões +/-, moeda USD',
+      'Botões de ação: Higher (#00d0a0) e Lower (#ff444f)',
+      'Payout e percentual exibidos em cada botão',
+      'Após confirmar, transforma em Trade Card',
+    ],
+    component: <CreateTradeCard card={mockCreateTradeCard} />,
+  },
+  {
+    name: 'Trade Card',
+    type: 'trade-card',
+    icon: TrendingUp,
+    description: 'Card compacto de trade ativo/executado com expand/collapse. Segundo estágio: exibe trade em andamento após confirmação.',
+    hasLogic: true,
+    logicDetails: [
+      'Modo colapsado: ícone + asset/direção + stake→payout + status + botão expand',
+      'Modo expandido: header completo + grid de detalhes + spots + profit/loss',
+      'Botão de seta no canto direito para expandir/colapsar',
+      'Status: open (cyan), won (verde), lost (vermelho), sold (amber)',
+      'Botão "Sell Early" para trades abertos (modo expandido)',
+      'Derivado do Create Trade Card após confirmação',
+    ],
+    component: <TradeCard card={mockTradeCard} />,
+  },
+  {
+    name: 'Actions Card',
+    type: 'actions-card',
+    icon: Zap,
+    description: 'Card de ação configurada com 4 botões de gerenciamento (executar, editar, deletar, agendar).',
+    hasLogic: true,
+    logicDetails: [
+      'Layout compacto de 2 linhas: Nome + Status/Last run',
+      'Bolinha de status no ícone (verde=active, cinza=inactive)',
+      '4 botões alinhados à direita: Execute, Edit, Delete, Schedule',
+      'Botões em tom cinza/neutro com hover state',
+      'Click handlers para simulação (console.log)',
+    ],
+    component: <ActionsCard card={mockActionsCard} />,
+  },
+  {
+    name: 'Bot Card Creator',
+    type: 'bot-creator',
+    icon: Workflow,
+    description: 'Card visual com diagrama/flowchart mostrando a configuração de um novo bot antes do deploy.',
+    hasLogic: true,
+    logicDetails: [
+      'Header com ícone de bot e nome da estratégia',
+      'Área de flowchart com boxes conectados por linhas',
+      'Trigger box (cyan): tipo e valor do gatilho',
+      'Action box (verde): tipo de ação e ativo',
+      'Target box (amber): tipo e valor do alvo',
+      'Condition box (laranja): condição opcional',
+      'Resumo textual do fluxo do bot',
+      'Botões: Deploy Bot (verde), Edit Config, Cancel',
+      'Grid pattern de fundo para efeito visual',
+    ],
+    component: <BotCardCreator card={mockBotCreator} />,
+  },
+  {
+    name: 'Bot Card',
+    type: 'bot-card',
+    icon: Bot,
+    description: 'Card para gerenciar bots ativos com 4 botões de ação (Play/Pause, Edit, Delete, Schedule).',
+    hasLogic: true,
+    logicDetails: [
+      'Layout compacto de 2 linhas: Nome + Status/Performance',
+      'Bolinha de status no ícone (verde=active, cinza=paused/stopped)',
+      'Performance com ícone de tendência (verde/vermelho)',
+      '4 botões alinhados à direita: Play/Pause, Edit, Delete, Schedule',
+      'Botão Play/Pause alterna baseado no status atual',
+      'Botões em tom cinza/neutro com hover state',
+    ],
+    component: <BotCard card={mockBotCard} />,
   },
 ];
 
@@ -388,17 +456,7 @@ export function CardsPage() {
 
         <div className="space-y-8">
           {cardsInfo.map((cardInfo, index) => {
-            // Calculate display index: 1-5 normal, 6 for sidebar, 7 for expanded, 7.1 for complete
-            let displayIndex: string;
-            if (index <= 5) {
-              displayIndex = String(index + 1);
-            } else if (index === 6) {
-              displayIndex = '7';
-            } else if (index === 7) {
-              displayIndex = '7.1';
-            } else {
-              displayIndex = String(index + 1);
-            }
+            const displayIndex = String(index + 1);
             return (
               <CardSection key={cardInfo.type} cardInfo={cardInfo} displayIndex={displayIndex} />
             );

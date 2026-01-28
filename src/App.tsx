@@ -6,7 +6,7 @@ import { DrawingToolsProvider } from './store/DrawingToolsContext';
 import { SessionSyncProvider } from './components/SessionSyncProvider';
 import { Sidebar } from './components/layout/Sidebar';
 import { MainArea } from './components/layout/MainArea';
-import { ExecutionsSidebar } from './components/layout/ExecutionsSidebar';
+import { CardsSidebar } from './components/layout/CardsSidebar';
 import { ChartLayer } from './components/chart/ChartLayer';
 import { CardsPage } from './pages/CardsPage';
 import { ComponentBuilderPage } from './pages/ComponentBuilderPage';
@@ -17,8 +17,8 @@ function MainLayout() {
   const {
     currentMode,
     sidebarCollapsed,
-    executionsSidebarCollapsed,
-    executionsSidebarWidth,
+    cardsSidebarCollapsed,
+    cardsSidebarWidth,
     chartVisible,
     updateUserPoint,
     setResizing,
@@ -35,12 +35,12 @@ function MainLayout() {
       
       <MainArea isGraphMode={currentMode === 'graph'} />
       
-      <ExecutionsSidebar 
-        isCollapsed={executionsSidebarCollapsed}
-        width={executionsSidebarWidth}
+      <CardsSidebar 
+        isCollapsed={cardsSidebarCollapsed}
+        width={cardsSidebarWidth}
         isGraphMode={currentMode === 'graph'}
-        onToggleCollapse={() => updateUserPoint({ executionsSidebarCollapsed: !executionsSidebarCollapsed })}
-        onResize={(width) => updateUserPoint({ executionsSidebarWidth: width })}
+        onToggleCollapse={() => updateUserPoint({ cardsSidebarCollapsed: !cardsSidebarCollapsed })}
+        onResize={(width) => updateUserPoint({ cardsSidebarWidth: width })}
         onResizeStart={() => setResizing(true)}
         onResizeEnd={() => setResizing(false)}
       />
