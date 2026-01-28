@@ -318,10 +318,10 @@ export function CardsSidebar({
         <div className={`flex border-b ${theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'}`}>
           <button
             onClick={() => setActiveTab('cards')}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-xs font-medium transition-colors relative ${
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium transition-colors relative ${
               activeTab === 'cards'
                 ? theme === 'dark' ? 'text-white' : 'text-gray-900'
-                : theme === 'dark' ? 'text-zinc-500 hover:text-zinc-300' : 'text-gray-500 hover:text-gray-700'
+                : theme === 'dark' ? 'text-zinc-400 hover:text-zinc-300' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             <Zap className="w-3.5 h-3.5" />
@@ -332,10 +332,10 @@ export function CardsSidebar({
           </button>
           <button
             onClick={() => setActiveTab('actions')}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-xs font-medium transition-colors relative ${
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium transition-colors relative ${
               activeTab === 'actions'
                 ? theme === 'dark' ? 'text-white' : 'text-gray-900'
-                : theme === 'dark' ? 'text-zinc-500 hover:text-zinc-300' : 'text-gray-500 hover:text-gray-700'
+                : theme === 'dark' ? 'text-zinc-400 hover:text-zinc-300' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             <Play className="w-3.5 h-3.5" />
@@ -346,10 +346,10 @@ export function CardsSidebar({
           </button>
           <button
             onClick={() => setActiveTab('bots')}
-            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-xs font-medium transition-colors relative ${
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-sm font-medium transition-colors relative ${
               activeTab === 'bots'
                 ? theme === 'dark' ? 'text-white' : 'text-gray-900'
-                : theme === 'dark' ? 'text-zinc-500 hover:text-zinc-300' : 'text-gray-500 hover:text-gray-700'
+                : theme === 'dark' ? 'text-zinc-400 hover:text-zinc-300' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             <Bot className="w-3.5 h-3.5" />
