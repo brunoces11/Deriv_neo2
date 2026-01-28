@@ -1,4 +1,4 @@
-import { Star, Archive, Zap, Bot, Wallet, Table, TrendingUp, LineChart, Workflow } from 'lucide-react';
+import { Star, Archive, Zap, Bot, Wallet, Table, TrendingUp, LineChart, Workflow, FileText } from 'lucide-react';
 import type { BaseCard } from '../../types';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
