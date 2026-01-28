@@ -1,23 +1,31 @@
 import { useChat } from '../../store/ChatContext';
 import { IntentSummaryCard } from './IntentSummaryCard';
-import { ActionTicketCard } from './ActionTicketCard';
 import { BotCard } from './BotCard';
 import { PortfolioSnapshotCard } from './PortfolioSnapshotCard';
 import { PortfolioTableCard } from './PortfolioTableCard';
 import { PortfolioSidebarCard } from './PortfolioSidebarCard';
 import { PortfolioTableCardExpanded } from './PortfolioTableCardExpanded';
 import { PortfolioTableCardComplete } from './PortfolioTableCardComplete';
+import { PositionsCard } from './PositionsCard';
+import { CreateTradeCard } from './CreateTradeCard';
+import { TradeCard } from './TradeCard';
+import { ActionsCard } from './ActionsCard';
+import { BotCardCreator } from './BotCardCreator';
 import type { BaseCard } from '../../types';
 
 const cardComponents = {
   'intent-summary': IntentSummaryCard,
-  'action-ticket': ActionTicketCard,
   'bot-card': BotCard,
   'portfolio-snapshot': PortfolioSnapshotCard,
   'portfolio-table': PortfolioTableCard,
   'portfolio-sidebar': PortfolioSidebarCard,
   'portfolio-table-expanded': PortfolioTableCardExpanded,
   'portfolio-table-complete': PortfolioTableCardComplete,
+  'positions-card': PositionsCard,
+  'create-trade-card': CreateTradeCard,
+  'trade-card': TradeCard,
+  'actions-card': ActionsCard,
+  'bot-creator': BotCardCreator,
 };
 
 export function ActiveCards() {

@@ -1,4 +1,4 @@
-import { Star, X, Zap, Bot, Wallet, FileText, Table } from 'lucide-react';
+import { Star, X, Zap, Bot, Wallet, FileText, Table, TrendingUp, LineChart, Workflow } from 'lucide-react';
 import type { BaseCard } from '../../types';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
@@ -10,18 +10,32 @@ interface SidebarCardProps {
 
 const cardIcons = {
   'intent-summary': FileText,
-  'action-ticket': Zap,
   'bot-card': Bot,
   'portfolio-snapshot': Wallet,
   'portfolio-table': Table,
+  'portfolio-sidebar': Wallet,
+  'portfolio-table-expanded': Table,
+  'portfolio-table-complete': Table,
+  'positions-card': TrendingUp,
+  'create-trade-card': LineChart,
+  'trade-card': TrendingUp,
+  'actions-card': Zap,
+  'bot-creator': Workflow,
 };
 
 const cardLabels = {
   'intent-summary': 'Intent',
-  'action-ticket': 'Action',
   'bot-card': 'Bot',
   'portfolio-snapshot': 'Portfolio',
   'portfolio-table': 'Portfolio Table',
+  'portfolio-sidebar': 'Portfolio',
+  'portfolio-table-expanded': 'Portfolio',
+  'portfolio-table-complete': 'Portfolio',
+  'positions-card': 'Positions',
+  'create-trade-card': 'Create Trade',
+  'trade-card': 'Trade',
+  'actions-card': 'Action',
+  'bot-creator': 'Bot Creator',
 };
 
 export function SidebarCard({ card, variant }: SidebarCardProps) {
@@ -35,17 +49,29 @@ export function SidebarCard({ card, variant }: SidebarCardProps) {
     if (card.type === 'intent-summary') {
       return (payload.action as string) || 'Intent';
     }
-    if (card.type === 'action-ticket') {
-      return `${(payload.action as string)?.toUpperCase() || 'Action'} ${payload.asset || ''}`;
+    if (card.type === 'trade-card') {
+      return `${(payload.direction as string)?.toUpperCase() || 'Trade'} ${payload.asset || ''}`;
     }
     if (card.type === 'bot-card') {
       return (payload.name as string) || 'Bot';
     }
-    if (card.type === 'portfolio-snapshot') {
+    if (card.type === 'portfolio-snapshot' || card.type === 'portfolio-sidebar' || card.type === 'portfolio-table-expanded' || card.type === 'portfolio-table-complete') {
       return 'Portfolio';
     }
     if (card.type === 'portfolio-table') {
       return 'Portfolio Table';
+    }
+    if (card.type === 'positions-card') {
+      return 'Positions';
+    }
+    if (card.type === 'create-trade-card') {
+      return `Create ${payload.asset || 'Trade'}`;
+    }
+    if (card.type === 'actions-card') {
+      return (payload.name as string) || 'Action';
+    }
+    if (card.type === 'bot-creator') {
+      return (payload.botName as string) || 'New Bot';
     }
     return label;
   };

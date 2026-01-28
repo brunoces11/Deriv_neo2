@@ -13,7 +13,7 @@ interface MockScenario {
 const scenarios: MockScenario[] = [
   {
     keywords: ['buy', 'comprar', 'purchase'],
-    response: "I understand you want to make a purchase. I've prepared a summary of your intent and created an action ticket for this transaction. You can review the details in the cards below.",
+    response: "I understand you want to make a purchase. I've prepared a summary of your intent and created a trade card for this transaction. You can review the details in the cards below.",
     events: () => [
       {
         type: 'ADD_CARD',
@@ -28,21 +28,25 @@ const scenarios: MockScenario[] = [
       },
       {
         type: 'ADD_CARD',
-        cardType: 'action-ticket' as CardType,
+        cardType: 'trade-card' as CardType,
         cardId: generateId(),
         payload: {
-          ticketId: `TKT-${Math.floor(Math.random() * 10000)}`,
-          action: 'buy',
-          asset: 'BTC',
-          amount: '0.025 BTC',
-          status: 'pending',
+          tradeId: `TRD-${Math.floor(Math.random() * 10000)}`,
+          asset: 'BTC/USD',
+          assetName: 'Bitcoin',
+          direction: 'higher',
+          stake: '$1,000.00',
+          payout: '$1,950.00',
+          barrier: '42,500.00',
+          expiryDate: '28 Jan 2026, 23:59:59',
+          status: 'open',
         },
       },
     ],
   },
   {
     keywords: ['sell', 'vender'],
-    response: "I've registered your sell order. Check the action ticket below for the transaction details. You can track the status in real-time.",
+    response: "I've registered your sell order. Check the trade card below for the transaction details. You can track the status in real-time.",
     events: () => [
       {
         type: 'ADD_CARD',
@@ -57,14 +61,18 @@ const scenarios: MockScenario[] = [
       },
       {
         type: 'ADD_CARD',
-        cardType: 'action-ticket' as CardType,
+        cardType: 'trade-card' as CardType,
         cardId: generateId(),
         payload: {
-          ticketId: `TKT-${Math.floor(Math.random() * 10000)}`,
-          action: 'sell',
-          asset: 'ETH',
-          amount: '2.5 ETH',
-          status: 'executing',
+          tradeId: `TRD-${Math.floor(Math.random() * 10000)}`,
+          asset: 'ETH/USD',
+          assetName: 'Ethereum',
+          direction: 'lower',
+          stake: '$500.00',
+          payout: '$975.00',
+          barrier: '2,350.00',
+          expiryDate: '28 Jan 2026, 23:59:59',
+          status: 'open',
         },
       },
     ],
@@ -111,7 +119,7 @@ const scenarios: MockScenario[] = [
   },
   {
     keywords: ['swap', 'trocar', 'exchange', 'convert'],
-    response: "I've prepared a swap transaction for you. Review the details in the action ticket below and confirm when ready.",
+    response: "I've prepared a swap transaction for you. Review the details in the trade card below and confirm when ready.",
     events: () => [
       {
         type: 'ADD_CARD',
@@ -126,14 +134,18 @@ const scenarios: MockScenario[] = [
       },
       {
         type: 'ADD_CARD',
-        cardType: 'action-ticket' as CardType,
+        cardType: 'trade-card' as CardType,
         cardId: generateId(),
         payload: {
-          ticketId: `TKT-${Math.floor(Math.random() * 10000)}`,
-          action: 'swap',
-          asset: 'ETH → USDC',
-          amount: '1.5 ETH ≈ $2,850',
-          status: 'pending',
+          tradeId: `TRD-${Math.floor(Math.random() * 10000)}`,
+          asset: 'ETH/USDC',
+          assetName: 'Ethereum',
+          direction: 'higher',
+          stake: '$2,850.00',
+          payout: '$5,557.50',
+          barrier: '2,400.00',
+          expiryDate: '28 Jan 2026, 23:59:59',
+          status: 'open',
         },
       },
     ],

@@ -27,13 +27,36 @@ function getDefaultPayload(cardType: CardType): Record<string, unknown> {
         value: 'N/A',
         summary: 'Request processed by AI assistant',
       };
-    case 'action-ticket':
+    case 'trade-card':
       return {
-        ticketId: `TKT-${Math.floor(Math.random() * 10000)}`,
-        action: 'buy',
-        asset: 'BTC',
-        amount: '0.01 BTC',
-        status: 'pending',
+        tradeId: `TRD-${Math.floor(Math.random() * 10000)}`,
+        asset: 'BTC/USD',
+        assetName: 'Bitcoin',
+        direction: 'higher',
+        stake: '$100.00',
+        payout: '$195.00',
+        barrier: '42,500.00',
+        expiryDate: '28 Jan 2026, 23:59:59',
+        status: 'open',
+      };
+    case 'create-trade-card':
+      return {
+        asset: 'BTC/USD',
+        assetName: 'Bitcoin',
+        tradeType: 'higher-lower',
+        duration: {
+          mode: 'duration',
+          unit: 'days',
+          value: 1,
+          range: { min: 1, max: 365 },
+          expiryDate: '28 Jan 2026, 23:59:59 GMT +0',
+        },
+        barrier: { value: 42500.00, spotPrice: 42350.75 },
+        stake: { mode: 'stake', value: 100, currency: 'USD' },
+        payout: {
+          higher: { amount: '$195.00', percentage: '95%' },
+          lower: { amount: '$195.00', percentage: '95%' },
+        },
       };
     case 'bot-card':
       return {
@@ -111,7 +134,11 @@ function findCardsInPayload(payload: string): CardType[] {
     'portfolio-snapshot',
     'portfolio-table',
     'intent-summary',
-    'action-ticket',
+    'create-trade-card',
+    'trade-card',
+    'positions-card',
+    'actions-card',
+    'bot-creator',
     'bot-card',
   ];
   

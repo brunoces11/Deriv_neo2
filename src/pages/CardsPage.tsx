@@ -1,7 +1,6 @@
 import { useTheme } from '../store/ThemeContext';
 import { ArrowLeft, FileText, Zap, Bot, Wallet, Table, CheckCircle, XCircle, TrendingUp, LineChart, Workflow } from 'lucide-react';
 import { IntentSummaryCard } from '../components/cards/IntentSummaryCard';
-import { ActionTicketCard } from '../components/cards/ActionTicketCard';
 import { BotCard } from '../components/cards/BotCard';
 import { PortfolioSnapshotCard } from '../components/cards/PortfolioSnapshotCard';
 import { PortfolioTableCard } from '../components/cards/PortfolioTableCard';
@@ -9,6 +8,7 @@ import { PortfolioTableCardExpanded } from '../components/cards/PortfolioTableCa
 import { PortfolioTableCardComplete } from '../components/cards/PortfolioTableCardComplete';
 import { PortfolioSidebarCard } from '../components/cards/PortfolioSidebarCard';
 import { PositionsCard } from '../components/cards/PositionsCard';
+import { CreateTradeCard } from '../components/cards/CreateTradeCard';
 import { TradeCard } from '../components/cards/TradeCard';
 import { ActionsCard } from '../components/cards/ActionsCard';
 import { BotCardCreator } from '../components/cards/BotCardCreator';
@@ -28,21 +28,6 @@ const mockIntentSummaryCard: BaseCard = {
     asset: 'BTC',
     value: '$1,000',
     summary: 'Purchase Bitcoin with specified amount',
-  },
-};
-
-const mockActionTicketCard: BaseCard = {
-  id: 'demo-action-1',
-  type: 'action-ticket',
-  status: 'active',
-  isFavorite: false,
-  createdAt: new Date(),
-  payload: {
-    ticketId: 'TKT-1234',
-    action: 'buy',
-    asset: 'BTC',
-    amount: '0.025 BTC',
-    status: 'pending',
   },
 };
 
@@ -154,6 +139,27 @@ const mockTradeCard: BaseCard = {
   isFavorite: false,
   createdAt: new Date(),
   payload: {
+    tradeId: 'TRD-7891',
+    asset: 'BTC/USD',
+    assetName: 'Bitcoin',
+    direction: 'higher',
+    stake: '$100.00',
+    payout: '$357.52',
+    barrier: '772,009.31',
+    expiryDate: '28 Jan 2026, 23:59:59',
+    status: 'open',
+    entrySpot: '771,850.25',
+    currentSpot: '772,105.50',
+  },
+};
+
+const mockCreateTradeCard: BaseCard = {
+  id: 'demo-create-trade-1',
+  type: 'create-trade-card',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {
     asset: 'BTC/USD',
     assetName: 'Bitcoin',
     tradeType: 'higher-lower',
@@ -236,21 +242,6 @@ const cardsInfo: CardInfo[] = [
       'Suporta favoritar/arquivar via CardWrapper',
     ],
     component: <IntentSummaryCard card={mockIntentSummaryCard} />,
-  },
-  {
-    name: 'Action Ticket Card',
-    type: 'action-ticket',
-    icon: Zap,
-    description: 'Representa um ticket de operação (buy/sell/transfer/swap).',
-    hasLogic: true,
-    logicDetails: [
-      'Ícone dinâmico por tipo de ação (buy=ArrowUpRight, sell=ArrowDownRight)',
-      'Cor dinâmica por ação (buy=red, sell=rose, transfer=amber, swap=cyan)',
-      'Status badge com ícone animado (pending/executing = spinner)',
-      'Exibe ticketId, asset, amount',
-      'Estados: pending, executing, completed, failed',
-    ],
-    component: <ActionTicketCard card={mockActionTicketCard} />,
   },
   {
     name: 'Portfolio Snapshot Card',
@@ -337,10 +328,10 @@ const cardsInfo: CardInfo[] = [
     component: <PositionsCard card={mockPositionsCard} />,
   },
   {
-    name: 'Trade Card',
-    type: 'trade-card',
+    name: 'Create Trade Card',
+    type: 'create-trade-card',
     icon: LineChart,
-    description: 'Card de trading completo pré-preenchido pela IA, similar ao card padrão da Deriv.',
+    description: 'Card de criação de trade completo pré-preenchido pela IA. Primeiro estágio: configurar e confirmar trade.',
     hasLogic: true,
     logicDetails: [
       'Header com tipo de trade (Higher/Lower) e link "Learn about"',
@@ -350,7 +341,24 @@ const cardsInfo: CardInfo[] = [
       'Seção Stake: toggle Stake/Payout, botões +/-, moeda USD',
       'Botões de ação: Higher (#00d0a0) e Lower (#ff444f)',
       'Payout e percentual exibidos em cada botão',
-      'Click handlers para execução simulada (console.log)',
+      'Após confirmar, transforma em Trade Card',
+    ],
+    component: <CreateTradeCard card={mockCreateTradeCard} />,
+  },
+  {
+    name: 'Trade Card',
+    type: 'trade-card',
+    icon: TrendingUp,
+    description: 'Card compacto de trade ativo/executado. Segundo estágio: exibe trade em andamento após confirmação.',
+    hasLogic: true,
+    logicDetails: [
+      'Header com asset, direção (Higher/Lower) e status',
+      'Grid compacto: Stake, Payout, Barrier, Expiry',
+      'Entry spot e current spot (quando disponível)',
+      'Status: open (cyan), won (verde), lost (vermelho), sold (amber)',
+      'Profit/Loss para trades finalizados',
+      'Botão "Sell Early" para trades abertos',
+      'Derivado do Create Trade Card após confirmação',
     ],
     component: <TradeCard card={mockTradeCard} />,
   },
@@ -361,13 +369,11 @@ const cardsInfo: CardInfo[] = [
     description: 'Card de ação configurada com 4 botões de gerenciamento (executar, editar, deletar, agendar).',
     hasLogic: true,
     logicDetails: [
-      'Exibe nome, descrição e ID da action',
-      'Status badge com cores: active (verde), inactive (cinza), error (vermelho)',
-      'Timestamp da última execução formatado',
+      'Layout compacto de 2 linhas: Nome + Status/Last run',
+      'Bolinha de status no ícone (verde=active, cinza=inactive)',
       '4 botões alinhados à direita: Execute, Edit, Delete, Schedule',
       'Botões em tom cinza/neutro com hover state',
       'Click handlers para simulação (console.log)',
-      'Suporta favoritar/arquivar via CardWrapper',
     ],
     component: <ActionsCard card={mockActionsCard} />,
   },
@@ -397,14 +403,12 @@ const cardsInfo: CardInfo[] = [
     description: 'Card para gerenciar bots ativos com 4 botões de ação (Play/Pause, Edit, Delete, Schedule).',
     hasLogic: true,
     logicDetails: [
-      'Exibe nome, estratégia e ID do bot',
-      'Ícone com dot de status (pulsante quando active)',
-      'Status badge: active (verde), paused (amber), stopped (cinza)',
+      'Layout compacto de 2 linhas: Nome + Status/Performance',
+      'Bolinha de status no ícone (verde=active, cinza=paused/stopped)',
       'Performance com ícone de tendência (verde/vermelho)',
       '4 botões alinhados à direita: Play/Pause, Edit, Delete, Schedule',
       'Botão Play/Pause alterna baseado no status atual',
       'Botões em tom cinza/neutro com hover state',
-      'Click handlers para simulação (console.log)',
     ],
     component: <BotCard card={mockBotCard} />,
   },
