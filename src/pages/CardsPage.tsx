@@ -1,5 +1,5 @@
 import { useTheme } from '../store/ThemeContext';
-import { ArrowLeft, FileText, Zap, Bot, Wallet, Table, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, FileText, Zap, Bot, Wallet, Table, CheckCircle, XCircle, TrendingUp, LineChart, Workflow } from 'lucide-react';
 import { IntentSummaryCard } from '../components/cards/IntentSummaryCard';
 import { ActionTicketCard } from '../components/cards/ActionTicketCard';
 import { BotCard } from '../components/cards/BotCard';
@@ -8,6 +8,11 @@ import { PortfolioTableCard } from '../components/cards/PortfolioTableCard';
 import { PortfolioTableCardExpanded } from '../components/cards/PortfolioTableCardExpanded';
 import { PortfolioTableCardComplete } from '../components/cards/PortfolioTableCardComplete';
 import { PortfolioSidebarCard } from '../components/cards/PortfolioSidebarCard';
+import { PositionsCard } from '../components/cards/PositionsCard';
+import { TradeCard } from '../components/cards/TradeCard';
+import { ActionsCard } from '../components/cards/ActionsCard';
+import { BotCardCreator } from '../components/cards/BotCardCreator';
+import { BotCardSimple } from '../components/cards/BotCardSimple';
 import { UserProfile } from '../components/layout/UserProfile';
 import derivNeoDark from '../assets/deriv_neo_dark_mode.svg';
 import derivNeoLight from '../assets/deriv_neo_light_mode.svg';
@@ -93,6 +98,131 @@ const mockPortfolioTableCard: BaseCard = {
       { symbol: 'SOL', name: 'Solana', allocation: 15, value: '$6,784.50', invested: '$7,200.00', change: '-$415.50', changePercent: '-5.77%' },
       { symbol: 'USDT', name: 'Tether', allocation: 10, value: '$4,523.00', invested: '$4,500.00', change: '+$23.00', changePercent: '+0.51%' },
     ],
+  },
+};
+
+const mockPositionsCard: BaseCard = {
+  id: 'demo-positions-1',
+  type: 'positions-card',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {
+    positions: [
+      {
+        id: 'pos-1',
+        asset: 'BTC/USD',
+        assetName: 'Bitcoin',
+        contractType: 'higher',
+        stake: '$100.00',
+        payout: '$195.00',
+        expiryTime: '2025-01-28T15:30:00Z',
+        timeRemaining: '2:45:30',
+        status: 'open',
+      },
+      {
+        id: 'pos-2',
+        asset: 'ETH/USD',
+        assetName: 'Ethereum',
+        contractType: 'lower',
+        stake: '$50.00',
+        payout: '$92.50',
+        expiryTime: '2025-01-28T14:00:00Z',
+        timeRemaining: '0:00:00',
+        status: 'won',
+        profit: '+$42.50',
+      },
+      {
+        id: 'pos-3',
+        asset: 'SOL/USD',
+        assetName: 'Solana',
+        contractType: 'rise',
+        stake: '$75.00',
+        payout: '$140.00',
+        expiryTime: '2025-01-28T13:00:00Z',
+        timeRemaining: '0:00:00',
+        status: 'lost',
+        profit: '-$75.00',
+      },
+    ],
+  },
+};
+
+const mockTradeCard: BaseCard = {
+  id: 'demo-trade-1',
+  type: 'trade-card',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {
+    asset: 'BTC/USD',
+    assetName: 'Bitcoin',
+    tradeType: 'higher-lower',
+    duration: {
+      mode: 'duration',
+      unit: 'days',
+      value: 1,
+      range: { min: 1, max: 365 },
+      expiryDate: '28 Jan 2026, 23:59:59 GMT +0',
+    },
+    barrier: {
+      value: 772009.31,
+      spotPrice: 771850.25,
+    },
+    stake: {
+      mode: 'stake',
+      value: 100,
+      currency: 'USD',
+    },
+    payout: {
+      higher: { amount: '$357.52', percentage: '257.52%' },
+      lower: { amount: '$134.39', percentage: '34.39%' },
+    },
+  },
+};
+
+const mockActionsCard: BaseCard = {
+  id: 'demo-actions-1',
+  type: 'actions-card',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {
+    actionId: 'ACT-001',
+    name: 'Weekly BTC Purchase',
+    description: 'Automatically buy $100 of Bitcoin every Monday at 9:00 AM',
+    status: 'active',
+    lastExecution: '2026-01-27T09:00:00Z',
+  },
+};
+
+const mockBotCreator: BaseCard = {
+  id: 'demo-bot-creator-1',
+  type: 'bot-creator',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {
+    botName: 'DCA Bitcoin Strategy',
+    trigger: { type: 'Weekly', value: 'Monday' },
+    action: { type: 'Buy', asset: 'BTC' },
+    target: { type: 'Amount', value: '$100' },
+    condition: { type: 'Price', operator: '<', value: '50000' },
+  },
+};
+
+const mockBotSimple: BaseCard = {
+  id: 'demo-bot-simple-1',
+  type: 'bot-simple',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {
+    botId: 'BOT-789',
+    name: 'ETH Swing Trader',
+    strategy: 'Buy low, sell high based on RSI indicators',
+    status: 'active',
+    performance: '+8.3%',
   },
 };
 
@@ -219,6 +349,95 @@ const cardsInfo: CardInfo[] = [
     logicDetails: [],
     component: <PortfolioTableCardComplete card={mockPortfolioTableCard} />,
     expanded: true,
+  },
+  {
+    name: 'Positions Card',
+    type: 'positions-card',
+    icon: TrendingUp,
+    description: 'Exibe posições de trade ativas (opções digitais) com status, stake, payout e tempo restante.',
+    hasLogic: true,
+    logicDetails: [
+      'Lista de posições ativas com dados do contrato',
+      'Exibe asset, tipo de contrato (Higher/Lower/Rise/Fall)',
+      'Mostra stake → payout com seta visual',
+      'Status com cores: verde (won), vermelho (lost), cyan (open)',
+      'Tempo restante para posições abertas',
+      'Lucro/prejuízo para posições finalizadas',
+      'Suporta favoritar/arquivar via CardWrapper',
+    ],
+    component: <PositionsCard card={mockPositionsCard} />,
+  },
+  {
+    name: 'Trade Card',
+    type: 'trade-card',
+    icon: LineChart,
+    description: 'Card de trading completo pré-preenchido pela IA, similar ao card padrão da Deriv.',
+    hasLogic: true,
+    logicDetails: [
+      'Header com tipo de trade (Higher/Lower) e link "Learn about"',
+      'Seção Duration: toggle Duration/End time, seletor de unidade, input numérico',
+      'Exibe range válido e data de expiração calculada',
+      'Seção Barrier: input com valor e spot price de referência',
+      'Seção Stake: toggle Stake/Payout, botões +/-, moeda USD',
+      'Botões de ação: Higher (#00d0a0) e Lower (#ff444f)',
+      'Payout e percentual exibidos em cada botão',
+      'Click handlers para execução simulada (console.log)',
+    ],
+    component: <TradeCard card={mockTradeCard} />,
+  },
+  {
+    name: 'Actions Card',
+    type: 'actions-card',
+    icon: Zap,
+    description: 'Card de ação configurada com 4 botões de gerenciamento (executar, editar, deletar, agendar).',
+    hasLogic: true,
+    logicDetails: [
+      'Exibe nome, descrição e ID da action',
+      'Status badge com cores: active (verde), inactive (cinza), error (vermelho)',
+      'Timestamp da última execução formatado',
+      '4 botões alinhados à direita: Execute, Edit, Delete, Schedule',
+      'Botões em tom cinza/neutro com hover state',
+      'Click handlers para simulação (console.log)',
+      'Suporta favoritar/arquivar via CardWrapper',
+    ],
+    component: <ActionsCard card={mockActionsCard} />,
+  },
+  {
+    name: 'Bot Card Creator',
+    type: 'bot-creator',
+    icon: Workflow,
+    description: 'Card visual com diagrama/flowchart mostrando a configuração de um novo bot antes do deploy.',
+    hasLogic: true,
+    logicDetails: [
+      'Header com ícone de bot e nome da estratégia',
+      'Área de flowchart com boxes conectados por linhas',
+      'Trigger box (cyan): tipo e valor do gatilho',
+      'Action box (verde): tipo de ação e ativo',
+      'Target box (amber): tipo e valor do alvo',
+      'Condition box (laranja): condição opcional',
+      'Resumo textual do fluxo do bot',
+      'Botões: Deploy Bot (verde), Edit Config, Cancel',
+      'Grid pattern de fundo para efeito visual',
+    ],
+    component: <BotCardCreator card={mockBotCreator} />,
+  },
+  {
+    name: 'Bot Card Simple',
+    type: 'bot-simple',
+    icon: Bot,
+    description: 'Card simples para bots ativos com 4 botões de gerenciamento similar ao Actions Card.',
+    hasLogic: true,
+    logicDetails: [
+      'Exibe nome, estratégia e ID do bot',
+      'Ícone com dot de status (pulsante quando active)',
+      'Status badge: active (verde), paused (amber), stopped (cinza)',
+      'Performance com ícone de tendência (verde/vermelho)',
+      '4 botões alinhados à direita: Play/Pause, Edit, Delete, Schedule',
+      'Botão Play/Pause alterna baseado no status atual',
+      'Botões em tom cinza/neutro com hover state',
+      'Click handlers para simulação (console.log)',
+    ],
+    component: <BotCardSimple card={mockBotSimple} />,
   },
 ];
 
