@@ -14,8 +14,8 @@ const AGENTS = [
   'Trader Agent',
   'Bot Creator Agent',
   'Market Agent',
-  'Support Agent',
-  'Trainer Agent',
+  // 'Support Agent',
+  // 'Trainer Agent',
 ];
 
 const PRODUCTS = [
