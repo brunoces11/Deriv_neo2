@@ -1,10 +1,47 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Zap, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Zap, ChevronLeft, ChevronRight, Play, Bot } from 'lucide-react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import { ExecutionCard } from './ExecutionCard';
 import { ChatMessages } from '../chat/ChatMessages';
 import { ChatInput_NEO } from '../chat/ChatInput_NEO';
+
+type RightSidebarTab = 'cards' | 'actions' | 'bots';
+
+const RIGHT_SIDEBAR_STATE_KEY = 'deriv-neo-right-sidebar-state';
+
+interface RightSidebarState {
+  activeTab: RightSidebarTab;
+  // ChatMode section heights (percentages)
+  cardsSectionHeight: number;
+  actionsSectionHeight: number;
+}
+
+const defaultRightSidebarState: RightSidebarState = {
+  activeTab: 'cards',
+  cardsSectionHeight: 33,
+  actionsSectionHeight: 33,
+};
+
+function loadRightSidebarState(): RightSidebarState {
+  try {
+    const stored = localStorage.getItem(RIGHT_SIDEBAR_STATE_KEY);
+    if (stored) {
+      return { ...defaultRightSidebarState, ...JSON.parse(stored) };
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return defaultRightSidebarState;
+}
+
+function saveRightSidebarState(state: RightSidebarState): void {
+  try {
+    localStorage.setItem(RIGHT_SIDEBAR_STATE_KEY, JSON.stringify(state));
+  } catch {
+    // Ignore storage errors
+  }
+}
 
 interface CardsSidebarProps {
   isCollapsed: boolean;
@@ -39,11 +76,26 @@ export function CardsSidebar({
   const { theme } = useTheme();
   const [localWidth, setLocalWidth] = useState(propWidth);
   const [isResizing, setIsResizing] = useState(false);
-  const [cardsHeight, setCardsHeight] = useState(200); // Default height in pixels
+  const [cardsHeight, setCardsHeight] = useState(200); // Default height in pixels for graph mode
   const [isVerticalResizing, setIsVerticalResizing] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const finalWidthRef = useRef(propWidth);
+  
+  // Right sidebar state (tabs + section heights)
+  const [rightSidebarState, setRightSidebarState] = useState<RightSidebarState>(loadRightSidebarState);
+  const { activeTab, cardsSectionHeight, actionsSectionHeight } = rightSidebarState;
+  const [resizingSection, setResizingSection] = useState<'cards' | 'actions' | null>(null);
+
+  const updateRightSidebarState = useCallback((updates: Partial<RightSidebarState>) => {
+    setRightSidebarState(prev => {
+      const newState = { ...prev, ...updates };
+      saveRightSidebarState(newState);
+      return newState;
+    });
+  }, []);
+
+  const setActiveTab = (tab: RightSidebarTab) => updateRightSidebarState({ activeTab: tab });
 
   // Sincronizar com prop width quando não está em resize
   useEffect(() => {
@@ -119,7 +171,7 @@ export function CardsSidebar({
     document.body.style.userSelect = 'none';
   }, [localWidth, isCollapsed, onResizeStart, onResizeEnd, onResize, onToggleCollapse]);
 
-  // Vertical resize handler
+  // Vertical resize handler for graph mode
   const handleVerticalMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -152,6 +204,61 @@ export function CardsSidebar({
     document.body.style.cursor = 'ns-resize';
     document.body.style.userSelect = 'none';
   }, [cardsHeight]);
+
+  // ChatMode section resize handler
+  const handleSectionResize = useCallback((section: 'cards' | 'actions', e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setResizingSection(section);
+    
+    const startY = e.clientY;
+    const containerHeight = contentRef.current?.clientHeight || 500;
+    const startCardsHeight = cardsSectionHeight;
+    const startActionsHeight = actionsSectionHeight;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaPercent = ((e.clientY - startY) / containerHeight) * 100;
+      
+      if (section === 'cards') {
+        // Resizing cards section affects cards and actions
+        let newCardsHeight = startCardsHeight + deltaPercent;
+        let newActionsHeight = startActionsHeight - deltaPercent;
+        
+        // Clamp values (min 15%, max 60%)
+        newCardsHeight = Math.max(15, Math.min(60, newCardsHeight));
+        newActionsHeight = Math.max(15, Math.min(60, newActionsHeight));
+        
+        updateRightSidebarState({ 
+          cardsSectionHeight: newCardsHeight, 
+          actionsSectionHeight: newActionsHeight 
+        });
+      } else {
+        // Resizing actions section affects actions and bots
+        let newActionsHeight = startActionsHeight + deltaPercent;
+        
+        // Clamp values (min 15%, max 60%)
+        newActionsHeight = Math.max(15, Math.min(60, newActionsHeight));
+        
+        updateRightSidebarState({ actionsSectionHeight: newActionsHeight });
+      }
+    };
+
+    const handleMouseUp = () => {
+      setResizingSection(null);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+    document.body.style.cursor = 'ns-resize';
+    document.body.style.userSelect = 'none';
+  }, [cardsSectionHeight, actionsSectionHeight, updateRightSidebarState]);
+
+  // Calculate bots section height
+  const botsSectionHeight = 100 - cardsSectionHeight - actionsSectionHeight;
 
   // Width visual: durante resize sempre usa localWidth, senão respeita collapsed
   const displayWidth = isResizing ? localWidth : (isCollapsed ? COLLAPSED_WIDTH : localWidth);
@@ -189,66 +296,106 @@ export function CardsSidebar({
         }`} />
       </div>
 
-      {/* Header */}
-      <div className={`p-4 border-b transition-colors ${theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'}`}>
-        <div className="flex items-center gap-3">
-          {/* Collapse/Expand button - always on the border */}
-          <button 
-            onClick={handleToggleCollapse} 
-            className={`absolute -left-3 top-5 p-1 rounded-full shadow-md transition-colors z-[70] ${
-              theme === 'dark' 
-                ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700' 
-                : 'bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-700 border border-gray-200'
-            }`} 
-            title={showCollapsedContent ? "Expand sidebar" : "Collapse sidebar"}
+      {/* Collapse/Expand button */}
+      <button 
+        onClick={handleToggleCollapse} 
+        className={`absolute -left-3 top-5 p-1 rounded-full shadow-md transition-colors z-[70] ${
+          theme === 'dark' 
+            ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white border border-zinc-700' 
+            : 'bg-white hover:bg-gray-100 text-gray-500 hover:text-gray-700 border border-gray-200'
+        }`} 
+        title={showCollapsedContent ? "Expand sidebar" : "Collapse sidebar"}
+      >
+        {showCollapsedContent ? (
+          <ChevronLeft className="w-3 h-3" />
+        ) : (
+          <ChevronRight className="w-3 h-3" />
+        )}
+      </button>
+
+      {/* Tab Navigation - Graph Mode only */}
+      {isGraphMode && !showCollapsedContent && (
+        <div className={`flex border-b ${theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'}`}>
+          <button
+            onClick={() => setActiveTab('cards')}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-xs font-medium transition-colors relative ${
+              activeTab === 'cards'
+                ? theme === 'dark' ? 'text-white' : 'text-gray-900'
+                : theme === 'dark' ? 'text-zinc-500 hover:text-zinc-300' : 'text-gray-500 hover:text-gray-700'
+            }`}
           >
-            {showCollapsedContent ? (
-              <ChevronLeft className="w-3 h-3" />
-            ) : (
-              <ChevronRight className="w-3 h-3" />
+            <Zap className="w-3.5 h-3.5" />
+            <span>Cards</span>
+            {activeTab === 'cards' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
             )}
           </button>
-          
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${theme === 'dark' ? 'bg-red-500/10' : 'bg-red-50'}`}>
-            <Zap className="w-4 h-4 text-red-500" />
-          </div>
-          {!showCollapsedContent && (
-            <>
-              <div className="flex-1 min-w-0">
-                <h2 className={`text-sm font-medium transition-colors truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  Cards
-                </h2>
-                <p className={`text-xs transition-colors ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-                  {activeCards.length} active
-                </p>
-              </div>
-              {activeCards.length > 0 && (
-                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
-              )}
-            </>
-          )}
+          <button
+            onClick={() => setActiveTab('actions')}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-xs font-medium transition-colors relative ${
+              activeTab === 'actions'
+                ? theme === 'dark' ? 'text-white' : 'text-gray-900'
+                : theme === 'dark' ? 'text-zinc-500 hover:text-zinc-300' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Play className="w-3.5 h-3.5" />
+            <span>Actions</span>
+            {activeTab === 'actions' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('bots')}
+            className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-3 text-xs font-medium transition-colors relative ${
+              activeTab === 'bots'
+                ? theme === 'dark' ? 'text-white' : 'text-gray-900'
+                : theme === 'dark' ? 'text-zinc-500 hover:text-zinc-300' : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Bot className="w-3.5 h-3.5" />
+            <span>Bots</span>
+            {activeTab === 'bots' && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
+            )}
+          </button>
         </div>
-      </div>
+      )}
 
-      {/* Cards List - Chat Mode: apenas cards, Graph Mode: cards + chat */}
+      {/* Cards List - Chat Mode: 3 sections, Graph Mode: tabs + chat */}
       {isGraphMode && !showCollapsedContent ? (
-        // Graph Mode Layout: 3 seções
+        // Graph Mode Layout: tabs in upper section + chat below
         <div ref={contentRef} className="flex-1 flex flex-col overflow-hidden">
-          {/* Cards Section */}
+          {/* Tab Content Section */}
           <div 
             className="overflow-y-auto custom-scrollbar p-3"
             style={{ height: cardsHeight, minHeight: MIN_CARDS_HEIGHT }}
           >
-            {activeCards.length === 0 ? (
+            {activeTab === 'cards' && (
+              activeCards.length === 0 ? (
+                <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
+                  <Zap className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
+                  <p className="text-xs">No cards</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {activeCards.map(card => (
+                    <ExecutionCard key={card.id} card={card} />
+                  ))}
+                </div>
+              )
+            )}
+            {activeTab === 'actions' && (
               <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-                <Zap className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
-                <p className="text-xs">No cards</p>
+                <Play className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
+                <p className="text-xs">No actions</p>
+                <p className="text-xs mt-1">Pending actions will appear here</p>
               </div>
-            ) : (
-              <div className="space-y-2">
-                {activeCards.map(card => (
-                  <ExecutionCard key={card.id} card={card} />
-                ))}
+            )}
+            {activeTab === 'bots' && (
+              <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
+                <Bot className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
+                <p className="text-xs">No bots</p>
+                <p className="text-xs mt-1">Your trading bots will appear here</p>
               </div>
             )}
           </div>
@@ -281,45 +428,133 @@ export function CardsSidebar({
             <ChatInput_NEO displayMode="sidebar" />
           </div>
         </div>
-      ) : (
-        // Chat Mode Layout: apenas cards (comportamento original)
-        <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-          {showCollapsedContent ? (
-            <div className="flex flex-col items-center space-y-2">
-              {activeCards.length === 0 ? (
-                <Zap className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
-              ) : (
-                activeCards.slice(0, 5).map((card, index) => (
-                  <div 
-                    key={card.id} 
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium ${
-                      theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
-                    }`} 
-                    title={card.type}
-                  >
-                    {index + 1}
-                  </div>
-                ))
+      ) : !isGraphMode && !showCollapsedContent ? (
+        // Chat Mode Layout: 3 vertical sections (Cards, Actions, Bots)
+        <div ref={contentRef} className="flex-1 flex flex-col overflow-hidden">
+          {/* Cards Section */}
+          <div 
+            className="overflow-y-auto custom-scrollbar flex flex-col"
+            style={{ height: `${cardsSectionHeight}%`, minHeight: '60px' }}
+          >
+            <div className={`px-3 py-2 flex items-center gap-2 border-b ${
+              theme === 'dark' ? 'border-zinc-800/50 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'
+            }`}>
+              <Zap className="w-4 h-4 text-red-500" />
+              <span className={`text-xs font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Cards</span>
+              {activeCards.length > 0 && (
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                  theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+                }`}>{activeCards.length}</span>
               )}
-              {activeCards.length > 5 && (
-                <div className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
-                  +{activeCards.length - 5}
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
+              {activeCards.length === 0 ? (
+                <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
+                  <p className="text-xs">No cards yet</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {activeCards.map(card => (
+                    <ExecutionCard key={card.id} card={card} />
+                  ))}
                 </div>
               )}
             </div>
-          ) : activeCards.length === 0 ? (
-            <div className={`text-center py-8 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-              <Zap className={`w-8 h-8 mx-auto mb-2 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
-              <p className="text-sm">No cards yet</p>
-              <p className="text-xs mt-1">Cards will appear here as you chat</p>
+          </div>
+
+          {/* Cards/Actions Resize Handle */}
+          <div
+            onMouseDown={(e) => handleSectionResize('cards', e)}
+            className={`relative h-1.5 cursor-ns-resize group flex-shrink-0 ${
+              theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-200'
+            }`}
+          >
+            <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-0.5 rounded-full transition-colors ${
+              resizingSection === 'cards' 
+                ? 'bg-red-500' 
+                : theme === 'dark' 
+                  ? 'bg-zinc-600 group-hover:bg-red-400' 
+                  : 'bg-gray-400 group-hover:bg-red-400'
+            }`} />
+          </div>
+
+          {/* Actions Section */}
+          <div 
+            className="overflow-y-auto custom-scrollbar flex flex-col"
+            style={{ height: `${actionsSectionHeight}%`, minHeight: '60px' }}
+          >
+            <div className={`px-3 py-2 flex items-center gap-2 border-b ${
+              theme === 'dark' ? 'border-zinc-800/50 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'
+            }`}>
+              <Play className="w-4 h-4 text-red-500" />
+              <span className={`text-xs font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Actions</span>
             </div>
-          ) : (
-            <div className="space-y-2">
-              {activeCards.map(card => (
-                <ExecutionCard key={card.id} card={card} />
-              ))}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
+              <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
+                <p className="text-xs">No actions yet</p>
+              </div>
             </div>
-          )}
+          </div>
+
+          {/* Actions/Bots Resize Handle */}
+          <div
+            onMouseDown={(e) => handleSectionResize('actions', e)}
+            className={`relative h-1.5 cursor-ns-resize group flex-shrink-0 ${
+              theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-200'
+            }`}
+          >
+            <div className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-0.5 rounded-full transition-colors ${
+              resizingSection === 'actions' 
+                ? 'bg-red-500' 
+                : theme === 'dark' 
+                  ? 'bg-zinc-600 group-hover:bg-red-400' 
+                  : 'bg-gray-400 group-hover:bg-red-400'
+            }`} />
+          </div>
+
+          {/* Bots Section */}
+          <div 
+            className="overflow-y-auto custom-scrollbar flex flex-col"
+            style={{ height: `${botsSectionHeight}%`, minHeight: '60px' }}
+          >
+            <div className={`px-3 py-2 flex items-center gap-2 border-b ${
+              theme === 'dark' ? 'border-zinc-800/50 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'
+            }`}>
+              <Bot className="w-4 h-4 text-red-500" />
+              <span className={`text-xs font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Bots</span>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
+              <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
+                <p className="text-xs">No bots yet</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        // Collapsed Layout
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
+          <div className="flex flex-col items-center space-y-2">
+            {activeCards.length === 0 ? (
+              <Zap className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
+            ) : (
+              activeCards.slice(0, 5).map((card, index) => (
+                <div 
+                  key={card.id} 
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-medium ${
+                    theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+                  }`} 
+                  title={card.type}
+                >
+                  {index + 1}
+                </div>
+              ))
+            )}
+            {activeCards.length > 5 && (
+              <div className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                +{activeCards.length - 5}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </aside>
