@@ -1,4 +1,4 @@
-export type CardType = 'intent-summary' | 'action-ticket' | 'bot-card' | 'portfolio-snapshot' | 'portfolio-table' | 'portfolio-sidebar' | 'portfolio-table-expanded' | 'portfolio-table-complete' | 'positions-card' | 'trade-card' | 'actions-card' | 'bot-creator' | 'bot-simple';
+export type CardType = 'intent-summary' | 'action-ticket' | 'bot-card' | 'portfolio-snapshot' | 'portfolio-table' | 'portfolio-sidebar' | 'portfolio-table-expanded' | 'portfolio-table-complete' | 'positions-card' | 'trade-card' | 'actions-card' | 'bot-creator';
 
 export type CardStatus = 'active' | 'archived' | 'hidden';
 
@@ -132,7 +132,7 @@ export interface BotCreatorPayload {
   };
 }
 
-export interface BotSimplePayload {
+export interface BotCardPayload {
   botId: string;
   name: string;
   strategy: string;
@@ -150,7 +150,7 @@ export type CardPayload =
   | TradeCardPayload
   | ActionsCardPayload
   | BotCreatorPayload
-  | BotSimplePayload;
+  | BotCardPayload;
 
 export interface ChatMessage {
   id: string;

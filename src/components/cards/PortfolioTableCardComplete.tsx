@@ -42,10 +42,13 @@ export function PortfolioTableCardComplete({ card }: PortfolioTableCardCompleteP
             </div>
           </div>
 
-          <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg ${isPositive ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+          <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg ${isPositive ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
             <TrendIcon className={`w-4 h-4 ${isPositive ? 'text-green-500' : 'text-red-500'}`} />
             <span className={`text-sm font-semibold ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
               {payload.changePercent}
+            </span>
+            <span className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+              24h
             </span>
           </div>
         </div>
@@ -89,9 +92,6 @@ export function PortfolioTableCardComplete({ card }: PortfolioTableCardCompleteP
                   Value
                 </th>
                 <th className={`text-right py-3 px-4 font-semibold border-l ${theme === 'dark' ? 'text-zinc-400 border-zinc-800/50' : 'text-gray-500 border-gray-100'}`}>
-                  Invested
-                </th>
-                <th className={`text-right py-3 px-4 font-semibold border-l ${theme === 'dark' ? 'text-zinc-400 border-zinc-800/50' : 'text-gray-500 border-gray-100'}`}>
                   Change
                 </th>
                 <th className={`text-right py-3 px-4 font-semibold border-l ${theme === 'dark' ? 'text-zinc-400 border-zinc-800/50' : 'text-gray-500 border-gray-100'}`}>
@@ -127,9 +127,6 @@ export function PortfolioTableCardComplete({ card }: PortfolioTableCardCompleteP
                     <td className={`text-right py-4 px-4 font-semibold border-l ${theme === 'dark' ? 'text-white border-zinc-800/50' : 'text-gray-900 border-gray-100'}`}>
                       {asset.value}
                     </td>
-                    <td className={`text-right py-4 px-4 border-l ${theme === 'dark' ? 'text-zinc-400 border-zinc-800/50' : 'text-gray-600 border-gray-100'}`}>
-                      {asset.invested}
-                    </td>
                     <td className={`text-right py-4 px-4 border-l ${theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-100'}`}>
                       <div className="flex items-center justify-end gap-1.5">
                         <span className={`font-medium ${assetPositive ? 'text-green-500' : 'text-red-500'}`}>
@@ -152,17 +149,17 @@ export function PortfolioTableCardComplete({ card }: PortfolioTableCardCompleteP
                       <div className="flex items-center justify-center gap-2">
                         <button
                           onClick={() => handleBuy(asset.symbol)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20 transition-colors text-xs font-semibold"
+                          className="flex items-center justify-center w-8 h-8 rounded-lg bg-green-500/10 text-green-500 hover:bg-green-500/20 transition-colors"
+                          title={`Buy ${asset.symbol}`}
                         >
-                          <ArrowUpRight className="w-3.5 h-3.5" />
-                          Buy
+                          <ArrowUpRight className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleSell(asset.symbol)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors text-xs font-semibold"
+                          className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors"
+                          title={`Sell ${asset.symbol}`}
                         >
-                          <ArrowDownRight className="w-3.5 h-3.5" />
-                          Sell
+                          <ArrowDownRight className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
@@ -178,7 +175,7 @@ export function PortfolioTableCardComplete({ card }: PortfolioTableCardCompleteP
           theme === 'dark' ? 'border-zinc-800' : 'border-gray-200'
         }`}>
           <span className={`text-sm ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-            24h change: <span className={`font-medium ${isPositive ? 'text-green-500' : 'text-red-500'}`}>{payload.change24h}</span>
+            Change: <span className={`font-medium ${isPositive ? 'text-green-500' : 'text-red-500'}`}>{payload.change24h}</span>
           </span>
           <span className={`text-sm ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
             {payload.assets.length} assets

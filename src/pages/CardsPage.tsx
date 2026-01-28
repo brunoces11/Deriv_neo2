@@ -12,7 +12,6 @@ import { PositionsCard } from '../components/cards/PositionsCard';
 import { TradeCard } from '../components/cards/TradeCard';
 import { ActionsCard } from '../components/cards/ActionsCard';
 import { BotCardCreator } from '../components/cards/BotCardCreator';
-import { BotCardSimple } from '../components/cards/BotCardSimple';
 import { UserProfile } from '../components/layout/UserProfile';
 import derivNeoDark from '../assets/deriv_neo_dark_mode.svg';
 import derivNeoLight from '../assets/deriv_neo_light_mode.svg';
@@ -211,21 +210,6 @@ const mockBotCreator: BaseCard = {
   },
 };
 
-const mockBotSimple: BaseCard = {
-  id: 'demo-bot-simple-1',
-  type: 'bot-simple',
-  status: 'active',
-  isFavorite: false,
-  createdAt: new Date(),
-  payload: {
-    botId: 'BOT-789',
-    name: 'ETH Swing Trader',
-    strategy: 'Buy low, sell high based on RSI indicators',
-    status: 'active',
-    performance: '+8.3%',
-  },
-};
-
 interface CardInfo {
   name: string;
   type: string;
@@ -272,14 +256,17 @@ const cardsInfo: CardInfo[] = [
     name: 'Bot Card',
     type: 'bot-card',
     icon: Bot,
-    description: 'Mostra um trading bot configurado e seu status.',
+    description: 'Card para gerenciar bots ativos com 4 botões de ação (Play/Pause, Edit, Delete, Schedule).',
     hasLogic: true,
     logicDetails: [
-      'Dot pulsante quando status=active',
-      'Ícone de status dinâmico (Play/Pause/Square)',
-      'Exibe nome, estratégia e performance',
-      'Cor de destaque: amber',
-      'Estados: active, paused, stopped',
+      'Exibe nome, estratégia e ID do bot',
+      'Ícone com dot de status (pulsante quando active)',
+      'Status badge: active (verde), paused (amber), stopped (cinza)',
+      'Performance com ícone de tendência (verde/vermelho)',
+      '4 botões alinhados à direita: Play/Pause, Edit, Delete, Schedule',
+      'Botão Play/Pause alterna baseado no status atual',
+      'Botões em tom cinza/neutro com hover state',
+      'Click handlers para simulação (console.log)',
     ],
     component: <BotCard card={mockBotCard} />,
   },
@@ -420,24 +407,6 @@ const cardsInfo: CardInfo[] = [
       'Grid pattern de fundo para efeito visual',
     ],
     component: <BotCardCreator card={mockBotCreator} />,
-  },
-  {
-    name: 'Bot Card Simple',
-    type: 'bot-simple',
-    icon: Bot,
-    description: 'Card simples para bots ativos com 4 botões de gerenciamento similar ao Actions Card.',
-    hasLogic: true,
-    logicDetails: [
-      'Exibe nome, estratégia e ID do bot',
-      'Ícone com dot de status (pulsante quando active)',
-      'Status badge: active (verde), paused (amber), stopped (cinza)',
-      'Performance com ícone de tendência (verde/vermelho)',
-      '4 botões alinhados à direita: Play/Pause, Edit, Delete, Schedule',
-      'Botão Play/Pause alterna baseado no status atual',
-      'Botões em tom cinza/neutro com hover state',
-      'Click handlers para simulação (console.log)',
-    ],
-    component: <BotCardSimple card={mockBotSimple} />,
   },
 ];
 
