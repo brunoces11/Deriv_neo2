@@ -3,6 +3,7 @@ import { Send, Loader2, Paperclip, Mic, ChevronDown, X } from 'lucide-react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import { useDrawingTools } from '../../store/DrawingToolsContext';
+import { useViewMode } from '../../store/ViewModeContext';
 import { callLangflow } from '../../services/langflowApi';
 import { simulateLangFlowResponse } from '../../services/mockSimulation';
 import type { ChatMessage } from '../../types';
@@ -137,18 +138,20 @@ interface ChatInput_NEOProps {
 }
 
 export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
-  const [plainText, setPlainText] = useState('');
-  const [autoMode, setAutoMode] = useState(true);
-  const [userReactivatedAutoMode, setUserReactivatedAutoMode] = useState(false); // Rastreia se usuário reativou manualmente
-  const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
+  // Draft state from context (persisted)
+  const { draftInput, updateDraftInput, clearDraftInput } = useViewMode();
+  const { plainText, selectedAgents, selectedProducts, autoMode } = draftInput;
+  
+  // Local UI state (not persisted)
+  const [userReactivatedAutoMode, setUserReactivatedAutoMode] = useState(false);
   const [isAgentDropdownOpen, setIsAgentDropdownOpen] = useState(false);
   const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
   
   const editorRef = useRef<HTMLDivElement>(null);
   const agentDropdownRef = useRef<HTMLDivElement>(null);
   const productDropdownRef = useRef<HTMLDivElement>(null);
-  const lastCursorRangeRef = useRef<Range | null>(null); // Salva última posição do cursor no editor
+  const lastCursorRangeRef = useRef<Range | null>(null);
+  const isRestoringDraftRef = useRef(false); // Flag to prevent loops during draft restore
   
   const { 
     addMessage, 
@@ -254,8 +257,8 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
     }
     
     // Atualizar plainText
-    setPlainText(htmlToText(editorRef.current.innerHTML));
-  }, [theme]);
+    updateDraftInput({ plainText: htmlToText(editorRef.current.innerHTML) });
+  }, [theme, updateDraftInput]);
 
   // Função para remover tag do editor
   const removeTagFromEditor = useCallback((tagLabel: string) => {
@@ -273,40 +276,38 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
       }
     });
     
-    setPlainText(htmlToText(editorRef.current.innerHTML));
-  }, []);
+    updateDraftInput({ plainText: htmlToText(editorRef.current.innerHTML) });
+  }, [updateDraftInput]);
 
   // Toggle agent selection - agentes ficam no header, não no editor
   // Quando seleciona um agente, desativa autoMode automaticamente (apenas se usuário não reativou manualmente)
   const toggleAgent = useCallback((agent: string) => {
-    setSelectedAgents(prev => {
-      if (prev.includes(agent)) {
-        return prev.filter(a => a !== agent);
-      } else {
-        // Só desativa autoMode se o usuário ainda não reativou manualmente
-        if (!userReactivatedAutoMode) {
-          setAutoMode(false);
-        }
-        return [...prev, agent];
-      }
-    });
+    const newSelectedAgents = selectedAgents.includes(agent)
+      ? selectedAgents.filter(a => a !== agent)
+      : [...selectedAgents, agent];
+    
+    // Só desativa autoMode se o usuário ainda não reativou manualmente e está adicionando agente
+    if (!selectedAgents.includes(agent) && !userReactivatedAutoMode) {
+      updateDraftInput({ selectedAgents: newSelectedAgents, autoMode: false });
+    } else {
+      updateDraftInput({ selectedAgents: newSelectedAgents });
+    }
+    
     // Fechar dropdown após selecionar/desselecionar
     setIsAgentDropdownOpen(false);
-  }, [userReactivatedAutoMode]);
+  }, [selectedAgents, userReactivatedAutoMode, updateDraftInput]);
 
   // Toggle product selection
   const toggleProduct = useCallback((product: string) => {
     const productTag = product.replace(/\s+/g, '');
-    setSelectedProducts(prev => {
-      if (prev.includes(product)) {
-        removeTagFromEditor(productTag);
-        return prev.filter(p => p !== product);
-      } else {
-        insertTagInEditor(productTag);
-        return [...prev, product];
-      }
-    });
-  }, [insertTagInEditor, removeTagFromEditor]);
+    if (selectedProducts.includes(product)) {
+      removeTagFromEditor(productTag);
+      updateDraftInput({ selectedProducts: selectedProducts.filter(p => p !== product) });
+    } else {
+      insertTagInEditor(productTag);
+      updateDraftInput({ selectedProducts: [...selectedProducts, product] });
+    }
+  }, [selectedProducts, insertTagInEditor, removeTagFromEditor, updateDraftInput]);
 
   // Salvar posição do cursor
   const saveCaretPosition = useCallback(() => {
@@ -422,12 +423,13 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
         selection.addRange(range);
         
         // Atualizar plainText
-        setPlainText(htmlToText(editorRef.current.innerHTML));
+        updateDraftInput({ plainText: htmlToText(editorRef.current.innerHTML) });
       } else {
         // Fallback: adicionar no final
-        setPlainText(prev => prev + tagText);
+        const newText = plainText + tagText;
+        updateDraftInput({ plainText: newText });
         if (editorRef.current) {
-          editorRef.current.innerHTML = textToHTML(plainText + tagText);
+          editorRef.current.innerHTML = textToHTML(newText);
           // Aplicar cores às tags
           const tags = editorRef.current.querySelectorAll('.inline-tag');
           tags.forEach(tag => {
@@ -443,7 +445,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
       editorRef.current.focus();
     }
     lastTagCountRef.current = chatTags.length;
-  }, [chatTags, plainText, theme]);
+  }, [chatTags, plainText, theme, updateDraftInput]);
 
   // Sincronizar HTML quando plainText muda externamente
   useEffect(() => {
@@ -451,6 +453,30 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
       editorRef.current.innerHTML = '';
     }
   }, [plainText]);
+
+  // Restore editor content from persisted draft on mount or mode switch
+  useEffect(() => {
+    if (!editorRef.current) return;
+    
+    // Only restore if editor is empty but draft has content
+    const currentEditorText = htmlToText(editorRef.current.innerHTML);
+    if (plainText && !currentEditorText) {
+      isRestoringDraftRef.current = true;
+      editorRef.current.innerHTML = textToHTML(plainText);
+      
+      // Apply correct tag colors based on theme
+      const tags = editorRef.current.querySelectorAll('.inline-tag');
+      tags.forEach(tag => {
+        const tl = tag.getAttribute('data-text-light');
+        const td = tag.getAttribute('data-text-dark');
+        if (tl && td) {
+          (tag as HTMLElement).style.color = theme === 'dark' ? td : tl;
+        }
+      });
+      
+      isRestoringDraftRef.current = false;
+    }
+  }, [plainText, theme]);
 
   // Close dropdowns on outside click
   useEffect(() => {
@@ -468,11 +494,11 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
 
   // Handle input no contenteditable
   const handleInput = useCallback(() => {
-    if (!editorRef.current) return;
+    if (!editorRef.current || isRestoringDraftRef.current) return;
     
     const html = editorRef.current.innerHTML;
     const text = htmlToText(html);
-    setPlainText(text);
+    updateDraftInput({ plainText: text });
     
     // Re-renderizar tags se o usuário digitou uma tag manualmente
     if (text.includes('[@') && text.includes(']')) {
@@ -495,7 +521,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
         }
       }
     }
-  }, [saveCaretPosition, restoreCaretPosition, theme]);
+  }, [saveCaretPosition, restoreCaretPosition, theme, updateDraftInput]);
 
   const handleSubmit = async () => {
     if (!plainText.trim() || isTyping) return;
@@ -519,15 +545,13 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
       }
     }
     
-    setPlainText('');
+    // Clear draft and reset local state
+    clearDraftInput();
     if (editorRef.current) {
       editorRef.current.innerHTML = '';
     }
     clearChatTags();
-    setSelectedAgents([]);
-    setSelectedProducts([]);
-    setUserReactivatedAutoMode(false); // Reset para próximo chat
-    setAutoMode(true); // Reset auto mode para próximo chat
+    setUserReactivatedAutoMode(false);
     setTyping(true);
 
     try {
@@ -745,7 +769,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
                   type="button"
                   onClick={() => {
                     const newAutoMode = !autoMode;
-                    setAutoMode(newAutoMode);
+                    updateDraftInput({ autoMode: newAutoMode });
                     // Se usuário está reativando o autoMode enquanto tem agentes selecionados,
                     // marca que ele quer usar ambos (auto mode + agentes específicos)
                     if (newAutoMode && selectedAgents.length > 0) {

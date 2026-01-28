@@ -9,10 +9,26 @@ interface UserPoint {
   cardsSidebarWidth?: number;
 }
 
+// Draft Input - persisted chat input state
+interface DraftInput {
+  plainText: string;
+  selectedAgents: string[];
+  selectedProducts: string[];
+  autoMode: boolean;
+}
+
+const DEFAULT_DRAFT_INPUT: DraftInput = {
+  plainText: '',
+  selectedAgents: [],
+  selectedProducts: [],
+  autoMode: true,
+};
+
 interface ViewModeState {
   currentMode: ViewMode;
   userPoints: Record<ViewMode, UserPoint>;
   isResizing: boolean;
+  draftInput: DraftInput;
 }
 
 // Start Points - configuração padrão de cada modo
@@ -50,11 +66,14 @@ interface ViewModeContextValue {
   cardsSidebarCollapsed: boolean;
   cardsSidebarWidth: number;
   chartVisible: boolean;
+  draftInput: DraftInput;
   toggleMode: () => void;
   setMode: (mode: ViewMode) => void;
   updateUserPoint: (updates: Partial<UserPoint>) => void;
   setResizing: (value: boolean) => void;
   resetMode: () => void;
+  updateDraftInput: (updates: Partial<DraftInput>) => void;
+  clearDraftInput: () => void;
 }
 
 const ViewModeContext = createContext<ViewModeContextValue | null>(null);
@@ -65,7 +84,9 @@ type Action =
   | { type: 'UPDATE_USER_POINT'; payload: Partial<UserPoint> }
   | { type: 'SET_RESIZING'; payload: boolean }
   | { type: 'RESET_MODE' }
-  | { type: 'LOAD_STATE'; payload: { currentMode: ViewMode; userPoints: Record<ViewMode, UserPoint> } };
+  | { type: 'LOAD_STATE'; payload: { currentMode: ViewMode; userPoints: Record<ViewMode, UserPoint>; draftInput?: DraftInput } }
+  | { type: 'UPDATE_DRAFT_INPUT'; payload: Partial<DraftInput> }
+  | { type: 'CLEAR_DRAFT_INPUT' };
 
 function reducer(state: ViewModeState, action: Action): ViewModeState {
   switch (action.type) {
@@ -102,6 +123,22 @@ function reducer(state: ViewModeState, action: Action): ViewModeState {
         ...state,
         currentMode: action.payload.currentMode,
         userPoints: action.payload.userPoints,
+        draftInput: action.payload.draftInput ?? DEFAULT_DRAFT_INPUT,
+      };
+    
+    case 'UPDATE_DRAFT_INPUT':
+      return {
+        ...state,
+        draftInput: {
+          ...state.draftInput,
+          ...action.payload,
+        },
+      };
+    
+    case 'CLEAR_DRAFT_INPUT':
+      return {
+        ...state,
+        draftInput: DEFAULT_DRAFT_INPUT,
       };
     
     default:
@@ -112,17 +149,17 @@ function reducer(state: ViewModeState, action: Action): ViewModeState {
 // Storage
 const STORAGE_KEY = 'deriv-neo-view-mode';
 
-function loadFromStorage(): { currentMode: ViewMode; userPoints: Record<ViewMode, UserPoint> } | null {
+function loadFromStorage(): { currentMode: ViewMode; userPoints: Record<ViewMode, UserPoint>; draftInput: DraftInput } | null {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed.userPoints) {
-        // Only restore userPoints (sidebar widths, collapsed states)
-        // Always start in 'chat' mode - don't restore currentMode
+        // Restore userPoints and draftInput, always start in 'chat' mode
         return {
           currentMode: 'chat', // Always start in chat mode
           userPoints: parsed.userPoints,
+          draftInput: parsed.draftInput ?? DEFAULT_DRAFT_INPUT,
         };
       }
     }
@@ -132,9 +169,9 @@ function loadFromStorage(): { currentMode: ViewMode; userPoints: Record<ViewMode
   return null;
 }
 
-function saveToStorage(currentMode: ViewMode, userPoints: Record<ViewMode, UserPoint>) {
+function saveToStorage(currentMode: ViewMode, userPoints: Record<ViewMode, UserPoint>, draftInput: DraftInput) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentMode, userPoints }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentMode, userPoints, draftInput }));
   } catch {
     // Ignore
   }
@@ -146,6 +183,7 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     currentMode: 'chat',
     userPoints: { chat: {}, graph: {} },
     isResizing: false,
+    draftInput: DEFAULT_DRAFT_INPUT,
   });
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -164,7 +202,7 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(debounceRef.current);
     }
     debounceRef.current = setTimeout(() => {
-      saveToStorage(state.currentMode, state.userPoints);
+      saveToStorage(state.currentMode, state.userPoints, state.draftInput);
     }, 500);
 
     return () => {
@@ -172,7 +210,7 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
         clearTimeout(debounceRef.current);
       }
     };
-  }, [state.currentMode, state.userPoints]);
+  }, [state.currentMode, state.userPoints, state.draftInput]);
 
   // Actions
   const toggleMode = useCallback(() => {
@@ -195,6 +233,14 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'RESET_MODE' });
   }, []);
 
+  const updateDraftInput = useCallback((updates: Partial<DraftInput>) => {
+    dispatch({ type: 'UPDATE_DRAFT_INPUT', payload: updates });
+  }, []);
+
+  const clearDraftInput = useCallback(() => {
+    dispatch({ type: 'CLEAR_DRAFT_INPUT' });
+  }, []);
+
   // Computed config
   const config = useMemo(
     () => computeConfig(state.currentMode, state.userPoints[state.currentMode]),
@@ -204,12 +250,15 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
   const value: ViewModeContextValue = {
     currentMode: state.currentMode,
     isResizing: state.isResizing,
+    draftInput: state.draftInput,
     ...config,
     toggleMode,
     setMode,
     updateUserPoint,
     setResizing,
     resetMode,
+    updateDraftInput,
+    clearDraftInput,
   };
 
   return (
