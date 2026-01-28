@@ -253,24 +253,6 @@ const cardsInfo: CardInfo[] = [
     component: <ActionTicketCard card={mockActionTicketCard} />,
   },
   {
-    name: 'Bot Card',
-    type: 'bot-card',
-    icon: Bot,
-    description: 'Card para gerenciar bots ativos com 4 botões de ação (Play/Pause, Edit, Delete, Schedule).',
-    hasLogic: true,
-    logicDetails: [
-      'Exibe nome, estratégia e ID do bot',
-      'Ícone com dot de status (pulsante quando active)',
-      'Status badge: active (verde), paused (amber), stopped (cinza)',
-      'Performance com ícone de tendência (verde/vermelho)',
-      '4 botões alinhados à direita: Play/Pause, Edit, Delete, Schedule',
-      'Botão Play/Pause alterna baseado no status atual',
-      'Botões em tom cinza/neutro com hover state',
-      'Click handlers para simulação (console.log)',
-    ],
-    component: <BotCard card={mockBotCard} />,
-  },
-  {
     name: 'Portfolio Snapshot Card',
     type: 'portfolio-snapshot',
     icon: Wallet,
@@ -407,6 +389,24 @@ const cardsInfo: CardInfo[] = [
       'Grid pattern de fundo para efeito visual',
     ],
     component: <BotCardCreator card={mockBotCreator} />,
+  },
+  {
+    name: 'Bot Card',
+    type: 'bot-card',
+    icon: Bot,
+    description: 'Card para gerenciar bots ativos com 4 botões de ação (Play/Pause, Edit, Delete, Schedule).',
+    hasLogic: true,
+    logicDetails: [
+      'Exibe nome, estratégia e ID do bot',
+      'Ícone com dot de status (pulsante quando active)',
+      'Status badge: active (verde), paused (amber), stopped (cinza)',
+      'Performance com ícone de tendência (verde/vermelho)',
+      '4 botões alinhados à direita: Play/Pause, Edit, Delete, Schedule',
+      'Botão Play/Pause alterna baseado no status atual',
+      'Botões em tom cinza/neutro com hover state',
+      'Click handlers para simulação (console.log)',
+    ],
+    component: <BotCard card={mockBotCard} />,
   },
 ];
 
@@ -576,17 +576,7 @@ export function CardsPage() {
 
         <div className="space-y-8">
           {cardsInfo.map((cardInfo, index) => {
-            // Calculate display index: 1-5 normal, 6 for sidebar, 7 for expanded, 7.1 for complete
-            let displayIndex: string;
-            if (index <= 5) {
-              displayIndex = String(index + 1);
-            } else if (index === 6) {
-              displayIndex = '7';
-            } else if (index === 7) {
-              displayIndex = '7.1';
-            } else {
-              displayIndex = String(index + 1);
-            }
+            const displayIndex = String(index + 1);
             return (
               <CardSection key={cardInfo.type} cardInfo={cardInfo} displayIndex={displayIndex} />
             );
