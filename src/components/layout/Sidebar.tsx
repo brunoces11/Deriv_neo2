@@ -164,30 +164,36 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
       {isCollapsed ? (
         <div className="flex-1 flex flex-col items-center py-4 space-y-4">
           <button
-            onClick={() => setActiveTab('chats')}
+            onClick={() => {
+              setActiveTab('chats');
+              onToggleCollapse?.();
+            }}
             className={`p-2 rounded-lg transition-colors ${
               activeTab === 'chats'
                 ? theme === 'dark'
                   ? 'bg-zinc-800 text-brand-green'
                   : 'bg-gray-200 text-brand-green'
                 : theme === 'dark'
-                  ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
-                  : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+                  ? 'hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300'
+                  : 'hover:bg-gray-200 text-gray-400 hover:text-gray-600'
             }`}
             title="Chats"
           >
             <MessageSquare className="w-5 h-5" />
           </button>
           <button
-            onClick={() => setActiveTab('positions')}
+            onClick={() => {
+              setActiveTab('positions');
+              onToggleCollapse?.();
+            }}
             className={`p-2 rounded-lg transition-colors ${
               activeTab === 'positions'
                 ? theme === 'dark'
                   ? 'bg-zinc-800 text-brand-green'
                   : 'bg-gray-200 text-brand-green'
                 : theme === 'dark'
-                  ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
-                  : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+                  ? 'hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300'
+                  : 'hover:bg-gray-200 text-gray-400 hover:text-gray-600'
             }`}
             title="Positions"
           >
@@ -195,24 +201,34 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
           </button>
           <div className={`w-8 h-px ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`} />
           <button
+            onClick={() => {
+              setFavoritesOpen(true);
+              setActiveTab('chats');
+              onToggleCollapse?.();
+            }}
             className={`p-2 rounded-lg transition-colors ${
               theme === 'dark'
-                ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
-                : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+                ? 'hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300'
+                : 'hover:bg-gray-200 text-gray-400 hover:text-gray-600'
             }`}
             title="Favorites"
           >
-            <Star className="w-5 h-5 text-brand-green" />
+            <Star className="w-5 h-5" />
           </button>
           <button
+            onClick={() => {
+              setArchivedOpen(true);
+              setActiveTab('chats');
+              onToggleCollapse?.();
+            }}
             className={`p-2 rounded-lg transition-colors ${
               theme === 'dark'
-                ? 'hover:bg-zinc-800 text-zinc-400 hover:text-white'
-                : 'hover:bg-gray-200 text-gray-500 hover:text-gray-700'
+                ? 'hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300'
+                : 'hover:bg-gray-200 text-gray-400 hover:text-gray-600'
             }`}
             title="Archived"
           >
-            <Archive className="w-5 h-5 text-brand-green" />
+            <Archive className="w-5 h-5" />
           </button>
         </div>
       ) : (
