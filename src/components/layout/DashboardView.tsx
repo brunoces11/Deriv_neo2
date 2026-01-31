@@ -1,5 +1,6 @@
 import { useTheme } from '../../store/ThemeContext';
-import { TrendingUp, TrendingDown, DollarSign, Activity, BarChart3, PieChart, Wallet, Clock } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Activity, PieChart, Wallet, Clock } from 'lucide-react';
+import { PerformanceGrowthCard } from './PerformanceGrowthCard';
 
 export function DashboardView() {
   const { theme } = useTheme();
@@ -56,23 +57,7 @@ export function DashboardView() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-          <ChartCard
-            title="Portfolio Performance"
-            icon={<BarChart3 className="w-5 h-5" />}
-            theme={theme}
-          >
-            <div className="h-48 flex items-end gap-2 px-4">
-              {[65, 45, 78, 52, 88, 72, 95, 68, 82, 75, 90, 85].map((height, i) => (
-                <div
-                  key={i}
-                  className={`flex-1 rounded-t transition-all hover:opacity-80 ${
-                    theme === 'dark' ? 'bg-red-500' : 'bg-red-600'
-                  }`}
-                  style={{ height: `${height}%` }}
-                />
-              ))}
-            </div>
-          </ChartCard>
+          <PerformanceGrowthCard theme={theme} />
 
           <ChartCard
             title="Asset Allocation"
