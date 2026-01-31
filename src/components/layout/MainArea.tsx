@@ -30,20 +30,20 @@ export function MainArea({ isGraphMode, isDashboardMode }: MainAreaProps) {
         }`} />
       )}
 
-      {/* Header row - Mode Toggle centralizado + Asset Selector à esquerda (apenas graph mode) */}
+      {/* Header row - Mode Toggle + Asset Selector (graph mode) */}
       <div className={`relative z-10 flex items-center px-4 py-2 border-b pointer-events-auto ${
         theme === 'dark' ? 'border-zinc-800/30' : 'border-gray-100'
       } ${isGraphMode ? 'border-transparent' : ''}`} style={{ marginTop: '7px' }}>
-        {/* Asset Selector - esquerda, apenas no Graph Mode */}
-        {isGraphMode && (
-          <div className="absolute left-4">
-            <AssetSelector />
-          </div>
-        )}
-        {/* Mode Toggle - centralizado */}
-        <div className="flex-1 flex justify-center">
+        {/* Left spacer / Asset Selector */}
+        <div className="flex-1 flex justify-start min-w-0">
+          {isGraphMode && <AssetSelector />}
+        </div>
+        {/* Mode Toggle - center */}
+        <div className="flex-shrink-0">
           <ModeToggle />
         </div>
+        {/* Right spacer */}
+        <div className="flex-1 min-w-0" />
       </div>
 
       {/* Drawing Tools Panel - positioned at bottom center in Graph Mode */}
