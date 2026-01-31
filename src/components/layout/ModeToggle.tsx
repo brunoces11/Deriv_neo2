@@ -3,8 +3,10 @@ import { MessageSquare, TrendingUp, LayoutDashboard } from 'lucide-react';
 import { useViewMode } from '../../store/ViewModeContext';
 import { useTheme } from '../../store/ThemeContext';
 
+type ViewMode = 'chat' | 'graph' | 'dashboard';
+
 export function ModeToggle() {
-  const { currentMode, toggleMode } = useViewMode();
+  const { currentMode, setMode, toggleMode } = useViewMode();
   const { theme } = useTheme();
 
   const sliderPosition = currentMode === 'chat' ? 'left-1' : currentMode === 'graph' ? 'left-[calc(33.33%+1px)]' : 'left-[calc(66.66%+1px)]';
@@ -14,7 +16,6 @@ export function ModeToggle() {
       ? 'bg-zinc-600'
       : 'bg-white shadow-sm';
 
-  // Keyboard shortcut: Ctrl/Cmd + Shift + M
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'M') {
@@ -27,60 +28,43 @@ export function ModeToggle() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleMode]);
 
+  const modes: { key: ViewMode; icon: typeof MessageSquare; label: string }[] = [
+    { key: 'chat', icon: MessageSquare, label: 'Chat' },
+    { key: 'graph', icon: TrendingUp, label: 'Graph' },
+    { key: 'dashboard', icon: LayoutDashboard, label: 'Dash' },
+  ];
+
   return (
-    <button
-      onClick={toggleMode}
+    <div
       className={`relative flex items-center h-9 rounded-full p-1 transition-colors ${
         theme === 'dark'
           ? 'bg-zinc-800 border border-zinc-700/50'
           : 'bg-gray-200 border border-gray-300'
       }`}
-      title="Toggle view mode (Ctrl+Shift+M)"
     >
-      {/* Slider */}
       <div
         className={`absolute h-7 rounded-full transition-all duration-300 ease-out ${sliderColor} ${sliderPosition}`}
         style={{ width: 'calc(33.33% - 4px)' }}
       />
 
-      {/* Chat Mode Label */}
-      <span
-        className={`relative z-10 px-3 py-1 text-sm font-bold transition-colors text-center flex items-center gap-1.5 ${
-          currentMode === 'chat'
-            ? theme === 'dark' ? 'text-white' : 'text-gray-900'
-            : theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'
-        }`}
-        style={{ width: '33.33%' }}
-      >
-        <MessageSquare className="w-4 h-4" />
-        Chat
-      </span>
-
-      {/* Graph Mode Label */}
-      <span
-        className={`relative z-10 px-3 py-1 text-sm font-bold transition-colors text-center flex items-center gap-1.5 ${
-          currentMode === 'graph'
-            ? 'text-white'
-            : theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'
-        }`}
-        style={{ width: '33.33%' }}
-      >
-        <TrendingUp className="w-4 h-4" />
-        Graph
-      </span>
-
-      {/* Dashboard Mode Label */}
-      <span
-        className={`relative z-10 px-3 py-1 text-sm font-bold transition-colors text-center flex items-center gap-1.5 ${
-          currentMode === 'dashboard'
-            ? theme === 'dark' ? 'text-white' : 'text-gray-900'
-            : theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'
-        }`}
-        style={{ width: '33.33%' }}
-      >
-        <LayoutDashboard className="w-4 h-4" />
-        Dash
-      </span>
-    </button>
+      {modes.map(({ key, icon: Icon, label }) => (
+        <button
+          key={key}
+          onClick={() => setMode(key)}
+          className={`relative z-10 px-3 py-1 text-sm font-bold transition-colors text-center flex items-center gap-1.5 cursor-pointer ${
+            currentMode === key
+              ? key === 'graph'
+                ? 'text-white'
+                : theme === 'dark' ? 'text-white' : 'text-gray-900'
+              : theme === 'dark' ? 'text-zinc-500 hover:text-zinc-400' : 'text-gray-500 hover:text-gray-700'
+          }`}
+          style={{ width: '33.33%' }}
+          title={`Switch to ${label} mode`}
+        >
+          <Icon className="w-4 h-4" />
+          {label}
+        </button>
+      ))}
+    </div>
   );
 }
