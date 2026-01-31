@@ -38,17 +38,15 @@ function MainLayout() {
         isDashboardMode={currentMode === 'dashboard'}
       />
 
-      {currentMode !== 'dashboard' && (
-        <CardsSidebar
-          isCollapsed={cardsSidebarCollapsed}
-          width={cardsSidebarWidth}
-          isGraphMode={currentMode === 'graph'}
-          onToggleCollapse={() => updateUserPoint({ cardsSidebarCollapsed: !cardsSidebarCollapsed })}
-          onResize={(width) => updateUserPoint({ cardsSidebarWidth: width })}
-          onResizeStart={() => setResizing(true)}
-          onResizeEnd={() => setResizing(false)}
-        />
-      )}
+      <CardsSidebar
+        isCollapsed={cardsSidebarCollapsed}
+        width={cardsSidebarWidth}
+        isGraphMode={currentMode === 'graph' || currentMode === 'dashboard'}
+        onToggleCollapse={() => updateUserPoint({ cardsSidebarCollapsed: !cardsSidebarCollapsed })}
+        onResize={(width) => updateUserPoint({ cardsSidebarWidth: width })}
+        onResizeStart={() => setResizing(true)}
+        onResizeEnd={() => setResizing(false)}
+      />
     </div>
   );
 }
