@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, useEffect, useRef, useCallback, useMemo } from 'react';
 
 // Types
-type ViewMode = 'chat' | 'graph';
+type ViewMode = 'chat' | 'graph' | 'dashboard';
 
 interface UserPoint {
   sidebarCollapsed?: boolean;
@@ -44,6 +44,12 @@ const START_POINTS: Record<ViewMode, Required<Omit<UserPoint, never>> & { chartV
     cardsSidebarCollapsed: false,
     cardsSidebarWidth: 840,
     chartVisible: true,
+  },
+  dashboard: {
+    sidebarCollapsed: true,
+    cardsSidebarCollapsed: true,
+    cardsSidebarWidth: 660,
+    chartVisible: false,
   },
 };
 
@@ -181,7 +187,7 @@ function saveToStorage(currentMode: ViewMode, userPoints: Record<ViewMode, UserP
 export function ViewModeProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, {
     currentMode: 'chat',
-    userPoints: { chat: {}, graph: {} },
+    userPoints: { chat: {}, graph: {}, dashboard: {} },
     isResizing: false,
     draftInput: DEFAULT_DRAFT_INPUT,
   });
@@ -214,7 +220,10 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
 
   // Actions
   const toggleMode = useCallback(() => {
-    dispatch({ type: 'SET_MODE', payload: state.currentMode === 'chat' ? 'graph' : 'chat' });
+    const modes: ViewMode[] = ['chat', 'graph', 'dashboard'];
+    const currentIndex = modes.indexOf(state.currentMode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    dispatch({ type: 'SET_MODE', payload: modes[nextIndex] });
   }, [state.currentMode]);
 
   const setMode = useCallback((mode: ViewMode) => {

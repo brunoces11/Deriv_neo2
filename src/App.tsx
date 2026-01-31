@@ -28,13 +28,16 @@ function MainLayout() {
     <div className="h-screen flex overflow-hidden relative">
       <ChartLayer isVisible={chartVisible} theme={theme} />
       
-      <Sidebar 
-        isCollapsed={sidebarCollapsed} 
-        onToggleCollapse={() => updateUserPoint({ sidebarCollapsed: !sidebarCollapsed })} 
+      <Sidebar
+        isCollapsed={sidebarCollapsed}
+        onToggleCollapse={() => updateUserPoint({ sidebarCollapsed: !sidebarCollapsed })}
       />
-      
-      <MainArea isGraphMode={currentMode === 'graph'} />
-      
+
+      <MainArea
+        isGraphMode={currentMode === 'graph'}
+        isDashboardMode={currentMode === 'dashboard'}
+      />
+
       <CardsSidebar 
         isCollapsed={cardsSidebarCollapsed}
         width={cardsSidebarWidth}
