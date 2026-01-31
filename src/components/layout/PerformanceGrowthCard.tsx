@@ -13,40 +13,40 @@ interface BarData {
 
 const DATA_BY_TIMEFRAME: Record<Timeframe, BarData[]> = {
   '1D': [
-    { performance: 45, growth: 62, label: '00:00', perfValue: '-$120', growthValue: '+$180' },
-    { performance: 52, growth: 48, label: '02:00', perfValue: '-$85', growthValue: '+$95' },
-    { performance: 38, growth: 71, label: '04:00', perfValue: '-$142', growthValue: '+$210' },
-    { performance: 65, growth: 55, label: '06:00', perfValue: '-$45', growthValue: '+$125' },
-    { performance: 42, growth: 78, label: '08:00', perfValue: '-$98', growthValue: '+$285' },
-    { performance: 58, growth: 82, label: '10:00', perfValue: '-$62', growthValue: '+$320' },
-    { performance: 35, growth: 68, label: '12:00', perfValue: '-$155', growthValue: '+$195' },
-    { performance: 48, growth: 75, label: '14:00', perfValue: '-$88', growthValue: '+$245' },
-    { performance: 55, growth: 85, label: '16:00', perfValue: '-$58', growthValue: '+$365' },
-    { performance: 42, growth: 72, label: '18:00', perfValue: '-$102', growthValue: '+$218' },
-    { performance: 38, growth: 65, label: '20:00', perfValue: '-$138', growthValue: '+$175' },
-    { performance: 50, growth: 70, label: '22:00', perfValue: '-$75', growthValue: '+$205' },
+    { performance: 35, growth: 42, label: '00:00', perfValue: '+$85', growthValue: '+$120' },
+    { performance: 28, growth: 45, label: '02:00', perfValue: '-$42', growthValue: '+$135' },
+    { performance: 45, growth: 48, label: '04:00', perfValue: '+$112', growthValue: '+$148' },
+    { performance: 22, growth: 52, label: '06:00', perfValue: '-$28', growthValue: '+$165' },
+    { performance: 52, growth: 55, label: '08:00', perfValue: '+$145', growthValue: '+$182' },
+    { performance: 38, growth: 58, label: '10:00', perfValue: '+$78', growthValue: '+$195' },
+    { performance: 48, growth: 54, label: '12:00', perfValue: '+$125', growthValue: '+$175' },
+    { performance: 32, growth: 62, label: '14:00', perfValue: '-$35', growthValue: '+$218' },
+    { performance: 55, growth: 65, label: '16:00', perfValue: '+$168', growthValue: '+$235' },
+    { performance: 42, growth: 68, label: '18:00', perfValue: '+$95', growthValue: '+$252' },
+    { performance: 25, growth: 64, label: '20:00', perfValue: '-$55', growthValue: '+$228' },
+    { performance: 58, growth: 72, label: '22:00', perfValue: '+$185', growthValue: '+$285' },
   ],
   '1W': [
-    { performance: 65, growth: 78, label: 'Mon', perfValue: '-$450', growthValue: '+$820' },
-    { performance: 45, growth: 85, label: 'Tue', perfValue: '-$680', growthValue: '+$1,150' },
-    { performance: 78, growth: 62, label: 'Wed', perfValue: '-$280', growthValue: '+$520' },
-    { performance: 52, growth: 88, label: 'Thu', perfValue: '-$590', growthValue: '+$1,380' },
-    { performance: 88, growth: 72, label: 'Fri', perfValue: '-$150', growthValue: '+$680' },
-    { performance: 72, growth: 95, label: 'Sat', perfValue: '-$340', growthValue: '+$1,850' },
-    { performance: 95, growth: 68, label: 'Sun', perfValue: '-$65', growthValue: '+$580' },
+    { performance: 42, growth: 48, label: 'Mon', perfValue: '+$320', growthValue: '+$680' },
+    { performance: 28, growth: 55, label: 'Tue', perfValue: '-$185', growthValue: '+$820' },
+    { performance: 55, growth: 62, label: 'Wed', perfValue: '+$425', growthValue: '+$980' },
+    { performance: 35, growth: 58, label: 'Thu', perfValue: '+$145', growthValue: '+$890' },
+    { performance: 62, growth: 68, label: 'Fri', perfValue: '+$580', growthValue: '+$1,150' },
+    { performance: 45, growth: 75, label: 'Sat', perfValue: '+$285', growthValue: '+$1,380' },
+    { performance: 52, growth: 82, label: 'Sun', perfValue: '+$395', growthValue: '+$1,620' },
   ],
   '1M': [
-    { performance: 55, growth: 72, label: 'Week 1', perfValue: '-$1,250', growthValue: '+$2,450' },
-    { performance: 42, growth: 85, label: 'Week 2', perfValue: '-$1,890', growthValue: '+$3,680' },
-    { performance: 68, growth: 78, label: 'Week 3', perfValue: '-$820', growthValue: '+$2,920' },
-    { performance: 75, growth: 92, label: 'Week 4', perfValue: '-$580', growthValue: '+$4,150' },
+    { performance: 45, growth: 52, label: 'Week 1', perfValue: '+$1,250', growthValue: '+$3,200' },
+    { performance: 32, growth: 65, label: 'Week 2', perfValue: '-$420', growthValue: '+$4,850' },
+    { performance: 58, growth: 78, label: 'Week 3', perfValue: '+$1,680', growthValue: '+$6,420' },
+    { performance: 52, growth: 92, label: 'Week 4', perfValue: '+$1,450', growthValue: '+$8,150' },
   ],
 };
 
 const SUMMARY_BY_TIMEFRAME: Record<Timeframe, { totalPerf: string; totalGrowth: string; net: string; netPositive: boolean }> = {
-  '1D': { totalPerf: '-$1,168', totalGrowth: '+$2,618', net: '+$1,450', netPositive: true },
-  '1W': { totalPerf: '-$2,555', totalGrowth: '+$6,980', net: '+$4,425', netPositive: true },
-  '1M': { totalPerf: '-$4,540', totalGrowth: '+$13,200', net: '+$8,660', netPositive: true },
+  '1D': { totalPerf: '+$833', totalGrowth: '+$2,338', net: '+$3,171', netPositive: true },
+  '1W': { totalPerf: '+$1,965', totalGrowth: '+$7,520', net: '+$9,485', netPositive: true },
+  '1M': { totalPerf: '+$3,960', totalGrowth: '+$22,620', net: '+$26,580', netPositive: true },
 };
 
 const TIMEFRAME_LABELS: Record<Timeframe, string> = {
@@ -136,20 +136,20 @@ export function PerformanceGrowthCard({ theme }: PerformanceGrowthCardProps) {
 
       <div className="flex items-center gap-4 mb-3 px-4">
         <div className="flex items-center gap-2">
-          <div className={`w-3 h-3 rounded ${theme === 'dark' ? 'bg-red-500' : 'bg-red-600'}`} />
+          <div className={`w-3 h-3 rounded ${theme === 'dark' ? 'bg-blue-500' : 'bg-blue-600'}`} />
           <span className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
-            Loss {summary.totalPerf}
+            Trades {summary.totalPerf}
           </span>
         </div>
         <div className="flex items-center gap-2">
           <div className={`w-3 h-3 rounded ${theme === 'dark' ? 'bg-green-500' : 'bg-green-600'}`} />
           <span className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
-            Growth {summary.totalGrowth}
+            Deposits {summary.totalGrowth}
           </span>
         </div>
         <div className="ml-auto">
           <span className={`text-sm font-semibold ${summary.netPositive ? 'text-green-500' : 'text-red-500'}`}>
-            Net: {summary.net}
+            Total: {summary.net}
           </span>
         </div>
       </div>
@@ -159,7 +159,7 @@ export function PerformanceGrowthCard({ theme }: PerformanceGrowthCardProps) {
           <div key={i} className="flex-1 flex gap-0.5 items-end h-full group relative">
             <div
               className={`flex-1 rounded-t transition-all hover:opacity-80 ${
-                theme === 'dark' ? 'bg-red-500' : 'bg-red-600'
+                theme === 'dark' ? 'bg-blue-500' : 'bg-blue-600'
               }`}
               style={{ height: `${bar.performance}%` }}
             />
@@ -177,7 +177,7 @@ export function PerformanceGrowthCard({ theme }: PerformanceGrowthCardProps) {
             <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 ${
               theme === 'dark' ? 'bg-zinc-700 text-white' : 'bg-gray-800 text-white'
             }`}>
-              <div className="text-red-400">{bar.perfValue}</div>
+              <div className="text-blue-400">{bar.perfValue}</div>
               <div className="text-green-400">{bar.growthValue}</div>
             </div>
           </div>
