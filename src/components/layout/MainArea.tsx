@@ -20,8 +20,8 @@ export function MainArea({ isGraphMode, isDashboardMode }: MainAreaProps) {
 
   return (
     <main className={`flex-1 flex flex-col h-full relative overflow-hidden transition-colors ${
-      theme === 'dark' ? 'bg-zinc-900' : 'bg-white'
-    } ${isGraphMode ? 'bg-transparent pointer-events-none' : ''}`}>
+      isGraphMode ? 'bg-transparent pointer-events-none' : theme === 'dark' ? 'bg-zinc-900' : 'bg-gray-50'
+    }`}>
       {!isGraphMode && !isDashboardMode && (
         <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] pointer-events-none transition-opacity ${
           theme === 'dark'
