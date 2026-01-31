@@ -54,13 +54,14 @@ const START_POINTS: Record<ViewMode, Required<Omit<UserPoint, never>> & { chartV
 };
 
 // Computed config - merge startPoint + userPoint
-function computeConfig(mode: ViewMode, userPoint: UserPoint) {
+function computeConfig(mode: ViewMode, userPoint: UserPoint | undefined) {
   const start = START_POINTS[mode];
+  const user = userPoint ?? {};
   return {
-    sidebarCollapsed: userPoint.sidebarCollapsed ?? start.sidebarCollapsed,
-    cardsSidebarCollapsed: userPoint.cardsSidebarCollapsed ?? start.cardsSidebarCollapsed,
-    cardsSidebarWidth: userPoint.cardsSidebarWidth ?? start.cardsSidebarWidth,
-    chartVisible: start.chartVisible, // Chart visibility não é customizável pelo usuário
+    sidebarCollapsed: user.sidebarCollapsed ?? start.sidebarCollapsed,
+    cardsSidebarCollapsed: user.cardsSidebarCollapsed ?? start.cardsSidebarCollapsed,
+    cardsSidebarWidth: user.cardsSidebarWidth ?? start.cardsSidebarWidth,
+    chartVisible: start.chartVisible,
   };
 }
 
@@ -161,10 +162,13 @@ function loadFromStorage(): { currentMode: ViewMode; userPoints: Record<ViewMode
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed.userPoints) {
-        // Restore userPoints and draftInput, always start in 'chat' mode
         return {
-          currentMode: 'chat', // Always start in chat mode
-          userPoints: parsed.userPoints,
+          currentMode: 'chat',
+          userPoints: {
+            chat: parsed.userPoints.chat ?? {},
+            graph: parsed.userPoints.graph ?? {},
+            dashboard: parsed.userPoints.dashboard ?? {},
+          },
           draftInput: parsed.draftInput ?? DEFAULT_DRAFT_INPUT,
         };
       }
