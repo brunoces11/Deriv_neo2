@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { BarChart3, ChevronDown } from 'lucide-react';
 
-type Timeframe = '1D' | '1W' | '1M';
+type Timeframe = '1D' | '1W' | '1M' | '1Y';
 
 interface BarData {
   performance: number;
@@ -41,18 +41,34 @@ const DATA_BY_TIMEFRAME: Record<Timeframe, BarData[]> = {
     { performance: 58, growth: 78, label: 'Week 3', perfValue: '+$1,680', growthValue: '+$6,420' },
     { performance: 52, growth: 92, label: 'Week 4', perfValue: '+$1,450', growthValue: '+$8,150' },
   ],
+  '1Y': [
+    { performance: 48, growth: 55, label: 'Jan', perfValue: '+$4,250', growthValue: '+$12,500' },
+    { performance: 35, growth: 62, label: 'Feb', perfValue: '+$2,180', growthValue: '+$15,820' },
+    { performance: 55, growth: 68, label: 'Mar', perfValue: '+$6,420', growthValue: '+$18,950' },
+    { performance: 42, growth: 72, label: 'Apr', perfValue: '+$3,850', growthValue: '+$21,680' },
+    { performance: 62, growth: 78, label: 'May', perfValue: '+$8,120', growthValue: '+$25,420' },
+    { performance: 38, growth: 82, label: 'Jun', perfValue: '+$2,950', growthValue: '+$28,150' },
+    { performance: 52, growth: 85, label: 'Jul', perfValue: '+$5,680', growthValue: '+$31,280' },
+    { performance: 45, growth: 88, label: 'Aug', perfValue: '+$4,250', growthValue: '+$34,820' },
+    { performance: 58, growth: 92, label: 'Sep', perfValue: '+$7,150', growthValue: '+$38,650' },
+    { performance: 48, growth: 95, label: 'Oct', perfValue: '+$5,420', growthValue: '+$42,180' },
+    { performance: 55, growth: 98, label: 'Nov', perfValue: '+$6,850', growthValue: '+$45,920' },
+    { performance: 62, growth: 100, label: 'Dec', perfValue: '+$8,320', growthValue: '+$50,000' },
+  ],
 };
 
 const SUMMARY_BY_TIMEFRAME: Record<Timeframe, { totalPerf: string; totalGrowth: string; net: string; netPositive: boolean }> = {
   '1D': { totalPerf: '+$833', totalGrowth: '+$2,338', net: '+$3,171', netPositive: true },
   '1W': { totalPerf: '+$1,965', totalGrowth: '+$7,520', net: '+$9,485', netPositive: true },
   '1M': { totalPerf: '+$3,960', totalGrowth: '+$22,620', net: '+$26,580', netPositive: true },
+  '1Y': { totalPerf: '+$65,440', totalGrowth: '+$385,370', net: '+$450,810', netPositive: true },
 };
 
 const TIMEFRAME_LABELS: Record<Timeframe, string> = {
-  '1D': '1 Day',
-  '1W': '1 Week',
-  '1M': '1 Month',
+  '1D': '1D',
+  '1W': '1W',
+  '1M': '1M',
+  '1Y': '1Y',
 };
 
 interface PerformanceGrowthCardProps {
@@ -108,7 +124,7 @@ export function PerformanceGrowthCard({ theme }: PerformanceGrowthCardProps) {
                   ? 'bg-zinc-800 border-zinc-700'
                   : 'bg-white border-gray-200'
               }`}>
-                {(['1D', '1W', '1M'] as Timeframe[]).map((tf) => (
+                {(['1D', '1W', '1M', '1Y'] as Timeframe[]).map((tf) => (
                   <button
                     key={tf}
                     onClick={() => {
@@ -138,13 +154,13 @@ export function PerformanceGrowthCard({ theme }: PerformanceGrowthCardProps) {
         <div className="flex items-center gap-2">
           <div className={`w-3 h-3 rounded ${theme === 'dark' ? 'bg-blue-500' : 'bg-blue-600'}`} />
           <span className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
-            Trades {summary.totalPerf}
+            Performance {summary.totalPerf}
           </span>
         </div>
         <div className="flex items-center gap-2">
           <div className={`w-3 h-3 rounded ${theme === 'dark' ? 'bg-green-500' : 'bg-green-600'}`} />
           <span className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
-            Deposits {summary.totalGrowth}
+            Growth {summary.totalGrowth}
           </span>
         </div>
         <div className="ml-auto">
