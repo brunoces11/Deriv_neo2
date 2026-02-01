@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, useEffect, useRef, useCallback, useMemo } from 'react';
 
 // Types
-type ViewMode = 'chat' | 'graph';
+type ViewMode = 'chat' | 'graph' | 'dashboard';
 
 interface UserPoint {
   sidebarCollapsed?: boolean;
@@ -42,19 +42,26 @@ const START_POINTS: Record<ViewMode, Required<Omit<UserPoint, never>> & { chartV
   graph: {
     sidebarCollapsed: true,
     cardsSidebarCollapsed: false,
-    cardsSidebarWidth: 840,
+    cardsSidebarWidth: 690,
     chartVisible: true,
+  },
+  dashboard: {
+    sidebarCollapsed: true,
+    cardsSidebarCollapsed: false,
+    cardsSidebarWidth: 690,
+    chartVisible: false,
   },
 };
 
 // Computed config - merge startPoint + userPoint
-function computeConfig(mode: ViewMode, userPoint: UserPoint) {
+function computeConfig(mode: ViewMode, userPoint: UserPoint | undefined) {
   const start = START_POINTS[mode];
+  const user = userPoint ?? {};
   return {
-    sidebarCollapsed: userPoint.sidebarCollapsed ?? start.sidebarCollapsed,
-    cardsSidebarCollapsed: userPoint.cardsSidebarCollapsed ?? start.cardsSidebarCollapsed,
-    cardsSidebarWidth: userPoint.cardsSidebarWidth ?? start.cardsSidebarWidth,
-    chartVisible: start.chartVisible, // Chart visibility não é customizável pelo usuário
+    sidebarCollapsed: user.sidebarCollapsed ?? start.sidebarCollapsed,
+    cardsSidebarCollapsed: user.cardsSidebarCollapsed ?? start.cardsSidebarCollapsed,
+    cardsSidebarWidth: user.cardsSidebarWidth ?? start.cardsSidebarWidth,
+    chartVisible: start.chartVisible,
   };
 }
 
@@ -155,10 +162,13 @@ function loadFromStorage(): { currentMode: ViewMode; userPoints: Record<ViewMode
     if (stored) {
       const parsed = JSON.parse(stored);
       if (parsed.userPoints) {
-        // Restore userPoints and draftInput, always start in 'chat' mode
         return {
-          currentMode: 'chat', // Always start in chat mode
-          userPoints: parsed.userPoints,
+          currentMode: 'chat',
+          userPoints: {
+            chat: parsed.userPoints.chat ?? {},
+            graph: parsed.userPoints.graph ?? {},
+            dashboard: parsed.userPoints.dashboard ?? {},
+          },
           draftInput: parsed.draftInput ?? DEFAULT_DRAFT_INPUT,
         };
       }
@@ -181,7 +191,7 @@ function saveToStorage(currentMode: ViewMode, userPoints: Record<ViewMode, UserP
 export function ViewModeProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, {
     currentMode: 'chat',
-    userPoints: { chat: {}, graph: {} },
+    userPoints: { chat: {}, graph: {}, dashboard: {} },
     isResizing: false,
     draftInput: DEFAULT_DRAFT_INPUT,
   });
@@ -214,7 +224,10 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
 
   // Actions
   const toggleMode = useCallback(() => {
-    dispatch({ type: 'SET_MODE', payload: state.currentMode === 'chat' ? 'graph' : 'chat' });
+    const modes: ViewMode[] = ['chat', 'graph', 'dashboard'];
+    const currentIndex = modes.indexOf(state.currentMode);
+    const nextIndex = (currentIndex + 1) % modes.length;
+    dispatch({ type: 'SET_MODE', payload: modes[nextIndex] });
   }, [state.currentMode]);
 
   const setMode = useCallback((mode: ViewMode) => {

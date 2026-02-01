@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { createChart, ColorType, CandlestickSeries, CrosshairMode } from 'lightweight-charts';
-import type { IChartApi, ISeriesApi, Time } from 'lightweight-charts';
+import { createChart, ColorType, CandlestickSeries, LineSeries, CrosshairMode, LineStyle } from 'lightweight-charts';
+import type { IChartApi, ISeriesApi, Time, LineData } from 'lightweight-charts';
 import { fetchKlinesWithVolume, type SupportedSymbol, type SupportedTimeframe, type KlineDataWithVolume } from '../../services/binanceApi';
 import { generateMockCandlestickData } from '../../services/mockChartData';
 import { useDrawingTools, DRAWING_COLORS } from '../../store/DrawingToolsContext';
@@ -45,6 +45,9 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<'Candlestick'> | null>(null);
+  const bbUpperRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const bbMiddleRef = useRef<ISeriesApi<'Line'> | null>(null);
+  const bbLowerRef = useRef<ISeriesApi<'Line'> | null>(null);
   const primitivesRef = useRef<Map<string, PrimitiveInstance>>(new Map());
   const rawDataRef = useRef<KlineDataWithVolume[]>([]);
 
@@ -173,6 +176,26 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     removeDrawing(selectedDrawingId);
   }, [selectedDrawingId, removeDrawing]);
 
+  const calculateBollingerBands = useCallback((data: { time: Time; close: number }[], period = 20, stdDev = 2) => {
+    const upper: LineData[] = [];
+    const middle: LineData[] = [];
+    const lower: LineData[] = [];
+
+    for (let i = period - 1; i < data.length; i++) {
+      const slice = data.slice(i - period + 1, i + 1);
+      const closes = slice.map(d => d.close);
+      const sma = closes.reduce((a, b) => a + b, 0) / period;
+      const variance = closes.reduce((sum, val) => sum + Math.pow(val - sma, 2), 0) / period;
+      const std = Math.sqrt(variance);
+
+      upper.push({ time: data[i].time, value: sma + stdDev * std });
+      middle.push({ time: data[i].time, value: sma });
+      lower.push({ time: data[i].time, value: sma - stdDev * std });
+    }
+
+    return { upper, middle, lower };
+  }, []);
+
   // Load data from Binance API
   const loadData = useCallback(async () => {
     if (!seriesRef.current) return;
@@ -183,11 +206,9 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     try {
       const data = await fetchKlinesWithVolume({ symbol, timeframe, limit: 500 });
       rawDataRef.current = data;
-      
-      // Check again in case component unmounted during fetch
+
       if (!seriesRef.current) return;
-      
-      // Set candlestick data
+
       seriesRef.current.setData(data.map(d => ({
         time: d.time,
         open: d.open,
@@ -195,14 +216,18 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
         low: d.low,
         close: d.close,
       })));
-      
-      // Show last ~70 candles for better readability
+
+      const bbData = calculateBollingerBands(data.map(d => ({ time: d.time, close: d.close })));
+      bbUpperRef.current?.setData(bbData.upper);
+      bbMiddleRef.current?.setData(bbData.middle);
+      bbLowerRef.current?.setData(bbData.lower);
+
       const visibleBars = 70;
       const totalBars = data.length;
       if (totalBars > visibleBars) {
         chartRef.current?.timeScale().setVisibleLogicalRange({
           from: totalBars - visibleBars,
-          to: totalBars + 5, // Small offset for right padding
+          to: totalBars + 5,
         });
       } else {
         chartRef.current?.timeScale().fitContent();
@@ -210,13 +235,16 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     } catch (err) {
       console.error('Failed to load data:', err);
       setError('Failed to load data. Using mock data.');
-      
-      // Check if series still exists before setting mock data
+
       if (seriesRef.current) {
         const mockData = generateMockCandlestickData();
         seriesRef.current.setData(mockData);
-        
-        // Show last ~70 candles for better readability
+
+        const bbData = calculateBollingerBands(mockData.map(d => ({ time: d.time, close: d.close })));
+        bbUpperRef.current?.setData(bbData.upper);
+        bbMiddleRef.current?.setData(bbData.middle);
+        bbLowerRef.current?.setData(bbData.lower);
+
         const visibleBars = 70;
         const totalBars = mockData.length;
         if (totalBars > visibleBars) {
@@ -231,7 +259,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [symbol, timeframe]);
+  }, [symbol, timeframe, calculateBollingerBands]);
 
   // Convert pixel coordinates to chart coordinates
   const pixelToChartCoords = useCallback((x: number, y: number): { time: Time; price: number } | null => {
@@ -537,6 +565,37 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     });
 
     seriesRef.current = candlestickSeries;
+
+    const bbOuterColor = theme === 'dark' ? '#6b7280' : '#9ca3af';
+    const bbMiddleColor = theme === 'dark' ? '#525252' : '#d1d5db';
+
+    const bbUpper = chart.addSeries(LineSeries, {
+      color: bbOuterColor,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+      crosshairMarkerVisible: false,
+    });
+    bbUpperRef.current = bbUpper;
+
+    const bbMiddle = chart.addSeries(LineSeries, {
+      color: bbMiddleColor,
+      lineWidth: 1,
+      lineStyle: LineStyle.Dashed,
+      priceLineVisible: false,
+      lastValueVisible: false,
+      crosshairMarkerVisible: false,
+    });
+    bbMiddleRef.current = bbMiddle;
+
+    const bbLower = chart.addSeries(LineSeries, {
+      color: bbOuterColor,
+      lineWidth: 1,
+      priceLineVisible: false,
+      lastValueVisible: false,
+      crosshairMarkerVisible: false,
+    });
+    bbLowerRef.current = bbLower;
     
     // Mark chart as ready for event listeners
     setChartReady(true);
@@ -573,6 +632,9 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
         chartRef.current.remove();
         chartRef.current = null;
         seriesRef.current = null;
+        bbUpperRef.current = null;
+        bbMiddleRef.current = null;
+        bbLowerRef.current = null;
       }
     };
   }, [isVisible]);
@@ -768,6 +830,12 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
       rightPriceScale: { borderColor: theme === 'dark' ? '#27272a' : '#e4e4e7' },
       timeScale: { borderColor: theme === 'dark' ? '#27272a' : '#e4e4e7' },
     });
+
+    const bbOuterColor = theme === 'dark' ? '#6b7280' : '#9ca3af';
+    const bbMiddleColor = theme === 'dark' ? '#525252' : '#d1d5db';
+    bbUpperRef.current?.applyOptions({ color: bbOuterColor });
+    bbMiddleRef.current?.applyOptions({ color: bbMiddleColor, lineStyle: LineStyle.Dashed });
+    bbLowerRef.current?.applyOptions({ color: bbOuterColor });
   }, [theme]);
 
   // Cancel drawing on Escape, Delete selected drawing on Delete key

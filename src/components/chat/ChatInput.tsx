@@ -230,7 +230,7 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
         <p className={`text-xs text-center mt-3 transition-colors ${
           theme === 'dark' ? 'text-zinc-600' : 'text-gray-500'
         }`}>
-          FlowChat may produce inaccurate information. Cards are dynamically generated.
+          This is a simulated system. Interaction data is illustrative only.
         </p>
       )}
     </div>

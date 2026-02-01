@@ -79,13 +79,8 @@ export function AssetSelector({ asset = defaultAsset, onClick }: AssetSelectorPr
         }`}>
           {asset.pair}
         </span>
-        {/* Line 2: Price + Change */}
+        {/* Line 2: Change */}
         <div className="flex items-center gap-1">
-          <span className={`text-xs ${
-            theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'
-          }`}>
-            {asset.price.toLocaleString('en-US', { minimumFractionDigits: 3 })}
-          </span>
           <span className={`text-xs ${variationColor}`}>
             {isPositive ? '+' : ''}{asset.change.toFixed(3)} ({asset.changePercent.toFixed(2)}%)
           </span>

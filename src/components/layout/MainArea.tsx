@@ -4,23 +4,25 @@ import { ActiveCards } from '../cards/ActiveCards';
 import { ModeToggle } from './ModeToggle';
 import { DrawingToolsPanel } from '../chart/DrawingToolsPanel';
 import { AssetSelector } from '../chart/AssetSelector';
+import { DashboardView } from './DashboardView';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 
 interface MainAreaProps {
   isGraphMode: boolean;
+  isDashboardMode: boolean;
 }
 
-export function MainArea({ isGraphMode }: MainAreaProps) {
+export function MainArea({ isGraphMode, isDashboardMode }: MainAreaProps) {
   const { messages } = useChat();
   const { theme } = useTheme();
   const hasMessages = messages.length > 0;
 
   return (
     <main className={`flex-1 flex flex-col h-full relative overflow-hidden transition-colors ${
-      theme === 'dark' ? 'bg-zinc-900' : 'bg-white'
-    } ${isGraphMode ? 'bg-transparent pointer-events-none' : ''}`}>
-      {!isGraphMode && (
+      isGraphMode ? 'bg-transparent pointer-events-none' : theme === 'dark' ? 'bg-zinc-900' : 'bg-gray-50'
+    }`}>
+      {!isGraphMode && !isDashboardMode && (
         <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] pointer-events-none transition-opacity ${
           theme === 'dark'
             ? 'from-zinc-800/20 via-zinc-900 to-zinc-900'
@@ -28,20 +30,20 @@ export function MainArea({ isGraphMode }: MainAreaProps) {
         }`} />
       )}
 
-      {/* Header row - Mode Toggle centralizado + Asset Selector à esquerda (apenas graph mode) */}
-      <div className={`relative z-10 flex items-center px-4 py-2 border-b pointer-events-auto ${
+      {/* Header row - Mode Toggle + Asset Selector (graph mode) */}
+      <div className={`relative z-10 flex items-center px-4 border-b pointer-events-auto h-14 ${
         theme === 'dark' ? 'border-zinc-800/30' : 'border-gray-100'
       } ${isGraphMode ? 'border-transparent' : ''}`} style={{ marginTop: '7px' }}>
-        {/* Asset Selector - esquerda, apenas no Graph Mode */}
-        {isGraphMode && (
-          <div className="absolute left-4">
-            <AssetSelector />
-          </div>
-        )}
-        {/* Mode Toggle - centralizado */}
-        <div className="flex-1 flex justify-center">
+        {/* Left spacer / Asset Selector */}
+        <div className="flex-1 flex items-center justify-start min-w-0 h-full">
+          {isGraphMode && <AssetSelector />}
+        </div>
+        {/* Mode Toggle - center */}
+        <div className="flex-shrink-0 flex items-center h-full">
           <ModeToggle />
         </div>
+        {/* Right spacer */}
+        <div className="flex-1 min-w-0 h-full" />
       </div>
 
       {/* Drawing Tools Panel - positioned at bottom center in Graph Mode */}
@@ -52,7 +54,9 @@ export function MainArea({ isGraphMode }: MainAreaProps) {
       )}
 
       <div className={`flex-1 flex flex-col relative z-10 overflow-hidden ${isGraphMode ? 'pointer-events-none' : ''}`}>
-        {isGraphMode ? (
+        {isDashboardMode ? (
+          <DashboardView />
+        ) : isGraphMode ? (
           // Graph Mode: área vazia, chart está no fundo e recebe eventos
           <div className="flex-1" />
         ) : !hasMessages ? (
@@ -67,7 +71,7 @@ export function MainArea({ isGraphMode }: MainAreaProps) {
         )}
       </div>
 
-      {!isGraphMode && (
+      {!isGraphMode && !isDashboardMode && (
         <div className={`relative z-20 border-t backdrop-blur-xl transition-colors ${
           theme === 'dark'
             ? 'border-zinc-800/50 bg-zinc-900/80'
