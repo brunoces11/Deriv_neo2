@@ -42,13 +42,13 @@ const START_POINTS: Record<ViewMode, Required<Omit<UserPoint, never>> & { chartV
   graph: {
     sidebarCollapsed: true,
     cardsSidebarCollapsed: false,
-    cardsSidebarWidth: 840,
+    cardsSidebarWidth: 730,
     chartVisible: true,
   },
   dashboard: {
     sidebarCollapsed: true,
     cardsSidebarCollapsed: true,
-    cardsSidebarWidth: 660,
+    cardsSidebarWidth: 730,
     chartVisible: false,
   },
 };
