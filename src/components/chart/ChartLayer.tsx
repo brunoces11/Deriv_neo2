@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { createChart, ColorType, CandlestickSeries, LineSeries, CrosshairMode } from 'lightweight-charts';
+import { createChart, ColorType, CandlestickSeries, LineSeries, CrosshairMode, LineStyle } from 'lightweight-charts';
 import type { IChartApi, ISeriesApi, Time, LineData } from 'lightweight-charts';
 import { fetchKlinesWithVolume, type SupportedSymbol, type SupportedTimeframe, type KlineDataWithVolume } from '../../services/binanceApi';
 import { generateMockCandlestickData } from '../../services/mockChartData';
@@ -567,7 +567,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     seriesRef.current = candlestickSeries;
 
     const bbOuterColor = theme === 'dark' ? '#6b7280' : '#9ca3af';
-    const bbMiddleColor = theme === 'dark' ? '#d1d5db' : '#4b5563';
+    const bbMiddleColor = theme === 'dark' ? '#525252' : '#d1d5db';
 
     const bbUpper = chart.addSeries(LineSeries, {
       color: bbOuterColor,
@@ -581,6 +581,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     const bbMiddle = chart.addSeries(LineSeries, {
       color: bbMiddleColor,
       lineWidth: 1,
+      lineStyle: LineStyle.Dashed,
       priceLineVisible: false,
       lastValueVisible: false,
       crosshairMarkerVisible: false,
@@ -831,9 +832,9 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     });
 
     const bbOuterColor = theme === 'dark' ? '#6b7280' : '#9ca3af';
-    const bbMiddleColor = theme === 'dark' ? '#d1d5db' : '#4b5563';
+    const bbMiddleColor = theme === 'dark' ? '#525252' : '#d1d5db';
     bbUpperRef.current?.applyOptions({ color: bbOuterColor });
-    bbMiddleRef.current?.applyOptions({ color: bbMiddleColor });
+    bbMiddleRef.current?.applyOptions({ color: bbMiddleColor, lineStyle: LineStyle.Dashed });
     bbLowerRef.current?.applyOptions({ color: bbOuterColor });
   }, [theme]);
 
