@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import { useDrawingTools } from '../../store/DrawingToolsContext';
+import { useViewMode } from '../../store/ViewModeContext';
 import { SidebarCard } from './SidebarCard';
 import { ChatSessionCard } from './ChatSessionCard';
 import { UserProfile } from './UserProfile';
@@ -56,16 +57,18 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
   const { favoriteCards, archivedCards, sessions, resetChat } = useChat();
   const { theme } = useTheme();
   const { clearChatTags, clearAllDrawings } = useDrawingTools();
+  const { setMode } = useViewMode();
   
   const [sidebarState, setSidebarState] = useState<SidebarState>(loadSidebarState);
   const { chatsOpen, favoritesOpen, archivedOpen } = sidebarState;
 
-  // Handler para iniciar novo chat - limpa tudo
+  // Handler para iniciar novo chat - limpa tudo e volta pro chat mode
   const handleNewChat = useCallback(() => {
     resetChat();
     clearChatTags();
     clearAllDrawings(); // Limpa os desenhos do chart também
-  }, [resetChat, clearChatTags, clearAllDrawings]);
+    setMode('chat'); // Volta para o chat mode
+  }, [resetChat, clearChatTags, clearAllDrawings, setMode]);
 
   // Sync state across tabs/windows
   useEffect(() => {

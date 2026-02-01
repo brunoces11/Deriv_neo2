@@ -211,39 +211,37 @@ interface ChatContextValue extends ChatState {
 
 const ChatContext = createContext<ChatContextValue | null>(null);
 
+// Storage key for persisting current session
+const SESSION_STORAGE_KEY = 'deriv-neo-current-session';
+
+// Load current session ID from localStorage
+function loadCurrentSessionId(): string | null {
+  try {
+    return localStorage.getItem(SESSION_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+// Save current session ID to localStorage
+function saveCurrentSessionId(sessionId: string | null) {
+  try {
+    if (sessionId) {
+      localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+    } else {
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(chatReducer, initialState);
 
   const refreshSessions = useCallback(async () => {
     const sessions = await supabaseService.getChatSessions();
     dispatch({ type: 'SET_SESSIONS', payload: sessions });
-  }, []);
-
-  useEffect(() => {
-    refreshSessions();
-  }, [refreshSessions]);
-
-  const createNewSession = useCallback(async (firstMessage: string): Promise<string | null> => {
-    const title = firstMessage.slice(0, 50) + (firstMessage.length > 50 ? '...' : '');
-    console.log('createNewSession called:', { title });
-    
-    const session = await supabaseService.createChatSession(title);
-
-    if (!session) {
-      console.error('Failed to create session in Supabase');
-      return null;
-    }
-
-    console.log('Session created successfully:', session.id);
-    
-    dispatch({ type: 'ADD_SESSION', payload: session });
-    dispatch({ type: 'SET_CURRENT_SESSION', payload: session.id });
-    dispatch({ type: 'SET_MESSAGES', payload: [] });
-    dispatch({ type: 'SET_CARDS', payload: [] });
-    dispatch({ type: 'SET_SESSION_DRAWINGS', payload: [] });
-    dispatch({ type: 'SET_SESSION_TAGS', payload: [] });
-
-    return session.id;
   }, []);
 
   const loadSession = useCallback(async (sessionId: string) => {
@@ -272,6 +270,59 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_SESSION_TAGS', payload: tags });
     dispatch({ type: 'SET_LOADING', payload: false });
   }, []);
+
+  const createNewSession = useCallback(async (firstMessage: string): Promise<string | null> => {
+    const title = firstMessage.slice(0, 50) + (firstMessage.length > 50 ? '...' : '');
+    console.log('createNewSession called:', { title });
+    
+    const session = await supabaseService.createChatSession(title);
+
+    if (!session) {
+      console.error('Failed to create session in Supabase');
+      return null;
+    }
+
+    console.log('Session created successfully:', session.id);
+    
+    dispatch({ type: 'ADD_SESSION', payload: session });
+    dispatch({ type: 'SET_CURRENT_SESSION', payload: session.id });
+    dispatch({ type: 'SET_MESSAGES', payload: [] });
+    dispatch({ type: 'SET_CARDS', payload: [] });
+    dispatch({ type: 'SET_SESSION_DRAWINGS', payload: [] });
+    dispatch({ type: 'SET_SESSION_TAGS', payload: [] });
+
+    return session.id;
+  }, []);
+
+  // Load sessions and restore last active session on mount
+  useEffect(() => {
+    const initializeSessions = async () => {
+      await refreshSessions();
+      
+      // Try to restore last active session
+      const savedSessionId = loadCurrentSessionId();
+      if (savedSessionId) {
+        console.log('Restoring last active session:', savedSessionId);
+        // Verify session still exists before loading
+        const sessions = await supabaseService.getChatSessions();
+        const sessionExists = sessions.some(s => s.id === savedSessionId);
+        
+        if (sessionExists) {
+          await loadSession(savedSessionId);
+        } else {
+          console.warn('Saved session no longer exists, clearing storage');
+          saveCurrentSessionId(null);
+        }
+      }
+    };
+    
+    initializeSessions();
+  }, [loadSession, refreshSessions]);
+
+  // Save currentSessionId to localStorage whenever it changes
+  useEffect(() => {
+    saveCurrentSessionId(state.currentSessionId);
+  }, [state.currentSessionId]);
 
   const addMessage = useCallback(async (message: ChatMessage, sessionId?: string) => {
     dispatch({ type: 'ADD_MESSAGE', payload: message });

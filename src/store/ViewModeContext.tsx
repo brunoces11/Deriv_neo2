@@ -163,7 +163,7 @@ function loadFromStorage(): { currentMode: ViewMode; userPoints: Record<ViewMode
       const parsed = JSON.parse(stored);
       if (parsed.userPoints) {
         return {
-          currentMode: 'chat',
+          currentMode: parsed.currentMode ?? 'chat',
           userPoints: {
             chat: parsed.userPoints.chat ?? {},
             graph: parsed.userPoints.graph ?? {},
@@ -194,19 +194,23 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     userPoints: { chat: {}, graph: {}, dashboard: {} },
     isResizing: false,
     draftInput: DEFAULT_DRAFT_INPUT,
+  }, (initialState) => {
+    // Load from storage synchronously during initialization
+    const stored = loadFromStorage();
+    if (stored) {
+      return {
+        ...initialState,
+        currentMode: stored.currentMode,
+        userPoints: stored.userPoints,
+        draftInput: stored.draftInput,
+      };
+    }
+    return initialState;
   });
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load from storage on mount
-  useEffect(() => {
-    const stored = loadFromStorage();
-    if (stored) {
-      dispatch({ type: 'LOAD_STATE', payload: stored });
-    }
-  }, []);
-
-  // Save to storage with debounce
+  // Save to storage with debounce (removed the load useEffect since we load synchronously now)
   useEffect(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
