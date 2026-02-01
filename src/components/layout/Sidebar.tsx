@@ -57,18 +57,19 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
   const { favoriteCards, archivedCards, sessions, resetChat } = useChat();
   const { theme } = useTheme();
   const { clearChatTags, clearAllDrawings } = useDrawingTools();
-  const { setMode } = useViewMode();
+  const { setMode, resetMode } = useViewMode();
   
   const [sidebarState, setSidebarState] = useState<SidebarState>(loadSidebarState);
   const { chatsOpen, favoritesOpen, archivedOpen } = sidebarState;
 
-  // Handler para iniciar novo chat - limpa tudo e volta pro chat mode
+  // Handler para iniciar novo chat - limpa tudo, volta pro chat mode e reseta layout
   const handleNewChat = useCallback(() => {
     resetChat();
     clearChatTags();
     clearAllDrawings(); // Limpa os desenhos do chart também
     setMode('chat'); // Volta para o chat mode
-  }, [resetChat, clearChatTags, clearAllDrawings, setMode]);
+    resetMode(); // Reseta as configurações de layout (sidebars, widths) para o padrão
+  }, [resetChat, clearChatTags, clearAllDrawings, setMode, resetMode]);
 
   // Sync state across tabs/windows
   useEffect(() => {

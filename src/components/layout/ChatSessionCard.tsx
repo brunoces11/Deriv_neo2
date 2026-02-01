@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { MessageSquare, MoreVertical, Edit, Star, Archive, Trash2 } from 'lucide-react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
+import { useViewMode } from '../../store/ViewModeContext';
 import type { ChatSession } from '../../types';
 
 interface ChatSessionCardProps {
@@ -11,6 +12,7 @@ interface ChatSessionCardProps {
 export function ChatSessionCard({ session }: ChatSessionCardProps) {
   const { theme } = useTheme();
   const { loadSession, updateSession, deleteSession, currentSessionId } = useChat();
+  const { currentMode, cardsSidebarCollapsed, updateUserPoint } = useViewMode();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [newTitle, setNewTitle] = useState(session.title);
@@ -41,6 +43,12 @@ export function ChatSessionCard({ session }: ChatSessionCardProps) {
 
   const handleSessionClick = () => {
     if (!isRenaming) {
+      // Se estiver no modo graph ou dashboard E a sidebar direita estiver colapsada
+      // Expandir automaticamente a sidebar para mostrar o chat
+      if ((currentMode === 'graph' || currentMode === 'dashboard') && cardsSidebarCollapsed) {
+        updateUserPoint({ cardsSidebarCollapsed: false });
+      }
+      
       loadSession(session.id);
     }
   };
