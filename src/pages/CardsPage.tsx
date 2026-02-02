@@ -15,7 +15,7 @@ import type { BaseCard } from '../types';
 
 const mockBotCard: BaseCard = {
   id: 'demo-bot-1',
-  type: 'bot-card',
+  type: 'card_bot',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -31,7 +31,7 @@ const mockBotCard: BaseCard = {
 
 const mockPortfolioCard: BaseCard = {
   id: 'demo-portfolio-1',
-  type: 'portfolio-snapshot',
+  type: 'card_portfolio_exemple_compacto',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -50,7 +50,7 @@ const mockPortfolioCard: BaseCard = {
 
 const mockPortfolioTableCard: BaseCard = {
   id: 'demo-portfolio-table-1',
-  type: 'portfolio-table-complete',
+  type: 'card_portfolio',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -69,7 +69,7 @@ const mockPortfolioTableCard: BaseCard = {
 
 const mockTradeCard: BaseCard = {
   id: 'demo-trade-1',
-  type: 'trade-card',
+  type: 'card_trade',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -90,7 +90,7 @@ const mockTradeCard: BaseCard = {
 
 const mockCreateTradeCard: BaseCard = {
   id: 'demo-create-trade-1',
-  type: 'create-trade-card',
+  type: 'card_trade_creator',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -123,7 +123,7 @@ const mockCreateTradeCard: BaseCard = {
 
 const mockActionsCard: BaseCard = {
   id: 'demo-actions-1',
-  type: 'actions-card',
+  type: 'card_actions',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -138,7 +138,7 @@ const mockActionsCard: BaseCard = {
 
 const mockBotCreator: BaseCard = {
   id: 'demo-bot-creator-1',
-  type: 'bot-creator',
+  type: 'card_bot_creator',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -353,9 +353,7 @@ function CardSection({ cardInfo, displayIndex }: { cardInfo: CardInfo; displayIn
           }`}>
             Preview do Card (Expanded)
           </h4>
-          <div className="pointer-events-none">
-            {cardInfo.component}
-          </div>
+          {cardInfo.component}
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-6 p-6">
@@ -365,9 +363,7 @@ function CardSection({ cardInfo, displayIndex }: { cardInfo: CardInfo; displayIn
             }`}>
               Preview do Card
             </h4>
-            <div className="pointer-events-none">
-              {cardInfo.component}
-            </div>
+            {cardInfo.component}
           </div>
 
           <div>
