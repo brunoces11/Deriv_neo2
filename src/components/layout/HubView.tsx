@@ -201,7 +201,7 @@ function OptionsSection({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="flex flex-wrap justify-center gap-[30px]">
         {platforms.map((platform) => (
           <PlatformCard
             key={platform.id}
@@ -226,7 +226,7 @@ function PlatformCard({
   onOpen: () => void;
 }) {
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all hover:shadow-md max-w-[390px] ${
+    <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all hover:shadow-md w-[390px] ${
       theme === 'dark'
         ? 'bg-zinc-800 border-zinc-700 hover:border-zinc-600'
         : 'bg-gray-50 border-gray-200 hover:border-gray-300'
@@ -300,11 +300,12 @@ function CFDsSection({
       </div>
 
       {/* Deriv Nakala Copy Trading */}
-      <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer hover:shadow-md max-w-[390px] ${
-        theme === 'dark'
-          ? 'bg-zinc-800 border-zinc-700 hover:border-zinc-600'
-          : 'bg-gray-50 border-gray-200 hover:border-gray-300'
-      }`}>
+      <div className="flex flex-wrap justify-center gap-[30px]">
+        <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer hover:shadow-md w-[390px] ${
+          theme === 'dark'
+            ? 'bg-zinc-800 border-zinc-700 hover:border-zinc-600'
+            : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+        }`}>
         <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm bg-zinc-500 text-white">
           DN
         </div>
@@ -318,6 +319,9 @@ function CFDsSection({
         <ChevronRight className={`w-5 h-5 ${
           theme === 'dark' ? 'text-zinc-400' : 'text-gray-400'
         }`} />
+        </div>
+        {/* Invisible spacer to maintain grid alignment */}
+        <div className="w-[390px] invisible" />
       </div>
     </div>
   );
@@ -345,7 +349,7 @@ function MT5Section({
         Deriv MT5
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="flex flex-wrap justify-center gap-[30px]">
         {accounts.map((account) => (
           <AccountCard
             key={account.id}
@@ -370,7 +374,7 @@ function AccountCard({
   onGet: () => void;
 }) {
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all hover:shadow-md max-w-[390px] ${
+    <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all hover:shadow-md w-[390px] ${
       theme === 'dark'
         ? 'bg-zinc-800 border-zinc-700 hover:border-zinc-600'
         : 'bg-gray-50 border-gray-200 hover:border-gray-300'
