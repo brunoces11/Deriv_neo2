@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Zap, Rocket, Settings, X } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
+import { CardMenuActions } from './CardMenuActions';
 import { useTheme } from '../../store/ThemeContext';
 import type { BaseCard, ActionsCreatorPayload } from '../../types';
 
@@ -16,6 +18,7 @@ interface ActionsCardCreatorProps {
  */
 export function ActionsCardCreator({ card }: ActionsCardCreatorProps) {
   const { theme } = useTheme();
+  const [isExpanded, setIsExpanded] = useState(true);
   const payload = card.payload as unknown as ActionsCreatorPayload;
 
   const actionName = payload?.actionName || 'New Action';
@@ -56,19 +59,29 @@ export function ActionsCardCreator({ card }: ActionsCardCreatorProps) {
     <CardWrapper card={card} accentColor="amber">
       <div className="space-y-4">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center flex-shrink-0">
-            <Zap className="w-5 h-5 text-amber-500" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center flex-shrink-0">
+              <Zap className="w-5 h-5 text-amber-500" />
+            </div>
+            <div>
+              <span className="text-[10px] font-medium text-amber-500 uppercase tracking-wider block">
+                New Action Configuration
+              </span>
+              <h3 className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                "{actionName}"
+              </h3>
+            </div>
           </div>
-          <div>
-            <span className="text-[10px] font-medium text-amber-500 uppercase tracking-wider block">
-              New Action Configuration
-            </span>
-            <h3 className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              "{actionName}"
-            </h3>
-          </div>
+          <CardMenuActions 
+            card={card} 
+            isExpanded={isExpanded} 
+            onToggleExpand={() => setIsExpanded(!isExpanded)} 
+          />
         </div>
+
+        {isExpanded && (
+          <>
 
         {/* Flowchart Area */}
         <div className={`rounded-xl p-4 border relative overflow-hidden ${
@@ -186,6 +199,8 @@ export function ActionsCardCreator({ card }: ActionsCardCreatorProps) {
             Cancel
           </button>
         </div>
+        </>
+        )}
       </div>
     </CardWrapper>
   );

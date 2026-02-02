@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Wallet, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
+import { CardMenuActions } from './CardMenuActions';
 import { useTheme } from '../../store/ThemeContext';
 import type { BaseCard, PortfolioTablePayload } from '../../types';
 
@@ -11,6 +13,7 @@ const assetColors = ['bg-red-500', 'bg-cyan-500', 'bg-amber-500', 'bg-rose-500',
 
 export function PortfolioTableCardComplete({ card }: PortfolioTableCardCompleteProps) {
   const { theme } = useTheme();
+  const [isExpanded, setIsExpanded] = useState(true); // Default expanded for this card
   const payload = card.payload as unknown as PortfolioTablePayload;
   const isPositive = payload.changePercent.startsWith('+');
   const TrendIcon = isPositive ? TrendingUp : TrendingDown;
@@ -42,14 +45,21 @@ export function PortfolioTableCardComplete({ card }: PortfolioTableCardCompleteP
             </div>
           </div>
 
-          <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg ${isPositive ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
-            <TrendIcon className={`w-4 h-4 ${isPositive ? 'text-green-500' : 'text-red-500'}`} />
-            <span className={`text-sm font-semibold ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
-              {payload.changePercent}
-            </span>
-            <span className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-              24h
-            </span>
+          <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg ${isPositive ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+              <TrendIcon className={`w-4 h-4 ${isPositive ? 'text-green-500' : 'text-red-500'}`} />
+              <span className={`text-sm font-semibold ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
+                {payload.changePercent}
+              </span>
+              <span className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+                24h
+              </span>
+            </div>
+            <CardMenuActions 
+              card={card} 
+              isExpanded={isExpanded} 
+              onToggleExpand={() => setIsExpanded(!isExpanded)} 
+            />
           </div>
         </div>
 

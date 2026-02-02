@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Bot, Rocket, Settings, X } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
+import { CardMenuActions } from './CardMenuActions';
 import { useTheme } from '../../store/ThemeContext';
 import type { BaseCard, BotCreatorPayload } from '../../types';
 
@@ -16,6 +18,7 @@ interface BotCardCreatorProps {
  */
 export function BotCardCreator({ card }: BotCardCreatorProps) {
   const { theme } = useTheme();
+  const [isExpanded, setIsExpanded] = useState(true);
   const payload = card.payload as unknown as BotCreatorPayload;
 
   const botName = payload?.botName || 'New Bot Strategy';
@@ -56,19 +59,29 @@ export function BotCardCreator({ card }: BotCardCreatorProps) {
     <CardWrapper card={card} accentColor="cyan">
       <div className="space-y-4">
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/20 to-[#00d0a0]/20 flex items-center justify-center flex-shrink-0">
-            <Bot className="w-5 h-5 text-cyan-500" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-cyan-500/20 to-[#00d0a0]/20 flex items-center justify-center flex-shrink-0">
+              <Bot className="w-5 h-5 text-cyan-500" />
+            </div>
+            <div>
+              <span className="text-[10px] font-medium text-cyan-500 uppercase tracking-wider block">
+                New Bot Configuration
+              </span>
+              <h3 className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                "{botName}"
+              </h3>
+            </div>
           </div>
-          <div>
-            <span className="text-[10px] font-medium text-cyan-500 uppercase tracking-wider block">
-              New Bot Configuration
-            </span>
-            <h3 className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              "{botName}"
-            </h3>
-          </div>
+          <CardMenuActions 
+            card={card} 
+            isExpanded={isExpanded} 
+            onToggleExpand={() => setIsExpanded(!isExpanded)} 
+          />
         </div>
+
+        {isExpanded && (
+          <>
 
         {/* Flowchart Area */}
         <div className={`rounded-xl p-4 border relative overflow-hidden ${
@@ -186,6 +199,8 @@ export function BotCardCreator({ card }: BotCardCreatorProps) {
             Cancel
           </button>
         </div>
+        </>
+        )}
       </div>
     </CardWrapper>
   );

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { TrendingUp, TrendingDown, ChevronDown, Minus, Plus, ExternalLink } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
+import { CardMenuActions } from './CardMenuActions';
 import { useTheme } from '../../store/ThemeContext';
 import type { BaseCard, CreateTradeCardPayload } from '../../types';
 
@@ -26,6 +27,7 @@ export function CreateTradeCard({ card }: CreateTradeCardProps) {
   const [durationMode, setDurationMode] = useState<'duration' | 'end-time'>(payload?.duration?.mode || 'duration');
   const [stakeMode, setStakeMode] = useState<'stake' | 'payout'>(payload?.stake?.mode || 'stake');
   const [stakeValue, setStakeValue] = useState(payload?.stake?.value || 10);
+  const [isExpanded, setIsExpanded] = useState(true); // Default expanded
 
   // Default values for safety
   const asset = payload?.asset || 'BTC/USD';
@@ -126,45 +128,54 @@ export function CreateTradeCard({ card }: CreateTradeCardProps) {
       <div className="space-y-4">
 
         {/* ===== HEADER SECTION ===== */}
-        <div className="space-y-1">
-          {/* Trade Type Header */}
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00d0a0]/20 to-[#ff444f]/20 flex items-center justify-center flex-shrink-0">
-              <div className="flex items-center">
-                <TrendingUp className="w-3 h-3 text-[#00d0a0]" />
-                <TrendingDown className="w-3 h-3 text-[#ff444f] -ml-1" />
+        <div className="flex items-start justify-between">
+          <div className="space-y-1">
+            {/* Trade Type Header */}
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00d0a0]/20 to-[#ff444f]/20 flex items-center justify-center flex-shrink-0">
+                <div className="flex items-center">
+                  <TrendingUp className="w-3 h-3 text-[#00d0a0]" />
+                  <TrendingDown className="w-3 h-3 text-[#ff444f] -ml-1" />
+                </div>
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                    {formatTradeType(tradeType)}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`} />
+                </div>
               </div>
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  {formatTradeType(tradeType)}
-                </span>
-                <ChevronDown className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`} />
-              </div>
-            </div>
-          </div>
-          
-          {/* Learn Link */}
-          <a 
-            href="#" 
-            className="flex items-center gap-1 text-xs text-[#ff444f] hover:text-[#ff444f]/80 transition-colors"
-            onClick={(e) => {
-              e.preventDefault();
-              console.log('[TradeCard] Learn about trade type clicked:', tradeType);
-            }}
-          >
-            Learn about this trade type
-            <ExternalLink className="w-3 h-3" />
-          </a>
+            
+            {/* Learn Link */}
+            <a 
+              href="#" 
+              className="flex items-center gap-1 text-xs text-[#ff444f] hover:text-[#ff444f]/80 transition-colors"
+              onClick={(e) => {
+                e.preventDefault();
+                console.log('[TradeCard] Learn about trade type clicked:', tradeType);
+              }}
+            >
+              Learn about this trade type
+              <ExternalLink className="w-3 h-3" />
+            </a>
 
-          {/* Asset Info */}
-          <div className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
-            {asset} • {assetName}
+            {/* Asset Info */}
+            <div className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
+              {asset} • {assetName}
+            </div>
           </div>
+
+          <CardMenuActions 
+            card={card} 
+            isExpanded={isExpanded} 
+            onToggleExpand={() => setIsExpanded(!isExpanded)} 
+          />
         </div>
 
-        {/* ===== DURATION SECTION ===== */}
+        {isExpanded && (
+          <>
         <div className={`rounded-lg p-3 border ${
           theme === 'dark' 
             ? 'bg-zinc-800/50 border-zinc-700/50' 
@@ -387,6 +398,8 @@ export function CreateTradeCard({ card }: CreateTradeCardProps) {
             <span className="text-xs opacity-80">{payout.lower.percentage}</span>
           </button>
         </div>
+        </>
+        )}
       </div>
     </CardWrapper>
   );
