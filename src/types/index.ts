@@ -96,6 +96,25 @@ export interface ActionsCardPayload {
   description: string;
   status: 'active' | 'inactive' | 'error';
   lastExecution?: string;
+  trigger?: {
+    type: 'schedule' | 'price' | 'event';
+    value: string;
+  };
+  action?: {
+    type: string;
+    asset?: string;
+    amount?: string;
+  };
+  schedule?: {
+    frequency: 'once' | 'daily' | 'weekly' | 'monthly';
+    time?: string;
+    day?: string;
+  };
+  condition?: {
+    type: string;
+    operator: string;
+    value: string;
+  };
 }
 
 export interface ActionsCreatorPayload {
