@@ -1,6 +1,8 @@
-import { Zap, Play, Pencil, Trash2, Calendar } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Zap, Play, Pause, MoreVertical, ChevronDown, ChevronUp, Pencil, Trash2, Calendar, Star } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { useTheme } from '../../store/ThemeContext';
+import { useChat } from '../../store/ChatContext';
 import type { BaseCard, ActionsCardPayload } from '../../types';
 
 interface ActionsCardProps {
@@ -11,19 +13,38 @@ interface ActionsCardProps {
  * ActionsCard Component
  * 
  * Displays a configured action with management buttons.
- * Actions can be executed, edited, deleted, or scheduled.
- * Simplified 2-line layout: Name + Status/LastRun
+ * Compact mode: Play/Pause, Dropdown Menu (3 dots), Expand
+ * Dropdown contains: Favorite, Edit, Delete, Schedule
  */
 export function ActionsCard({ card }: ActionsCardProps) {
   const { theme } = useTheme();
+  const { favoriteCard, unfavoriteCard } = useChat();
   const payload = card.payload as unknown as ActionsCardPayload;
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const actionId = payload?.actionId || 'ACT-000';
   const name = payload?.name || 'Unnamed Action';
   const status = payload?.status || 'inactive';
   const lastExecution = payload?.lastExecution;
 
-  const isActive = status === 'active';
+  // Sync isPlaying with status on mount
+  useEffect(() => {
+    setIsPlaying(status === 'active');
+  }, [status]);
 
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
@@ -36,20 +57,37 @@ export function ActionsCard({ card }: ActionsCardProps) {
     });
   };
 
-  const handleExecute = () => {
-    console.log('[ActionsCard] Execute action:', { actionId, name });
+  const handlePlayPause = () => {
+    setIsPlaying(!isPlaying);
+    console.log('[ActionsCard] Toggle play/pause:', { actionId, name, newState: !isPlaying ? 'playing' : 'paused' });
+  };
+
+  const handleFavorite = () => {
+    if (card.isFavorite) {
+      unfavoriteCard(card.id);
+    } else {
+      favoriteCard(card.id);
+    }
+    setIsDropdownOpen(false);
   };
 
   const handleEdit = () => {
     console.log('[ActionsCard] Edit action:', { actionId, name });
+    setIsDropdownOpen(false);
   };
 
   const handleDelete = () => {
     console.log('[ActionsCard] Delete action:', { actionId, name });
+    setIsDropdownOpen(false);
   };
 
   const handleSchedule = () => {
     console.log('[ActionsCard] Schedule action:', { actionId, name });
+    setIsDropdownOpen(false);
+  };
+
+  const toggleExpand = () => {
+    setIsExpanded(!isExpanded);
   };
 
   return (
@@ -64,7 +102,7 @@ export function ActionsCard({ card }: ActionsCardProps) {
           <div 
             className={`absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${
               theme === 'dark' ? 'border-zinc-900' : 'border-white'
-            } ${isActive ? 'bg-[#00d0a0]' : theme === 'dark' ? 'bg-zinc-500' : 'bg-gray-400'}`}
+            } ${isPlaying ? 'bg-[#00d0a0]' : theme === 'dark' ? 'bg-zinc-500' : 'bg-gray-400'}`}
           />
         </div>
 
@@ -77,8 +115,8 @@ export function ActionsCard({ card }: ActionsCardProps) {
 
           {/* Line 2: Status + Last Execution */}
           <div className="flex items-center gap-2 mt-0.5">
-            <span className={`text-xs font-medium ${isActive ? 'text-[#00d0a0]' : theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-              {isActive ? 'Active' : 'Inactive'}
+            <span className={`text-xs font-medium ${isPlaying ? 'text-[#00d0a0]' : theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+              {isPlaying ? 'Active' : 'Inactive'}
             </span>
             {lastExecution && (
               <span className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
@@ -88,54 +126,116 @@ export function ActionsCard({ card }: ActionsCardProps) {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Action Buttons - Compact: Play/Pause, Dropdown, Expand */}
         <div className="flex items-center gap-1 flex-shrink-0">
+          {/* Play/Pause Button */}
           <button
-            onClick={handleExecute}
-            title="Execute"
+            onClick={handlePlayPause}
+            title={isPlaying ? 'Pause' : 'Play'}
             className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-              theme === 'dark'
-                ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
-                : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+              isPlaying
+                ? 'bg-[#00d0a0]/20 text-[#00d0a0] hover:bg-[#00d0a0]/30'
+                : theme === 'dark'
+                  ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-400'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-400'
             }`}
           >
-            <Play className="w-4 h-4" />
+            {isPlaying ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
           </button>
+
+          {/* Dropdown Menu (3 dots) */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              title="More options"
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                theme === 'dark'
+                  ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+              }`}
+            >
+              <MoreVertical className="w-4 h-4" />
+            </button>
+
+            {/* Dropdown Content */}
+            {isDropdownOpen && (
+              <div className={`absolute right-0 top-full mt-1 w-40 rounded-lg shadow-lg border z-50 ${
+                theme === 'dark'
+                  ? 'bg-zinc-800 border-zinc-700'
+                  : 'bg-white border-gray-200'
+              }`}>
+                <button
+                  onClick={handleFavorite}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                    theme === 'dark'
+                      ? 'text-zinc-300 hover:bg-zinc-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <Star className={`w-4 h-4 ${card.isFavorite ? 'text-amber-400 fill-amber-400' : ''}`} />
+                  {card.isFavorite ? 'Unfavorite' : 'Add to Favorites'}
+                </button>
+                <button
+                  onClick={handleEdit}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                    theme === 'dark'
+                      ? 'text-zinc-300 hover:bg-zinc-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <Pencil className="w-4 h-4" />
+                  Edit
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                    theme === 'dark'
+                      ? 'text-zinc-300 hover:bg-zinc-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </button>
+                <button
+                  onClick={handleSchedule}
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                    theme === 'dark'
+                      ? 'text-zinc-300 hover:bg-zinc-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4" />
+                  Schedule
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Expand/Collapse Button */}
           <button
-            onClick={handleEdit}
-            title="Edit"
+            onClick={toggleExpand}
+            title={isExpanded ? 'Collapse' : 'Expand'}
             className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
               theme === 'dark'
                 ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
                 : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
             }`}
           >
-            <Pencil className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleDelete}
-            title="Delete"
-            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-              theme === 'dark'
-                ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
-                : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
-            }`}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleSchedule}
-            title="Schedule"
-            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
-              theme === 'dark'
-                ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
-                : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
-            }`}
-          >
-            <Calendar className="w-4 h-4" />
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
         </div>
       </div>
+
+      {/* Expanded Content */}
+      {isExpanded && (
+        <div className={`mt-3 pt-3 border-t ${theme === 'dark' ? 'border-zinc-700' : 'border-gray-200'}`}>
+          <div className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
+            <p>Action ID: {actionId}</p>
+            {lastExecution && <p className="mt-1">Last execution: {formatDate(lastExecution)}</p>}
+          </div>
+        </div>
+      )}
     </CardWrapper>
   );
 }
