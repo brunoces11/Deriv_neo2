@@ -1,6 +1,8 @@
 import { useRef, useEffect } from 'react';
 import { Bot, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import type { ChatMessage } from '../../types';
@@ -217,38 +219,127 @@ function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
                 // Para mensagens do usuário, renderiza tags como badges (line-height aumentado para tags)
                 <p className="mb-0 leading-[1.77]">{parseMessageWithTags(message.content, theme)}</p>
               ) : (
-                // Para mensagens da IA, usa ReactMarkdown
+                // Para mensagens da IA, usa ReactMarkdown com suporte completo
                 <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkBreaks]}
                   components={{
-                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                    ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
-                    ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
-                    li: ({ children }) => <li className="mb-1">{children}</li>,
-                    code: ({ children }) => (
-                      <code className={`px-1 py-0.5 rounded text-xs ${
-                        theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
-                      }`}>{children}</code>
-                    ),
-                    pre: ({ children }) => (
-                      <pre className={`p-2 rounded overflow-x-auto text-xs mb-2 ${
-                        theme === 'dark' ? 'bg-zinc-900' : 'bg-gray-100'
-                      }`}>{children}</pre>
-                    ),
+                    // Parágrafos
+                    p: ({ children }) => <p className="mb-2 last:mb-0 whitespace-pre-wrap">{children}</p>,
+                    
+                    // Quebras de linha
+                    br: () => <br />,
+                    
+                    // Listas
+                    ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
+                    li: ({ children }) => <li className="mb-0.5">{children}</li>,
+                    
+                    // Código inline e blocos
+                    code: ({ inline, children }) => {
+                      if (inline) {
+                        return (
+                          <code className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                            theme === 'dark' ? 'bg-zinc-700 text-zinc-200' : 'bg-gray-200 text-gray-800'
+                          }`}>{children}</code>
+                        );
+                      }
+                      return (
+                        <code className={`block p-3 rounded overflow-x-auto text-xs font-mono mb-2 ${
+                          theme === 'dark' ? 'bg-zinc-900 text-zinc-200' : 'bg-gray-100 text-gray-800'
+                        }`}>{children}</code>
+                      );
+                    },
+                    pre: ({ children }) => <pre className="mb-2">{children}</pre>,
+                    
+                    // Formatação de texto
                     strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
                     em: ({ children }) => <em className="italic">{children}</em>,
-                    h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
-                    h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
-                    h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
+                    del: ({ children }) => <del className="line-through">{children}</del>,
+                    
+                    // Headings
+                    h1: ({ children }) => <h1 className="text-lg font-bold mb-2 mt-3 first:mt-0">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-base font-bold mb-2 mt-2 first:mt-0">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-sm font-bold mb-1 mt-2 first:mt-0">{children}</h3>,
+                    h4: ({ children }) => <h4 className="text-sm font-semibold mb-1 mt-1 first:mt-0">{children}</h4>,
+                    h5: ({ children }) => <h5 className="text-xs font-semibold mb-1 mt-1 first:mt-0">{children}</h5>,
+                    h6: ({ children }) => <h6 className="text-xs font-semibold mb-1 mt-1 first:mt-0">{children}</h6>,
+                    
+                    // Links
                     a: ({ href, children }) => (
-                      <a href={href} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:underline">
+                      <a 
+                        href={href} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-red-500 hover:text-red-600 underline transition-colors"
+                      >
                         {children}
                       </a>
                     ),
+                    
+                    // Imagens
+                    img: ({ src, alt }) => (
+                      <img 
+                        src={src} 
+                        alt={alt || ''} 
+                        className="max-w-full h-auto rounded-lg my-2"
+                        loading="lazy"
+                      />
+                    ),
+                    
+                    // Blockquotes
                     blockquote: ({ children }) => (
-                      <blockquote className={`border-l-2 pl-3 italic mb-2 ${
-                        theme === 'dark' ? 'border-zinc-600 text-zinc-400' : 'border-gray-300 text-gray-600'
+                      <blockquote className={`border-l-4 pl-3 py-1 italic my-2 ${
+                        theme === 'dark' 
+                          ? 'border-zinc-600 text-zinc-400 bg-zinc-800/30' 
+                          : 'border-gray-300 text-gray-600 bg-gray-100/50'
                       }`}>{children}</blockquote>
                     ),
+                    
+                    // Linhas horizontais
+                    hr: () => (
+                      <hr className={`my-3 border-t ${
+                        theme === 'dark' ? 'border-zinc-700' : 'border-gray-300'
+                      }`} />
+                    ),
+                    
+                    // Tabelas (GFM)
+                    table: ({ children }) => (
+                      <div className="overflow-x-auto my-2">
+                        <table className={`min-w-full border-collapse text-xs ${
+                          theme === 'dark' ? 'border-zinc-700' : 'border-gray-300'
+                        }`}>{children}</table>
+                      </div>
+                    ),
+                    thead: ({ children }) => (
+                      <thead className={theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-100'}>{children}</thead>
+                    ),
+                    tbody: ({ children }) => <tbody>{children}</tbody>,
+                    tr: ({ children }) => (
+                      <tr className={`border-b ${
+                        theme === 'dark' ? 'border-zinc-700' : 'border-gray-300'
+                      }`}>{children}</tr>
+                    ),
+                    th: ({ children }) => (
+                      <th className="px-3 py-2 text-left font-semibold">{children}</th>
+                    ),
+                    td: ({ children }) => (
+                      <td className="px-3 py-2">{children}</td>
+                    ),
+                    
+                    // Checkboxes (GFM)
+                    input: ({ type, checked }) => {
+                      if (type === 'checkbox') {
+                        return (
+                          <input 
+                            type="checkbox" 
+                            checked={checked} 
+                            disabled 
+                            className="mr-2 align-middle"
+                          />
+                        );
+                      }
+                      return null;
+                    },
                   }}
                 >
                   {message.content}
