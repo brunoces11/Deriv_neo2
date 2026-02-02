@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, ChevronDown, Minus, Plus, ExternalLink } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronDown, Minus, Plus } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { CardMenuActions } from './CardMenuActions';
 import { useTheme } from '../../store/ThemeContext';
@@ -127,46 +127,40 @@ export function CreateTradeCard({ card }: CreateTradeCardProps) {
     <CardWrapper card={card} accentColor="red">
       <div className="space-y-4">
 
-        {/* ===== HEADER SECTION ===== */}
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            {/* Trade Type Header */}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#00d0a0]/20 to-[#ff444f]/20 flex items-center justify-center flex-shrink-0">
-                <div className="flex items-center">
-                  <TrendingUp className="w-3 h-3 text-[#00d0a0]" />
-                  <TrendingDown className="w-3 h-3 text-[#ff444f] -ml-1" />
-                </div>
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2">
-                  <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                    {formatTradeType(tradeType)}
-                  </span>
-                  <ChevronDown className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`} />
-                </div>
-              </div>
-            </div>
-            
-            {/* Learn Link */}
-            <a 
-              href="#" 
-              className="flex items-center gap-1 text-xs text-[#ff444f] hover:text-[#ff444f]/80 transition-colors"
-              onClick={(e) => {
-                e.preventDefault();
-                console.log('[TradeCard] Learn about trade type clicked:', tradeType);
-              }}
-            >
-              Learn about this trade type
-              <ExternalLink className="w-3 h-3" />
-            </a>
-
-            {/* Asset Info */}
-            <div className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
-              {asset} • {assetName}
+        {/* ===== HEADER SECTION (Compact Mode) ===== */}
+        <div className="flex items-center gap-3">
+          {/* Icon */}
+          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#00d0a0]/20 to-[#ff444f]/20 flex items-center justify-center flex-shrink-0">
+            <div className="flex items-center">
+              <TrendingUp className="w-4 h-4 text-[#00d0a0]" />
+              <TrendingDown className="w-4 h-4 text-[#ff444f] -ml-1.5" />
             </div>
           </div>
 
+          {/* Content - 2 lines */}
+          <div className="flex-1 min-w-0">
+            {/* Line 1: Asset + Trade Type */}
+            <div className="flex items-center gap-2">
+              <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                {asset}
+              </span>
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-[#ff444f]/20 text-[#ff444f]">
+                {formatTradeType(tradeType)}
+              </span>
+            </div>
+
+            {/* Line 2: Stake → Payout + Duration */}
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
+                ${stakeValue.toFixed(2)} → <span className="text-[#00d0a0] font-medium">{payout.higher.amount}</span>
+              </span>
+              <span className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                • {duration.value} {duration.unit}
+              </span>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
           <CardMenuActions 
             card={card} 
             isExpanded={isExpanded} 
