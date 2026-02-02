@@ -195,22 +195,6 @@ const cardsInfo: CardInfo[] = [
     component: <PortfolioSnapshotCard card={mockPortfolioCard} />,
   },
   {
-    name: 'Portfolio Sidebar Card',
-    type: 'portfolio-sidebar',
-    icon: Wallet,
-    description: 'Versão ultra compacta do portfólio otimizada para sidebar com botões mínimos.',
-    hasLogic: true,
-    logicDetails: [
-      'Layout ultra compacto para caber no sidebar',
-      'Tabela sem coluna Invested para economizar espaço',
-      'Botões ultra compactos: apenas seta + cor',
-      'Texto reduzido (10px) para máxima densidade',
-      'Header compacto com valor total e variação',
-      'Footer minimalista com 24h change',
-    ],
-    component: <PortfolioSidebarCard card={mockPortfolioTableCard} />,
-  },
-  {
     name: 'Portfolio Snapshot Table (Complete)',
     type: 'portfolio-table-complete',
     icon: Table,
@@ -322,6 +306,22 @@ const cardsInfo: CardInfo[] = [
       'Botões em tom cinza/neutro com hover state',
     ],
     component: <BotCard card={mockBotCard} />,
+  },
+  {
+    name: 'Portfolio Sidebar Card',
+    type: 'portfolio-sidebar',
+    icon: Wallet,
+    description: 'Versão ultra compacta do portfólio otimizada para sidebar com botões mínimos.',
+    hasLogic: true,
+    logicDetails: [
+      'Layout ultra compacto para caber no sidebar',
+      'Tabela sem coluna Invested para economizar espaço',
+      'Botões ultra compactos: apenas seta + cor',
+      'Texto reduzido (10px) para máxima densidade',
+      'Header compacto com valor total e variação',
+      'Footer minimalista com 24h change',
+    ],
+    component: <PortfolioSidebarCard card={mockPortfolioTableCard} />,
   },
 ];
 
