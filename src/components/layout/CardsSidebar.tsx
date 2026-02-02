@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { Zap, ChevronLeft, ChevronRight, Play, Bot } from 'lucide-react';
+import { Zap, ChevronLeft, ChevronRight, Play, Bot, LayoutGrid, BotMessageSquare } from 'lucide-react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
+import { useViewMode } from '../../store/ViewModeContext';
+import { useDrawingTools } from '../../store/DrawingToolsContext';
 import { ExecutionCard } from './ExecutionCard';
 import { ChatMessages } from '../chat/ChatMessages';
 import { ChatInput_NEO } from '../chat/ChatInput_NEO';
@@ -74,6 +76,8 @@ export function CardsSidebar({
 }: CardsSidebarProps) {
   const { activeCards } = useChat();
   const { theme } = useTheme();
+  const { updateDraftInput, clearDraftInput } = useViewMode();
+  const { clearChatTags } = useDrawingTools();
   const [localWidth, setLocalWidth] = useState(propWidth);
   const [isResizing, setIsResizing] = useState(false);
   const [cardsHeight, setCardsHeight] = useState(200); // Default height in pixels for graph mode
@@ -96,6 +100,19 @@ export function CardsSidebar({
   }, []);
 
   const setActiveTab = (tab: RightSidebarTab) => updateRightSidebarState({ activeTab: tab });
+
+  // Handler para icebreaker buttons
+  const handleIcebreaker = useCallback((text: string) => {
+    // 1. Limpar completamente o draft input (texto, agentes, produtos, tags)
+    clearDraftInput();
+    clearChatTags();
+    
+    // 2. Usar setTimeout para garantir que o clear seja processado primeiro
+    setTimeout(() => {
+      // 3. Inserir o novo texto
+      updateDraftInput({ plainText: text });
+    }, 50);
+  }, [clearDraftInput, clearChatTags, updateDraftInput]);
 
   // Sincronizar com prop width quando não está em resize
   useEffect(() => {
@@ -372,9 +389,11 @@ export function CardsSidebar({
           >
             {activeTab === 'cards' && (
               activeCards.length === 0 ? (
-                <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-                  <Zap className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
-                  <p className="text-xs">No cards</p>
+                <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                  <LayoutGrid className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                  <p className={`text-sm text-center leading-relaxed max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                    Cards são módulos visuais interativos que organizam informações solicitadas pelo usuário.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -385,17 +404,39 @@ export function CardsSidebar({
               )
             )}
             {activeTab === 'actions' && (
-              <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-                <Play className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
-                <p className="text-xs">No actions</p>
-                <p className="text-xs mt-1">Pending actions will appear here</p>
+              <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                <Zap className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                <p className={`text-sm text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                  Actions são automações inteligentes que executam tarefas ou trades automaticamente com base em regras do usuário.
+                </p>
+                <button 
+                  onClick={() => handleIcebreaker('I want to create an Action')}
+                  className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    theme === 'dark' 
+                      ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700' 
+                      : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+                  }`}
+                >
+                  Criar Action
+                </button>
               </div>
             )}
             {activeTab === 'bots' && (
-              <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-                <Bot className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
-                <p className="text-xs">No bots</p>
-                <p className="text-xs mt-1">Your trading bots will appear here</p>
+              <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                <BotMessageSquare className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                <p className={`text-sm text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                  Bots são agentes de trading autônomos que executam estratégias de investimento definidas pelo usuário.
+                </p>
+                <button 
+                  onClick={() => handleIcebreaker('I want to create a trading Bot')}
+                  className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    theme === 'dark' 
+                      ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700' 
+                      : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+                  }`}
+                >
+                  Criar Bot
+                </button>
               </div>
             )}
           </div>
@@ -449,8 +490,11 @@ export function CardsSidebar({
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
               {activeCards.length === 0 ? (
-                <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-                  <p className="text-xs">No cards yet</p>
+                <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                  <LayoutGrid className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                  <p className={`text-sm text-center leading-relaxed max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                    Cards são módulos visuais interativos que organizam informações solicitadas pelo usuário.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -490,8 +534,21 @@ export function CardsSidebar({
               <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Actions</span>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-              <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-                <p className="text-xs">No actions yet</p>
+              <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                <Zap className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                <p className={`text-sm text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                  Actions são automações inteligentes que executam tarefas ou trades automaticamente com base em regras do usuário.
+                </p>
+                <button 
+                  onClick={() => handleIcebreaker('I want to create an Action')}
+                  className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    theme === 'dark' 
+                      ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700' 
+                      : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+                  }`}
+                >
+                  Criar Action
+                </button>
               </div>
             </div>
           </div>
@@ -524,8 +581,21 @@ export function CardsSidebar({
               <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Bots</span>
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-              <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-                <p className="text-xs">No bots yet</p>
+              <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                <BotMessageSquare className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                <p className={`text-sm text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                  Bots são agentes de trading autônomos que executam estratégias de investimento definidas pelo usuário.
+                </p>
+                <button 
+                  onClick={() => handleIcebreaker('I want to create a trading Bot')}
+                  className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+                    theme === 'dark' 
+                      ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700' 
+                      : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+                  }`}
+                >
+                  Criar Bot
+                </button>
               </div>
             </div>
           </div>
