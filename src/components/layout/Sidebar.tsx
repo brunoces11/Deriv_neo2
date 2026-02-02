@@ -57,19 +57,35 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
   const { favoriteCards, archivedCards, sessions, resetChat } = useChat();
   const { theme } = useTheme();
   const { clearChatTags, clearAllDrawings } = useDrawingTools();
-  const { setMode, resetMode } = useViewMode();
+  const { setMode, resetAllUISettings } = useViewMode();
   
   const [sidebarState, setSidebarState] = useState<SidebarState>(loadSidebarState);
   const { chatsOpen, favoritesOpen, archivedOpen } = sidebarState;
 
   // Handler para iniciar novo chat - limpa tudo, volta pro chat mode e reseta layout
   const handleNewChat = useCallback(() => {
+    // 1. Limpar dados do chat
     resetChat();
     clearChatTags();
-    clearAllDrawings(); // Limpa os desenhos do chart também
-    setMode('chat'); // Volta para o chat mode
-    resetMode(); // Reseta as configurações de layout (sidebars, widths) para o padrão
-  }, [resetChat, clearChatTags, clearAllDrawings, setMode, resetMode]);
+    clearAllDrawings();
+    
+    // 2. Resetar modo para chat
+    setMode('chat');
+    
+    // 3. Resetar TODOS os parâmetros de UI (larguras, collapse states, etc.)
+    resetAllUISettings();
+    
+    // 4. Limpar estados persistidos de sidebars no localStorage
+    try {
+      localStorage.removeItem('deriv-neo-sidebar-state');
+      localStorage.removeItem('deriv-neo-right-sidebar-state');
+    } catch {
+      // Ignore storage errors
+    }
+    
+    // 5. Resetar estado local do sidebar para valores padrão
+    setSidebarState(defaultState);
+  }, [resetChat, clearChatTags, clearAllDrawings, setMode, resetAllUISettings]);
 
   // Sync state across tabs/windows
   useEffect(() => {

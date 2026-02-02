@@ -79,6 +79,7 @@ interface ViewModeContextValue {
   updateUserPoint: (updates: Partial<UserPoint>) => void;
   setResizing: (value: boolean) => void;
   resetMode: () => void;
+  resetAllUISettings: () => void;
   updateDraftInput: (updates: Partial<DraftInput>) => void;
   clearDraftInput: () => void;
 }
@@ -91,6 +92,7 @@ type Action =
   | { type: 'UPDATE_USER_POINT'; payload: Partial<UserPoint> }
   | { type: 'SET_RESIZING'; payload: boolean }
   | { type: 'RESET_MODE' }
+  | { type: 'RESET_ALL_UI_SETTINGS' }
   | { type: 'LOAD_STATE'; payload: { currentMode: ViewMode; userPoints: Record<ViewMode, UserPoint>; draftInput?: DraftInput } }
   | { type: 'UPDATE_DRAFT_INPUT'; payload: Partial<DraftInput> }
   | { type: 'CLEAR_DRAFT_INPUT' };
@@ -122,6 +124,17 @@ function reducer(state: ViewModeState, action: Action): ViewModeState {
         userPoints: {
           ...state.userPoints,
           [state.currentMode]: {},
+        },
+      };
+    
+    case 'RESET_ALL_UI_SETTINGS':
+      return {
+        ...state,
+        currentMode: 'chat', // Volta para o modo chat
+        userPoints: {
+          chat: {},
+          graph: {},
+          dashboard: {},
         },
       };
     
@@ -250,6 +263,10 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'RESET_MODE' });
   }, []);
 
+  const resetAllUISettings = useCallback(() => {
+    dispatch({ type: 'RESET_ALL_UI_SETTINGS' });
+  }, []);
+
   const updateDraftInput = useCallback((updates: Partial<DraftInput>) => {
     dispatch({ type: 'UPDATE_DRAFT_INPUT', payload: updates });
   }, []);
@@ -274,6 +291,7 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     updateUserPoint,
     setResizing,
     resetMode,
+    resetAllUISettings,
     updateDraftInput,
     clearDraftInput,
   };
