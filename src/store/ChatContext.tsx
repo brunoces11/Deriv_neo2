@@ -272,7 +272,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const createNewSession = useCallback(async (firstMessage: string): Promise<string | null> => {
-    const title = firstMessage.slice(0, 50) + (firstMessage.length > 50 ? '...' : '');
+    // Remove tags from title to prevent them from appearing in session cards
+    const cleanMessage = firstMessage.replace(/\[@([A-Za-z0-9\s]+?)(?:-(\d+))?\]\s*/g, '').trim();
+    const title = cleanMessage.slice(0, 50) + (cleanMessage.length > 50 ? '...' : '');
     console.log('createNewSession called:', { title });
     
     const session = await supabaseService.createChatSession(title);

@@ -30,6 +30,11 @@ const cardLabels = {
   'bot-creator': 'Bot Creator',
 };
 
+// Helper function to remove tag patterns from text
+function removeTagsFromText(text: string): string {
+  return text.replace(/\[@([A-Za-z0-9\s]+?)(?:-(\d+))?\]\s*/g, '').trim();
+}
+
 export function SidebarCard({ card, variant }: SidebarCardProps) {
   const { unfavoriteCard, hideCard } = useChat();
   const { theme } = useTheme();
@@ -38,25 +43,26 @@ export function SidebarCard({ card, variant }: SidebarCardProps) {
 
   const getTitle = () => {
     const payload = card.payload as Record<string, unknown>;
+    let title = '';
+    
     if (card.type === 'trade-card') {
-      return `${(payload.direction as string)?.toUpperCase() || 'Trade'} ${payload.asset || ''}`;
+      title = `${(payload.direction as string)?.toUpperCase() || 'Trade'} ${payload.asset || ''}`;
+    } else if (card.type === 'bot-card') {
+      title = (payload.name as string) || 'Bot';
+    } else if (card.type === 'portfolio-snapshot' || card.type === 'portfolio-sidebar' || card.type === 'portfolio-table-complete') {
+      title = 'Portfolio';
+    } else if (card.type === 'create-trade-card') {
+      title = `Create ${payload.asset || 'Trade'}`;
+    } else if (card.type === 'actions-card') {
+      title = (payload.name as string) || 'Action';
+    } else if (card.type === 'bot-creator') {
+      title = (payload.botName as string) || 'New Bot';
+    } else {
+      title = label;
     }
-    if (card.type === 'bot-card') {
-      return (payload.name as string) || 'Bot';
-    }
-    if (card.type === 'portfolio-snapshot' || card.type === 'portfolio-sidebar' || card.type === 'portfolio-table-complete') {
-      return 'Portfolio';
-    }
-    if (card.type === 'create-trade-card') {
-      return `Create ${payload.asset || 'Trade'}`;
-    }
-    if (card.type === 'actions-card') {
-      return (payload.name as string) || 'Action';
-    }
-    if (card.type === 'bot-creator') {
-      return (payload.botName as string) || 'New Bot';
-    }
-    return label;
+    
+    // Remove any tag patterns from title to prevent badge rendering
+    return title.replace(/\[@([A-Za-z0-9\s]+?)(?:-(\d+))?\]/g, '').trim();
   };
 
   return (

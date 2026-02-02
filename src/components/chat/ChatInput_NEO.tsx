@@ -688,8 +688,18 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
         .chat-editor:focus {
           outline: none;
         }
+        /* Scope inline-tag styles to chat-editor only to prevent leaking to other components */
         .chat-editor .inline-tag {
           user-select: all;
+          display: inline-flex;
+          align-items: center;
+          padding: 0px 8px;
+          border-radius: 9999px;
+          font-size: 12px;
+          font-weight: 500;
+          line-height: 1.4;
+          margin: 0 4px;
+          cursor: default;
         }
       `}</style>
       <div className={`relative rounded-2xl ${isSidebar ? 'shadow-lg shadow-black/20' : ''}`}>
