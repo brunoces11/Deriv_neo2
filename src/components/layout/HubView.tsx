@@ -127,10 +127,10 @@ export function HubView() {
     <div className={`w-full h-full overflow-y-auto custom-scrollbar ${
       theme === 'dark' ? 'bg-zinc-900' : 'bg-gray-50'
     }`}>
-      <div className="p-6 max-w-[1200px] mx-auto">
+      <div className="p-4 max-w-[1200px] mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className={`text-2xl font-bold ${
+        <div className="mb-5">
+          <h1 className={`text-xl font-bold ${
             theme === 'dark' ? 'text-white' : 'text-gray-900'
           }`}>
             Trader's Hub
@@ -177,13 +177,13 @@ function OptionsSection({
   onLearnMore: () => void;
 }) {
   return (
-    <div className={`p-6 rounded-xl border mb-6 ${
+    <div className={`p-4 rounded-xl border mb-4 ${
       theme === 'dark'
         ? 'bg-zinc-800/50 border-zinc-700/50'
         : 'bg-white border-gray-200'
     }`}>
-      <div className="mb-4">
-        <h2 className={`text-lg font-semibold mb-2 ${
+      <div className="mb-3">
+        <h2 className={`text-base font-semibold mb-1 ${
           theme === 'dark' ? 'text-white' : 'text-gray-900'
         }`}>
           Options
@@ -201,7 +201,7 @@ function OptionsSection({
         </p>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-[30px]">
+      <div className="flex flex-wrap justify-center gap-[24px]">
         {platforms.map((platform) => (
           <PlatformCard
             key={platform.id}
@@ -226,12 +226,12 @@ function PlatformCard({
   onOpen: () => void;
 }) {
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all hover:shadow-md w-[390px] ${
+    <div className={`flex items-center gap-2.5 p-2.5 rounded-lg border transition-all hover:shadow-md w-[390px] ${
       theme === 'dark'
         ? 'bg-zinc-800 border-zinc-700 hover:border-zinc-600'
         : 'bg-gray-50 border-gray-200 hover:border-gray-300'
     }`}>
-      <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${platform.iconBg} ${platform.iconText}`}>
+      <div className={`w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm ${platform.iconBg} ${platform.iconText}`}>
         {platform.icon}
       </div>
       <div className="flex-1 min-w-0">
@@ -267,14 +267,14 @@ function CFDsSection({
   onCompareAccounts: () => void;
 }) {
   return (
-    <div className={`p-6 rounded-xl border mb-6 ${
+    <div className={`p-4 rounded-xl border mb-4 ${
       theme === 'dark'
         ? 'bg-zinc-800/50 border-zinc-700/50'
         : 'bg-white border-gray-200'
     }`}>
-      <div className="mb-4">
-        <div className="flex items-center gap-3 mb-2">
-          <h2 className={`text-lg font-semibold ${
+      <div className="mb-3">
+        <div className="flex items-center gap-3 mb-1">
+          <h2 className={`text-base font-semibold ${
             theme === 'dark' ? 'text-white' : 'text-gray-900'
           }`}>
             CFDs
@@ -300,13 +300,13 @@ function CFDsSection({
       </div>
 
       {/* Deriv Nakala Copy Trading */}
-      <div className="flex flex-wrap justify-center gap-[30px]">
-        <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer hover:shadow-md w-[390px] ${
+      <div className="flex flex-wrap justify-center gap-[24px]">
+        <div className={`flex items-center gap-2.5 p-2.5 rounded-lg border transition-all cursor-pointer hover:shadow-md w-[390px] ${
           theme === 'dark'
             ? 'bg-zinc-800 border-zinc-700 hover:border-zinc-600'
             : 'bg-gray-50 border-gray-200 hover:border-gray-300'
         }`}>
-        <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm bg-zinc-500 text-white">
+        <div className="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-sm bg-zinc-500 text-white">
           DN
         </div>
         <div className="flex-1">
@@ -338,18 +338,18 @@ function MT5Section({
   onGetAccount: (name: string) => void;
 }) {
   return (
-    <div className={`p-6 rounded-xl border ${
+    <div className={`p-4 rounded-xl border ${
       theme === 'dark'
         ? 'bg-zinc-800/50 border-zinc-700/50'
         : 'bg-white border-gray-200'
     }`}>
-      <h2 className={`text-lg font-semibold mb-4 ${
+      <h2 className={`text-base font-semibold mb-3 ${
         theme === 'dark' ? 'text-white' : 'text-gray-900'
       }`}>
         Deriv MT5
       </h2>
 
-      <div className="flex flex-wrap justify-center gap-[30px]">
+      <div className="flex flex-wrap justify-center gap-[24px]">
         {accounts.map((account) => (
           <AccountCard
             key={account.id}
@@ -374,14 +374,14 @@ function AccountCard({
   onGet: () => void;
 }) {
   return (
-    <div className={`flex items-center gap-3 p-3 rounded-lg border transition-all hover:shadow-md w-[390px] ${
+    <div className={`flex items-center gap-2.5 p-2.5 rounded-lg border transition-all hover:shadow-md w-[390px] ${
       theme === 'dark'
         ? 'bg-zinc-800 border-zinc-700 hover:border-zinc-600'
         : 'bg-gray-50 border-gray-200 hover:border-gray-300'
     }`}>
-      <div className={`w-10 h-10 rounded-lg flex flex-col items-center justify-center text-white ${account.iconBg}`}>
-        <span className="text-[10px] font-bold leading-none">MT5</span>
-        <span className="text-[8px] leading-none">{account.shortName}</span>
+      <div className={`w-9 h-9 rounded-lg flex flex-col items-center justify-center text-white ${account.iconBg}`}>
+        <span className="text-[9px] font-bold leading-none">MT5</span>
+        <span className="text-[7px] leading-none">{account.shortName}</span>
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
