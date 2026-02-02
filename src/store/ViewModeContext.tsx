@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, useEffect, useRef, useCallback, useMemo } from 'react';
 
 // Types
-type ViewMode = 'chat' | 'graph' | 'dashboard';
+type ViewMode = 'chat' | 'graph' | 'dashboard' | 'hub';
 
 interface UserPoint {
   sidebarCollapsed?: boolean;
@@ -46,6 +46,12 @@ const START_POINTS: Record<ViewMode, Required<Omit<UserPoint, never>> & { chartV
     chartVisible: true,
   },
   dashboard: {
+    sidebarCollapsed: true,
+    cardsSidebarCollapsed: false,
+    cardsSidebarWidth: 690,
+    chartVisible: false,
+  },
+  hub: {
     sidebarCollapsed: true,
     cardsSidebarCollapsed: false,
     cardsSidebarWidth: 690,
@@ -135,6 +141,7 @@ function reducer(state: ViewModeState, action: Action): ViewModeState {
           chat: {},
           graph: {},
           dashboard: {},
+          hub: {},
         },
       };
     
@@ -181,6 +188,7 @@ function loadFromStorage(): { currentMode: ViewMode; userPoints: Record<ViewMode
             chat: parsed.userPoints.chat ?? {},
             graph: parsed.userPoints.graph ?? {},
             dashboard: parsed.userPoints.dashboard ?? {},
+            hub: parsed.userPoints.hub ?? {},
           },
           draftInput: parsed.draftInput ?? DEFAULT_DRAFT_INPUT,
         };
@@ -204,7 +212,7 @@ function saveToStorage(currentMode: ViewMode, userPoints: Record<ViewMode, UserP
 export function ViewModeProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, {
     currentMode: 'chat',
-    userPoints: { chat: {}, graph: {}, dashboard: {} },
+    userPoints: { chat: {}, graph: {}, dashboard: {}, hub: {} },
     isResizing: false,
     draftInput: DEFAULT_DRAFT_INPUT,
   }, (initialState) => {
@@ -241,7 +249,7 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
 
   // Actions
   const toggleMode = useCallback(() => {
-    const modes: ViewMode[] = ['chat', 'graph', 'dashboard'];
+    const modes: ViewMode[] = ['chat', 'graph', 'dashboard', 'hub'];
     const currentIndex = modes.indexOf(state.currentMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     dispatch({ type: 'SET_MODE', payload: modes[nextIndex] });

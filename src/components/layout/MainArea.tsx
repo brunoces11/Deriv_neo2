@@ -5,15 +5,17 @@ import { ModeToggle } from './ModeToggle';
 import { DrawingToolsPanel } from '../chart/DrawingToolsPanel';
 import { AssetSelector } from '../chart/AssetSelector';
 import { DashboardView } from './DashboardView';
+import { HubView } from './HubView';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 
 interface MainAreaProps {
   isGraphMode: boolean;
   isDashboardMode: boolean;
+  isHubMode: boolean;
 }
 
-export function MainArea({ isGraphMode, isDashboardMode }: MainAreaProps) {
+export function MainArea({ isGraphMode, isDashboardMode, isHubMode }: MainAreaProps) {
   const { messages } = useChat();
   const { theme } = useTheme();
   const hasMessages = messages.length > 0;
@@ -22,7 +24,7 @@ export function MainArea({ isGraphMode, isDashboardMode }: MainAreaProps) {
     <main className={`flex-1 flex flex-col h-full relative overflow-hidden transition-colors ${
       isGraphMode ? 'bg-transparent pointer-events-none' : theme === 'dark' ? 'bg-zinc-900' : 'bg-gray-50'
     }`}>
-      {!isGraphMode && !isDashboardMode && (
+      {!isGraphMode && !isDashboardMode && !isHubMode && (
         <div className={`absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] pointer-events-none transition-opacity ${
           theme === 'dark'
             ? 'from-zinc-800/20 via-zinc-900 to-zinc-900'
@@ -54,7 +56,9 @@ export function MainArea({ isGraphMode, isDashboardMode }: MainAreaProps) {
       )}
 
       <div className={`flex-1 flex flex-col relative z-10 overflow-hidden ${isGraphMode ? 'pointer-events-none' : ''}`}>
-        {isDashboardMode ? (
+        {isHubMode ? (
+          <HubView />
+        ) : isDashboardMode ? (
           <DashboardView />
         ) : isGraphMode ? (
           // Graph Mode: área vazia, chart está no fundo e recebe eventos
@@ -71,7 +75,7 @@ export function MainArea({ isGraphMode, isDashboardMode }: MainAreaProps) {
         )}
       </div>
 
-      {!isGraphMode && !isDashboardMode && (
+      {!isGraphMode && !isDashboardMode && !isHubMode && (
         <div className={`relative z-20 border-t backdrop-blur-xl transition-colors ${
           theme === 'dark'
             ? 'border-zinc-800/50 bg-zinc-900/80'
