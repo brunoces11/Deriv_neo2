@@ -211,50 +211,44 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
       tagElement.style.color = theme === 'dark' ? textDark : textLight;
     }
     
-    // Tentar usar a última posição salva do cursor
-    if (lastCursorRangeRef.current && editorRef.current.contains(lastCursorRangeRef.current.commonAncestorContainer)) {
-      const range = lastCursorRangeRef.current;
-      range.deleteContents();
-      range.insertNode(spaceNode);
-      range.insertNode(tagElement);
-      
-      // Mover cursor após a tag e salvar nova posição
-      range.setStartAfter(spaceNode);
-      range.collapse(true);
-      lastCursorRangeRef.current = range.cloneRange();
-      
-      // Restaurar seleção visual
-      editorRef.current.focus();
-      const selection = window.getSelection();
-      if (selection) {
-        selection.removeAllRanges();
-        selection.addRange(range);
-      }
+    // Focar o editor primeiro
+    editorRef.current.focus();
+    
+    // Obter seleção atual
+    const selection = window.getSelection();
+    if (!selection) return;
+    
+    let range: Range;
+    
+    // Tentar usar a última posição salva do cursor se ainda for válida
+    if (lastCursorRangeRef.current && 
+        editorRef.current.contains(lastCursorRangeRef.current.commonAncestorContainer)) {
+      range = lastCursorRangeRef.current.cloneRange();
+    } else if (selection.rangeCount > 0) {
+      range = selection.getRangeAt(0);
     } else {
-      // Fallback: adicionar no final do editor
-      editorRef.current.innerHTML += tagHTML + ' ';
-      // Aplicar cor às tags recém adicionadas
-      const newTags = editorRef.current.querySelectorAll('.inline-tag');
-      newTags.forEach(tag => {
-        const tl = tag.getAttribute('data-text-light');
-        const td = tag.getAttribute('data-text-dark');
-        if (tl && td) {
-          (tag as HTMLElement).style.color = theme === 'dark' ? td : tl;
-        }
-      });
-      editorRef.current.focus();
-      
-      // Posicionar cursor no final
-      const selection = window.getSelection();
-      if (selection) {
-        const range = document.createRange();
-        range.selectNodeContents(editorRef.current);
-        range.collapse(false);
-        selection.removeAllRanges();
-        selection.addRange(range);
-        lastCursorRangeRef.current = range.cloneRange();
-      }
+      // Criar novo range no final do editor
+      range = document.createRange();
+      range.selectNodeContents(editorRef.current);
+      range.collapse(false);
     }
+    
+    // Inserir tag e espaço
+    range.deleteContents();
+    range.insertNode(spaceNode);
+    range.insertNode(tagElement);
+    
+    // Posicionar cursor APÓS o espaço (não após a tag)
+    range.setStartAfter(spaceNode);
+    range.setEndAfter(spaceNode);
+    range.collapse(true);
+    
+    // Atualizar seleção visual
+    selection.removeAllRanges();
+    selection.addRange(range);
+    
+    // Salvar nova posição do cursor
+    lastCursorRangeRef.current = range.cloneRange();
     
     // Atualizar plainText
     updateDraftInput({ plainText: htmlToText(editorRef.current.innerHTML) });
@@ -338,7 +332,8 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
       if (node.nodeType === Node.TEXT_NODE) {
         const textLength = node.textContent?.length || 0;
         if (currentPos + textLength >= position) {
-          range.setStart(node, position - currentPos);
+          const offset = Math.min(position - currentPos, textLength);
+          range.setStart(node, offset);
           range.collapse(true);
           found = true;
           return;
@@ -349,6 +344,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
         if (el.classList.contains('inline-tag')) {
           const tagLength = (el.getAttribute('data-tag')?.length || 0) + 3; // [@...] = +3
           if (currentPos + tagLength >= position) {
+            // Posicionar após a tag
             range.setStartAfter(node);
             range.collapse(true);
             found = true;
@@ -366,6 +362,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
         } else {
           for (const child of Array.from(node.childNodes)) {
             walkNodes(child);
+            if (found) return;
           }
         }
       }
@@ -374,12 +371,16 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
     walkNodes(editorRef.current);
     
     if (!found) {
+      // Se não encontrou a posição exata, posicionar no final
       range.selectNodeContents(editorRef.current);
       range.collapse(false);
     }
     
     selection.removeAllRanges();
     selection.addRange(range);
+    
+    // Salvar a nova posição do cursor
+    lastCursorRangeRef.current = range.cloneRange();
   }, []);
 
   // Quando uma nova tag é adicionada via chatTags, inserir no editor
@@ -498,26 +499,47 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
     
     const html = editorRef.current.innerHTML;
     const text = htmlToText(html);
+    
+    // Salvar a seleção atual antes de qualquer modificação
+    const selection = window.getSelection();
+    let savedRange: Range | null = null;
+    if (selection && selection.rangeCount > 0) {
+      savedRange = selection.getRangeAt(0).cloneRange();
+      lastCursorRangeRef.current = savedRange.cloneRange();
+    }
+    
     updateDraftInput({ plainText: text });
     
     // Re-renderizar tags se o usuário digitou uma tag manualmente
+    // Mas APENAS se detectarmos uma tag completa nova que não está renderizada
     if (text.includes('[@') && text.includes(']')) {
-      const caretPos = saveCaretPosition();
       const newHTML = textToHTML(text);
       
+      // Só reconstruir se realmente houver diferença significativa
+      // (evita reconstruções desnecessárias que quebram o cursor)
       if (newHTML !== html) {
-        editorRef.current.innerHTML = newHTML;
-        // Aplicar cores às tags baseado no tema
-        const tags = editorRef.current.querySelectorAll('.inline-tag');
-        tags.forEach(tag => {
-          const tl = tag.getAttribute('data-text-light');
-          const td = tag.getAttribute('data-text-dark');
-          if (tl && td) {
-            (tag as HTMLElement).style.color = theme === 'dark' ? td : tl;
+        // Verificar se a diferença é apenas de formatação ou se há tags novas
+        const currentTags = html.match(/data-tag="[^"]+"/g) || [];
+        const newTags = newHTML.match(/data-tag="[^"]+"/g) || [];
+        
+        // Só reconstruir se houver tags novas
+        if (newTags.length > currentTags.length) {
+          const caretPos = saveCaretPosition();
+          editorRef.current.innerHTML = newHTML;
+          
+          // Aplicar cores às tags baseado no tema
+          const tags = editorRef.current.querySelectorAll('.inline-tag');
+          tags.forEach(tag => {
+            const tl = tag.getAttribute('data-text-light');
+            const td = tag.getAttribute('data-text-dark');
+            if (tl && td) {
+              (tag as HTMLElement).style.color = theme === 'dark' ? td : tl;
+            }
+          });
+          
+          if (caretPos !== null) {
+            restoreCaretPosition(caretPos);
           }
-        });
-        if (caretPos !== null) {
-          restoreCaretPosition(caretPos);
         }
       }
     }
@@ -757,6 +779,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
               onInput={handleInput}
               onKeyDown={handleKeyDown}
               onBlur={saveCursorPosition}
+              onClick={saveCursorPosition}
               onMouseUp={saveCursorPosition}
               onKeyUp={saveCursorPosition}
               data-placeholder={isSidebar ? "Message..." : "Message FlowChat..."}
