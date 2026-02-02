@@ -7,6 +7,7 @@ import { PortfolioSidebarCard } from '../components/cards/PortfolioSidebarCard';
 import { CreateTradeCard } from '../components/cards/CreateTradeCard';
 import { TradeCard } from '../components/cards/TradeCard';
 import { ActionsCard } from '../components/cards/ActionsCard';
+import { ActionsCardCreator } from '../components/cards/ActionsCardCreator';
 import { BotCardCreator } from '../components/cards/BotCardCreator';
 import { UserProfile } from '../components/layout/UserProfile';
 import derivNeoDark from '../assets/deriv_neo_dark_mode.svg';
@@ -151,6 +152,21 @@ const mockBotCreator: BaseCard = {
   },
 };
 
+const mockActionsCreator: BaseCard = {
+  id: 'demo-actions-creator-1',
+  type: 'card_actions_creator',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {
+    actionName: 'Daily BTC Alert',
+    trigger: { type: 'schedule', value: 'Daily' },
+    action: { type: 'Alert', asset: 'BTC' },
+    schedule: { frequency: 'daily', time: '09:00' },
+    condition: { type: 'Price', operator: '>', value: '100000' },
+  },
+};
+
 interface CardInfo {
   name: string;
   type: string;
@@ -252,6 +268,25 @@ const cardsInfo: CardInfo[] = [
       'Click handlers para simulação (console.log)',
     ],
     component: <ActionsCard card={mockActionsCard} />,
+  },
+  {
+    name: 'Actions Card Creator',
+    type: 'actions-creator',
+    icon: Workflow,
+    description: 'Card visual com diagrama/flowchart mostrando a configuração de uma nova action antes do deploy.',
+    hasLogic: true,
+    logicDetails: [
+      'Header com ícone de raio e nome da action',
+      'Área de flowchart com boxes conectados por linhas',
+      'Trigger box (amber): tipo e valor do gatilho',
+      'Action box (verde): tipo de ação e ativo',
+      'Schedule box (cyan): frequência e horário',
+      'Condition box (laranja): condição opcional',
+      'Resumo textual do fluxo da action',
+      'Botões: Deploy Action (verde), Edit Config, Cancel',
+      'Grid pattern de fundo para efeito visual',
+    ],
+    component: <ActionsCardCreator card={mockActionsCreator} />,
   },
   {
     name: 'Bot Card Creator',

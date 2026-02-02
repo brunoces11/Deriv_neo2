@@ -6,6 +6,7 @@ import { PortfolioTableCardComplete } from './PortfolioTableCardComplete';
 import { CreateTradeCard } from './CreateTradeCard';
 import { TradeCard } from './TradeCard';
 import { ActionsCard } from './ActionsCard';
+import { ActionsCardCreator } from './ActionsCardCreator';
 import { BotCardCreator } from './BotCardCreator';
 import type { BaseCard } from '../../types';
 
@@ -17,6 +18,7 @@ const cardComponents = {
   'create-trade-card': CreateTradeCard,
   'trade-card': TradeCard,
   'actions-card': ActionsCard,
+  'actions-creator': ActionsCardCreator,
   'bot-creator': BotCardCreator,
 };
 

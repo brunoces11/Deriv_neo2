@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { TrendingUp, TrendingDown, Clock, Target, DollarSign, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { TrendingUp, TrendingDown, Clock, Target, DollarSign, XCircle, ChevronDown, ChevronUp, MoreVertical, Star, Pencil, Trash2, Calendar } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { useTheme } from '../../store/ThemeContext';
+import { useChat } from '../../store/ChatContext';
 import type { BaseCard, TradeCardPayload } from '../../types';
 
 interface TradeCardProps {
@@ -18,8 +19,22 @@ interface TradeCardProps {
  */
 export function TradeCard({ card }: TradeCardProps) {
   const { theme } = useTheme();
+  const { favoriteCard, unfavoriteCard } = useChat();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
   const payload = card.payload as unknown as TradeCardPayload;
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const tradeId = payload?.tradeId || 'TRD-000';
   const asset = payload?.asset || 'BTC/USD';
@@ -53,6 +68,30 @@ export function TradeCard({ card }: TradeCardProps) {
 
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
+  };
+
+  const handleFavorite = () => {
+    if (card.isFavorite) {
+      unfavoriteCard(card.id);
+    } else {
+      favoriteCard(card.id);
+    }
+    setIsDropdownOpen(false);
+  };
+
+  const handleEdit = () => {
+    console.log('[TradeCard] Edit trade:', { tradeId });
+    setIsDropdownOpen(false);
+  };
+
+  const handleDelete = () => {
+    console.log('[TradeCard] Delete trade:', { tradeId });
+    setIsDropdownOpen(false);
+  };
+
+  const handleSchedule = () => {
+    console.log('[TradeCard] Schedule trade:', { tradeId });
+    setIsDropdownOpen(false);
   };
 
   // Compact view (collapsed)
@@ -91,28 +130,102 @@ export function TradeCard({ card }: TradeCardProps) {
               </span>
             </div>
 
-            {/* Line 2: Stake → Payout + Status */}
+            {/* Line 2: Stake → Payout */}
             <div className="flex items-center gap-2 mt-0.5">
               <span className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
                 {stake} → <span className="text-[#00d0a0] font-medium">{payout}</span>
               </span>
-              <span className={`text-xs font-medium ${currentStatus.color}`}>
-                {currentStatus.label}
-              </span>
             </div>
           </div>
 
-          {/* Expand Button */}
-          <button
-            onClick={toggleExpand}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${
-              theme === 'dark'
-                ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
-                : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
-            }`}
-          >
-            <ChevronDown className="w-4 h-4" />
-          </button>
+          {/* Action Buttons: Status Tag, Dropdown, Expand */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {/* Status Tag */}
+            <span className={`text-xs font-medium px-2 py-1 rounded ${currentStatus.bgColor} ${currentStatus.color}`}>
+              {currentStatus.label}
+            </span>
+
+            {/* Dropdown Menu (3 dots) */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                title="More options"
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                }`}
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+
+              {/* Dropdown Content */}
+              {isDropdownOpen && (
+                <div className={`absolute right-0 top-full mt-1 w-40 rounded-lg shadow-lg border z-50 ${
+                  theme === 'dark'
+                    ? 'bg-zinc-800 border-zinc-700'
+                    : 'bg-white border-gray-200'
+                }`}>
+                  <button
+                    onClick={handleFavorite}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                      theme === 'dark'
+                        ? 'text-zinc-300 hover:bg-zinc-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Star className={`w-4 h-4 ${card.isFavorite ? 'text-amber-400 fill-amber-400' : ''}`} />
+                    {card.isFavorite ? 'Unfavorite' : 'Add to Favorites'}
+                  </button>
+                  <button
+                    onClick={handleEdit}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                      theme === 'dark'
+                        ? 'text-zinc-300 hover:bg-zinc-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Pencil className="w-4 h-4" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                      theme === 'dark'
+                        ? 'text-zinc-300 hover:bg-zinc-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
+                  <button
+                    onClick={handleSchedule}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                      theme === 'dark'
+                        ? 'text-zinc-300 hover:bg-zinc-700'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    <Calendar className="w-4 h-4" />
+                    Schedule
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Expand Button */}
+            <button
+              onClick={toggleExpand}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                theme === 'dark'
+                  ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+              }`}
+            >
+              <ChevronDown className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </CardWrapper>
     );

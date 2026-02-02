@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bot, Play, Pause, MoreVertical, ChevronDown, ChevronUp, Pencil, Trash2, Calendar, Star, TrendingUp, TrendingDown } from 'lucide-react';
+import { Bot, Play, Pause, MoreVertical, ChevronDown, ChevronUp, Pencil, Trash2, Calendar, Star, TrendingUp, TrendingDown, Settings, Save, RotateCcw } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { useTheme } from '../../store/ThemeContext';
 import { useChat } from '../../store/ChatContext';
@@ -14,6 +14,7 @@ interface BotCardProps {
  * 
  * Card for managing active/existing bots.
  * Compact mode: Play/Pause, Dropdown Menu (3 dots), Expand
+ * Expanded mode: Shows visual flowchart of bot configuration with edit buttons
  * Dropdown contains: Favorite, Edit, Delete, Schedule
  */
 export function BotCard({ card }: BotCardProps) {
@@ -40,6 +41,12 @@ export function BotCard({ card }: BotCardProps) {
   const name = payload?.name || 'Unnamed Bot';
   const status = payload?.status || 'stopped';
   const performance = payload?.performance;
+  
+  // Bot configuration data (from payload or defaults)
+  const trigger = payload?.trigger || { type: 'Weekly', value: 'Monday' };
+  const action = payload?.action || { type: 'Buy', asset: 'BTC' };
+  const target = payload?.target || { type: 'Amount', value: '$100' };
+  const condition = payload?.condition;
 
   // Sync isPlaying with status on mount
   useEffect(() => {
@@ -80,6 +87,34 @@ export function BotCard({ card }: BotCardProps) {
   const toggleExpand = () => {
     setIsExpanded(!isExpanded);
   };
+
+  const handleSaveChanges = () => {
+    console.log('[BotCard] Save changes:', { botId, name, trigger, action, target, condition });
+  };
+
+  const handleEditConfig = () => {
+    console.log('[BotCard] Edit config:', { botId, name });
+  };
+
+  const handleResetConfig = () => {
+    console.log('[BotCard] Reset config:', { botId, name });
+  };
+
+  // Box component for flowchart nodes
+  const FlowBox = ({ 
+    label, 
+    value, 
+    colorClass 
+  }: { 
+    label: string; 
+    value: string; 
+    colorClass: string;
+  }) => (
+    <div className={`px-3 py-2 rounded-lg border-2 text-center min-w-[80px] ${colorClass}`}>
+      <div className="text-[10px] font-medium uppercase tracking-wider opacity-70">{label}</div>
+      <div className="text-xs font-semibold mt-0.5">{value}</div>
+    </div>
+  );
 
   return (
     <CardWrapper card={card} accentColor="amber">
@@ -229,12 +264,134 @@ export function BotCard({ card }: BotCardProps) {
         </div>
       </div>
 
-      {/* Expanded Content */}
+      {/* Expanded Content - Visual Flowchart */}
       {isExpanded && (
-        <div className={`mt-3 pt-3 border-t ${theme === 'dark' ? 'border-zinc-700' : 'border-gray-200'}`}>
-          <div className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
-            <p>Bot ID: {botId}</p>
-            {performance && <p className="mt-1">Performance: {performance}</p>}
+        <div className={`mt-4 pt-4 border-t ${theme === 'dark' ? 'border-zinc-700' : 'border-gray-200'}`}>
+          {/* Flowchart Area */}
+          <div className={`rounded-xl p-4 border relative overflow-hidden ${
+            theme === 'dark' 
+              ? 'bg-zinc-800/30 border-zinc-700/50' 
+              : 'bg-gray-50 border-gray-200'
+          }`}>
+            {/* Grid pattern background */}
+            <div 
+              className="absolute inset-0 opacity-5"
+              style={{
+                backgroundImage: `radial-gradient(circle, ${theme === 'dark' ? '#fff' : '#000'} 1px, transparent 1px)`,
+                backgroundSize: '20px 20px',
+              }}
+            />
+
+            {/* Top Row: Trigger → Action → Target */}
+            <div className="relative flex items-center justify-center gap-2 mb-4">
+              {/* Trigger Box */}
+              <FlowBox 
+                label="Trigger" 
+                value={trigger.value ? `${trigger.type} (${trigger.value})` : trigger.type}
+                colorClass={theme === 'dark' 
+                  ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' 
+                  : 'bg-cyan-50 border-cyan-300 text-cyan-700'
+                }
+              />
+
+              {/* Arrow */}
+              <div className={`w-6 h-0.5 ${theme === 'dark' ? 'bg-zinc-600' : 'bg-gray-300'}`} />
+
+              {/* Action Box */}
+              <FlowBox 
+                label="Action" 
+                value={`${action.type} ${action.asset}`}
+                colorClass={theme === 'dark' 
+                  ? 'bg-[#00d0a0]/10 border-[#00d0a0]/30 text-[#00d0a0]' 
+                  : 'bg-green-50 border-green-300 text-green-700'
+                }
+              />
+
+              {/* Arrow */}
+              <div className={`w-6 h-0.5 ${theme === 'dark' ? 'bg-zinc-600' : 'bg-gray-300'}`} />
+
+              {/* Target Box */}
+              <FlowBox 
+                label="Target" 
+                value={target.value}
+                colorClass={theme === 'dark' 
+                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
+                  : 'bg-amber-50 border-amber-300 text-amber-700'
+                }
+              />
+            </div>
+
+            {/* Vertical connector line */}
+            {condition && (
+              <>
+                <div className="flex justify-center">
+                  <div className={`w-0.5 h-6 ${theme === 'dark' ? 'bg-zinc-600' : 'bg-gray-300'}`} />
+                </div>
+
+                {/* Condition Box */}
+                <div className="flex justify-center">
+                  <FlowBox 
+                    label="Condition" 
+                    value={`${condition.type} ${condition.operator} ${condition.value}`}
+                    colorClass={theme === 'dark' 
+                      ? 'bg-orange-500/10 border-orange-500/30 text-orange-400' 
+                      : 'bg-orange-50 border-orange-300 text-orange-700'
+                    }
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Flow summary text */}
+            <div className={`text-center mt-4 text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+              {condition 
+                ? `When ${trigger.type.toLowerCase()}, if ${condition.type.toLowerCase()} ${condition.operator} ${condition.value}, then ${action.type.toLowerCase()} ${action.asset} (${target.value})`
+                : `When ${trigger.type.toLowerCase()}, ${action.type.toLowerCase()} ${action.asset} (${target.value})`
+              }
+            </div>
+          </div>
+
+          {/* Bot Info */}
+          <div className={`mt-3 flex items-center justify-between text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+            <span>ID: {botId}</span>
+            {performance && (
+              <span className={isPositivePerformance ? 'text-[#00d0a0]' : 'text-[#ff444f]'}>
+                Performance: {performance}
+              </span>
+            )}
+          </div>
+
+          {/* Edit Buttons */}
+          <div className="flex items-center gap-2 mt-4">
+            <button
+              onClick={handleSaveChanges}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#00d0a0] hover:bg-[#00d0a0]/90 text-white font-medium text-sm transition-colors shadow-lg shadow-[#00d0a0]/20"
+            >
+              <Save className="w-4 h-4" />
+              Save Changes
+            </button>
+            <button
+              onClick={handleEditConfig}
+              className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-colors ${
+                theme === 'dark'
+                  ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-200'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+              Edit
+            </button>
+            <button
+              onClick={handleResetConfig}
+              className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-colors ${
+                theme === 'dark'
+                  ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-200'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              }`}
+            >
+              <RotateCcw className="w-4 h-4" />
+              Reset
+            </button>
           </div>
         </div>
       )}

@@ -148,6 +148,23 @@ export interface BotCardPayload {
   strategy: string;
   status: 'active' | 'paused' | 'stopped';
   performance?: string;
+  trigger?: {
+    type: string;
+    value?: string;
+  };
+  action?: {
+    type: string;
+    asset: string;
+  };
+  target?: {
+    type: string;
+    value: string;
+  };
+  condition?: {
+    type: string;
+    operator: string;
+    value: string;
+  };
 }
 
 export type CardPayload =
