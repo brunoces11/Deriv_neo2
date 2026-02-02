@@ -360,18 +360,11 @@ export function ActionsCard({ card }: ActionsCardProps) {
           {/* Edit Buttons */}
           <div className="flex items-center gap-2 mt-4">
             <button
-              onClick={handleSaveChanges}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#00d0a0] hover:bg-[#00d0a0]/90 text-white font-medium text-sm transition-colors shadow-lg shadow-[#00d0a0]/20"
-            >
-              <Save className="w-4 h-4" />
-              Save Changes
-            </button>
-            <button
               onClick={handleEditConfig}
               className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-colors ${
                 theme === 'dark'
-                  ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-200'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                  ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
+                  : 'bg-gray-800 hover:bg-gray-700 text-gray-100'
               }`}
             >
               <Settings className="w-4 h-4" />
@@ -381,12 +374,23 @@ export function ActionsCard({ card }: ActionsCardProps) {
               onClick={handleResetConfig}
               className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-colors ${
                 theme === 'dark'
-                  ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-200'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                  ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
+                  : 'bg-gray-800 hover:bg-gray-700 text-gray-100'
               }`}
             >
               <RotateCcw className="w-4 h-4" />
               Reset
+            </button>
+            <button
+              onClick={handleSaveChanges}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-colors ${
+                theme === 'dark'
+                  ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
+                  : 'bg-gray-800 hover:bg-gray-700 text-gray-100'
+              }`}
+            >
+              <Save className="w-4 h-4" />
+              Save Changes
             </button>
           </div>
         </div>

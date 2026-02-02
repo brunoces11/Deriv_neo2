@@ -170,18 +170,11 @@ export function ActionsCardCreator({ card }: ActionsCardCreatorProps) {
         {/* Footer Buttons */}
         <div className="flex items-center gap-2">
           <button
-            onClick={handleDeploy}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg bg-[#00d0a0] hover:bg-[#00d0a0]/90 text-white font-medium text-sm transition-colors shadow-lg shadow-[#00d0a0]/20"
-          >
-            <Rocket className="w-4 h-4" />
-            Deploy Action
-          </button>
-          <button
             onClick={handleEditConfig}
             className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-colors ${
               theme === 'dark'
-                ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-200'
-                : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
+                : 'bg-gray-800 hover:bg-gray-700 text-gray-100'
             }`}
           >
             <Settings className="w-4 h-4" />
@@ -191,12 +184,23 @@ export function ActionsCardCreator({ card }: ActionsCardCreatorProps) {
             onClick={handleCancel}
             className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-colors ${
               theme === 'dark'
-                ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-200'
-                : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+                ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
+                : 'bg-gray-800 hover:bg-gray-700 text-gray-100'
             }`}
           >
             <X className="w-4 h-4" />
             Cancel
+          </button>
+          <button
+            onClick={handleDeploy}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-colors ${
+              theme === 'dark'
+                ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
+                : 'bg-gray-800 hover:bg-gray-700 text-gray-100'
+            }`}
+          >
+            <Rocket className="w-4 h-4" />
+            Deploy Action
           </button>
         </div>
         </>

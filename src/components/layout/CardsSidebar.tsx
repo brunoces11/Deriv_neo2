@@ -406,15 +406,15 @@ export function CardsSidebar({
             {activeTab === 'actions' && (
               <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                 <Zap className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
-                <p className={`text-sm text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
                   Actions são automações inteligentes que executam tarefas ou trades automaticamente com base em regras do usuário.
                 </p>
                 <button 
                   onClick={() => handleIcebreaker('I want to create an Action')}
-                  className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
                     theme === 'dark' 
-                      ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700' 
-                      : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+                      ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
                   }`}
                 >
                   Criar Action
@@ -424,15 +424,15 @@ export function CardsSidebar({
             {activeTab === 'bots' && (
               <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                 <BotMessageSquare className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
-                <p className={`text-sm text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
                   Bots são agentes de trading autônomos que executam estratégias de investimento definidas pelo usuário.
                 </p>
                 <button 
                   onClick={() => handleIcebreaker('I want to create a trading Bot')}
-                  className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
                     theme === 'dark' 
-                      ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700' 
-                      : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+                      ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
                   }`}
                 >
                   Criar Bot
@@ -536,15 +536,15 @@ export function CardsSidebar({
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
               <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                 <Zap className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
-                <p className={`text-sm text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
                   Actions são automações inteligentes que executam tarefas ou trades automaticamente com base em regras do usuário.
                 </p>
                 <button 
                   onClick={() => handleIcebreaker('I want to create an Action')}
-                  className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
                     theme === 'dark' 
-                      ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700' 
-                      : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+                      ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
                   }`}
                 >
                   Criar Action
@@ -583,15 +583,15 @@ export function CardsSidebar({
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
               <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                 <BotMessageSquare className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
-                <p className={`text-sm text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
                   Bots são agentes de trading autônomos que executam estratégias de investimento definidas pelo usuário.
                 </p>
                 <button 
                   onClick={() => handleIcebreaker('I want to create a trading Bot')}
-                  className={`px-4 py-2 rounded-lg text-xs font-medium transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
                     theme === 'dark' 
-                      ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700' 
-                      : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+                      ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
                   }`}
                 >
                   Criar Bot
