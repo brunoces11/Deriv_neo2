@@ -36,7 +36,7 @@ const START_POINTS: Record<ViewMode, Required<Omit<UserPoint, never>> & { chartV
   chat: {
     sidebarCollapsed: false,
     cardsSidebarCollapsed: false,
-    cardsSidebarWidth: 660,
+    cardsSidebarWidth: 575,
     chartVisible: false,
   },
   graph: {
