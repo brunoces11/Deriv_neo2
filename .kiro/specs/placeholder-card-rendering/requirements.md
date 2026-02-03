@@ -97,7 +97,7 @@ Como desenvolvedor, quero que as regras de placeholder→card fiquem em arquivo 
   *: inline 'bot-creator' expandido + painel 'bots' 'bot-creator' compactado
 }
 
-'[[ACTION_CREATOR_CARD]]': {
+'[[CREATE_ACTION_CARD]]': {
   *: inline 'actions-creator' expandido + painel 'actions' 'actions-creator' compactado
 }
 ```

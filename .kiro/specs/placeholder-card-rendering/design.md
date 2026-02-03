@@ -121,7 +121,7 @@ export const PLACEHOLDER_RULES: Record<string, PlaceholderRule> = {
       panel: { cardType: 'bot-creator', location: 'panel', panel: 'bots', visualState: 'compacted' }
     }
   },
-  '[[ACTION_CREATOR_CARD]]': {
+  '[[CREATE_ACTION_CARD]]': {
     chatmode: {
       inline: { cardType: 'actions-creator', location: 'inline', visualState: 'expanded' },
       panel: { cardType: 'actions-creator', location: 'panel', panel: 'actions', visualState: 'compacted' }

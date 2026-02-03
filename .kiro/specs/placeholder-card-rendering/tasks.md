@@ -107,7 +107,7 @@ Fase 7 (Transformações) ← Depende de tudo anterior
 - ✅ `[[PORTFOLIO_TABLE]]` → portfolio-table-complete (chat) / portfolio-snapshot (outros)
 - ✅ `[[CREATE_TRADE_CARD]]` → create-trade-card
 - ✅ `[[CREATE_BOT_CARD]]` → bot-creator
-- ✅ `[[ACTION_CREATOR_CARD]]` → actions-creator
+- ✅ `[[CREATE_ACTION_CARD]]` → actions-creator
 
 ### Nível 2 - Transformações
 - ✅ `create-trade-card` + "Higher"/"Lower" → `trade-card`
