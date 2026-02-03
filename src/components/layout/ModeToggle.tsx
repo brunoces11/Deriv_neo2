@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { MessageSquare, TrendingUp, LayoutDashboard, Home } from 'lucide-react';
+import { MessageSquare, CandlestickChart, LayoutDashboard, Home } from 'lucide-react';
 import { useViewMode } from '../../store/ViewModeContext';
 import { useTheme } from '../../store/ThemeContext';
 
@@ -36,7 +36,7 @@ export function ModeToggle() {
 
   const modes: { key: ViewMode; icon: typeof MessageSquare; label: string }[] = [
     { key: 'chat', icon: MessageSquare, label: 'Chat' },
-    { key: 'graph', icon: TrendingUp, label: 'Graph' },
+    { key: 'graph', icon: CandlestickChart, label: 'Graph' },
     { key: 'dashboard', icon: LayoutDashboard, label: 'Dash' },
     { key: 'hub', icon: Home, label: 'Hub' },
   ];
@@ -68,7 +68,7 @@ export function ModeToggle() {
           style={{ width: '25%' }}
           title={`Switch to ${label} mode`}
         >
-          <Icon className="w-4 h-4" />
+          <Icon className={key === 'graph' ? 'w-[22px] h-[22px]' : 'w-4 h-4'} />
           {label}
         </button>
       ))}
