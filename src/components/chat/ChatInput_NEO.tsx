@@ -12,8 +12,9 @@ const AGENTS = [
   'Risk Analysis Agent',
   'Portfolio Manager Agent',
   'Trader Agent',
+  'Action Creator Agent',
   'Bot Creator Agent',
-  'Market Agent',
+  'Market Analyses Agent',
   // 'Support Agent',
   // 'Trainer Agent',
 ];
