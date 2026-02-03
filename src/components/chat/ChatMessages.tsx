@@ -265,6 +265,7 @@ interface InlineCardProps {
 
 function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
   const { inline, panel } = config;
+  const { getCardById, deleteCardWithTwin } = useChat();
   const CardComponent = cardComponents[inline.cardType];
   // Track if we've already added to panel for this specific card instance
   const hasAddedToPanelRef = useRef(false);
@@ -274,7 +275,24 @@ function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
     return null;
   }
   
-  const mockCard = createMockCard(inline.cardType, cardId);
+  // Try to get the card from centralized state (panel card)
+  // Panel cards use 'panel-' prefix, so we look for that
+  const panelCardId = `panel-${cardId}`;
+  const existingCard = getCardById(panelCardId);
+  
+  // Se já foi adicionado ao painel mas não existe mais, foi deletado
+  // Não renderiza nada - o placeholder desaparece permanentemente
+  if (hasAddedToPanelRef.current && !existingCard) {
+    return null;
+  }
+  
+  // Use existing card data if available, otherwise create mock
+  const card: BaseCard = existingCard || createMockCard(inline.cardType, cardId);
+  
+  // If we have an existing card, use its type (might have been transformed)
+  const actualCardType = existingCard ? existingCard.type : inline.cardType;
+  const ActualCardComponent = cardComponents[actualCardType as RenderCardType] || CardComponent;
+  
   const isExpanded = inline.visualState === 'expanded';
   
   // Add card to panel on mount (only once per card instance)
@@ -286,15 +304,23 @@ function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
     
     if (panel && panel.panel) {
       hasAddedToPanelRef.current = true;
-      const payload = getDefaultPayloadForCard(panel.cardType);
-      onAddToPanel(cardId, panel.cardType, panel.panel, payload);
+      const payload = existingCard?.payload || getDefaultPayloadForCard(panel.cardType);
+      onAddToPanel(cardId, panel.cardType, panel.panel, payload as Record<string, unknown>);
     }
-  }, [cardId, panel, onAddToPanel]);
+  }, [cardId, panel, onAddToPanel, existingCard]);
+  
+  // Create a card object that includes the deleteCardWithTwin function
+  // This allows inline cards to trigger deletion of both twins
+  const cardWithTwinDelete: BaseCard = {
+    ...card,
+    // Override the id to use the inline cardId for proper twin matching
+    id: cardId,
+  };
   
   // margin-bottom 22px to push the next markdown text element
   return (
     <div className="my-4 max-w-full" style={{ marginBottom: '22px' }}>
-      <CardComponent card={mockCard} defaultExpanded={isExpanded} />
+      <ActualCardComponent card={cardWithTwinDelete} defaultExpanded={isExpanded} />
     </div>
   );
 }

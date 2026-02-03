@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Minus, Plus } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Minus, Plus, Trash2 } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { useTheme } from '../../store/ThemeContext';
 import { useChat } from '../../store/ChatContext';
@@ -22,7 +22,7 @@ interface CreateTradeCardProps {
  */
 export function CreateTradeCard({ card, defaultExpanded = true }: CreateTradeCardProps) {
   const { theme } = useTheme();
-  const { transformCard } = useChat();
+  const { transformCard, deleteCardWithTwin } = useChat();
   const payload = card.payload as unknown as CreateTradeCardPayload;
   
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
@@ -86,6 +86,12 @@ export function CreateTradeCard({ card, defaultExpanded = true }: CreateTradeCar
       transformCard(card.id, result.newType as CardType, result.newPayload);
     }
   };
+
+  const handleDiscard = () => {
+    console.log('[CreateTradeCard] Discard trade (deleting twins):', { cardId: card.id });
+    deleteCardWithTwin(card.id);
+  };
+
   const handleStakeIncrement = () => setStakeValue(prev => Math.round((prev + 1) * 100) / 100);
   const handleStakeDecrement = () => setStakeValue(prev => Math.max(1, Math.round((prev - 1) * 100) / 100));
 
@@ -179,6 +185,19 @@ export function CreateTradeCard({ card, defaultExpanded = true }: CreateTradeCar
                 </div>
               </div>
             </div>
+
+            {/* Discard Button */}
+            <button
+              onClick={handleDiscard}
+              className={`w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-colors ${
+                theme === 'dark'
+                  ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+              }`}
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span className="font-medium text-xs">Discard</span>
+            </button>
 
             {/* Action Buttons */}
             <div className="grid grid-cols-2 gap-2">

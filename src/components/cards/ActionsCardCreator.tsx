@@ -21,7 +21,7 @@ interface ActionsCardCreatorProps {
  */
 export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCardCreatorProps) {
   const { theme } = useTheme();
-  const { transformCard, hideCard } = useChat();
+  const { transformCard, deleteCardWithTwin } = useChat();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const payload = card.payload as unknown as ActionsCreatorPayload;
 
@@ -51,8 +51,8 @@ export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCard
   };
 
   const handleDiscard = () => {
-    console.log('[ActionsCardCreator] Discard action creation:', { actionName });
-    hideCard(card.id);
+    console.log('[ActionsCardCreator] Discard action (deleting twins):', { actionName, cardId: card.id });
+    deleteCardWithTwin(card.id);
   };
 
   // Box component for flowchart nodes

@@ -20,7 +20,7 @@ interface BotCardProps {
  */
 export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
   const { theme } = useTheme();
-  const { favoriteCard, unfavoriteCard } = useChat();
+  const { favoriteCard, unfavoriteCard, deleteCardWithTwin } = useChat();
   const payload = card.payload as unknown as BotCardPayload;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
@@ -87,7 +87,8 @@ export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
   };
 
   const handleDelete = () => {
-    console.log('[BotCard] Delete bot:', { botId, name });
+    console.log('[BotCard] Delete bot (deleting twins):', { botId, name, cardId: card.id });
+    deleteCardWithTwin(card.id);
     setIsDropdownOpen(false);
   };
 

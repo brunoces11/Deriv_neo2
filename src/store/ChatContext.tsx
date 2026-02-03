@@ -54,6 +54,8 @@ type ChatAction =
   | { type: 'ADD_CARD'; payload: BaseCard }
   | { type: 'SET_CARDS'; payload: BaseCard[] }
   | { type: 'TRANSFORM_CARD'; payload: { cardId: string; newType: CardType; newPayload: Record<string, unknown> } }
+  | { type: 'UPDATE_CARD_PAYLOAD'; payload: { cardId: string; updates: Record<string, unknown> } }
+  | { type: 'DELETE_CARD_WITH_TWIN'; payload: string }
   | { type: 'ARCHIVE_CARD'; payload: string }
   | { type: 'FAVORITE_CARD'; payload: string }
   | { type: 'UNFAVORITE_CARD'; payload: string }
@@ -124,23 +126,85 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 
     case 'TRANSFORM_CARD': {
       const { cardId, newType, newPayload } = action.payload;
+      // Get the base ID (without 'panel-' prefix) for twin matching
+      const baseId = cardId.replace(/^panel-/, '');
+      const panelId = cardId.startsWith('panel-') ? cardId : `panel-${cardId}`;
+      
       return {
         ...state,
-        activeCards: state.activeCards.map(card =>
-          card.id === cardId || card.id === `panel-${cardId}` || card.id.replace('panel-', '') === cardId
-            ? { ...card, type: newType, payload: newPayload }
-            : card
-        ),
-        archivedCards: state.archivedCards.map(card =>
-          card.id === cardId || card.id === `panel-${cardId}` || card.id.replace('panel-', '') === cardId
-            ? { ...card, type: newType, payload: newPayload }
-            : card
-        ),
-        favoriteCards: state.favoriteCards.map(card =>
-          card.id === cardId || card.id === `panel-${cardId}` || card.id.replace('panel-', '') === cardId
-            ? { ...card, type: newType, payload: newPayload }
-            : card
-        ),
+        activeCards: state.activeCards.map(card => {
+          // Match both the inline card (baseId) and panel card (panelId)
+          const cardBaseId = card.id.replace(/^panel-/, '');
+          if (cardBaseId === baseId || card.id === panelId) {
+            return { ...card, type: newType, payload: newPayload };
+          }
+          return card;
+        }),
+        archivedCards: state.archivedCards.map(card => {
+          const cardBaseId = card.id.replace(/^panel-/, '');
+          if (cardBaseId === baseId || card.id === panelId) {
+            return { ...card, type: newType, payload: newPayload };
+          }
+          return card;
+        }),
+        favoriteCards: state.favoriteCards.map(card => {
+          const cardBaseId = card.id.replace(/^panel-/, '');
+          if (cardBaseId === baseId || card.id === panelId) {
+            return { ...card, type: newType, payload: newPayload };
+          }
+          return card;
+        }),
+      };
+    }
+
+    case 'UPDATE_CARD_PAYLOAD': {
+      const { cardId, updates } = action.payload;
+      // Get the base ID for twin matching
+      const baseId = cardId.replace(/^panel-/, '');
+      
+      return {
+        ...state,
+        activeCards: state.activeCards.map(card => {
+          const cardBaseId = card.id.replace(/^panel-/, '');
+          if (cardBaseId === baseId) {
+            return { ...card, payload: { ...card.payload, ...updates } };
+          }
+          return card;
+        }),
+        archivedCards: state.archivedCards.map(card => {
+          const cardBaseId = card.id.replace(/^panel-/, '');
+          if (cardBaseId === baseId) {
+            return { ...card, payload: { ...card.payload, ...updates } };
+          }
+          return card;
+        }),
+        favoriteCards: state.favoriteCards.map(card => {
+          const cardBaseId = card.id.replace(/^panel-/, '');
+          if (cardBaseId === baseId) {
+            return { ...card, payload: { ...card.payload, ...updates } };
+          }
+          return card;
+        }),
+      };
+    }
+
+    case 'DELETE_CARD_WITH_TWIN': {
+      const cardId = action.payload;
+      // Get the base ID for twin matching - remove 'panel-' prefix if present
+      const baseId = cardId.replace(/^panel-/, '');
+      
+      // Filter out both the inline card and its panel twin
+      const filterTwins = (cards: BaseCard[]) => 
+        cards.filter(card => {
+          const cardBaseId = card.id.replace(/^panel-/, '');
+          return cardBaseId !== baseId;
+        });
+      
+      return {
+        ...state,
+        activeCards: filterTwins(state.activeCards),
+        archivedCards: filterTwins(state.archivedCards),
+        favoriteCards: filterTwins(state.favoriteCards),
       };
     }
 
@@ -238,6 +302,9 @@ interface ChatContextValue extends ChatState {
   setTyping: (typing: boolean) => void;
   processUIEvent: (event: UIEvent, sessionId?: string, onCardAdded?: (sidebar: 'left' | 'right', panel: string) => void) => Promise<void>;
   transformCard: (cardId: string, newType: CardType, newPayload: Record<string, unknown>) => void;
+  updateCardPayload: (cardId: string, updates: Record<string, unknown>) => void;
+  deleteCardWithTwin: (cardId: string) => Promise<void>;
+  getCardById: (cardId: string) => BaseCard | undefined;
   archiveCard: (cardId: string) => Promise<void>;
   favoriteCard: (cardId: string) => Promise<void>;
   unfavoriteCard: (cardId: string) => Promise<void>;
@@ -493,9 +560,56 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       type: 'TRANSFORM_CARD', 
       payload: { cardId, newType, newPayload } 
     });
-    // Note: Supabase persistence for card type/payload transformation 
-    // would require schema changes. For now, transformation is UI-only.
+    
+    // Persist transformation to Supabase
+    // Panel cards are the ones persisted, so we use the panel ID
+    const panelId = cardId.startsWith('panel-') ? cardId : `panel-${cardId}`;
+    supabaseService.updateCardInSession(panelId, { 
+      type: newType, 
+      payload: newPayload 
+    });
   }, []);
+
+  const updateCardPayload = useCallback((cardId: string, updates: Record<string, unknown>) => {
+    dispatch({
+      type: 'UPDATE_CARD_PAYLOAD',
+      payload: { cardId, updates }
+    });
+  }, []);
+
+  const deleteCardWithTwin = useCallback(async (cardId: string) => {
+    console.log('[ChatContext] deleteCardWithTwin called:', cardId);
+    
+    // Get the base ID (without 'panel-' prefix) for twin matching
+    const baseId = cardId.replace(/^panel-/, '');
+    const panelId = `panel-${baseId}`;
+    
+    // Find the panel card to get its Supabase ID (if it exists)
+    const panelCard = state.activeCards.find(c => c.id === panelId);
+    
+    // Delete from UI state (removes both twins)
+    dispatch({ type: 'DELETE_CARD_WITH_TWIN', payload: cardId });
+    
+    // Delete from Supabase if the panel card exists
+    // Panel cards are the ones persisted to Supabase
+    if (panelCard) {
+      await supabaseService.deleteCardFromSession(panelCard.id);
+    }
+    
+    console.log('[ChatContext] Card twins deleted:', { baseId, panelId });
+  }, [state.activeCards]);
+
+  const getCardById = useCallback((cardId: string): BaseCard | undefined => {
+    // Get the base ID for twin matching
+    const baseId = cardId.replace(/^panel-/, '');
+    
+    // Search in all card arrays
+    const allCards = [...state.activeCards, ...state.archivedCards, ...state.favoriteCards];
+    
+    // First try exact match, then try base ID match
+    return allCards.find(card => card.id === cardId) || 
+           allCards.find(card => card.id.replace(/^panel-/, '') === baseId);
+  }, [state.activeCards, state.archivedCards, state.favoriteCards]);
 
   const resetChat = useCallback(() => {
     dispatch({ type: 'RESET_CHAT' });
@@ -594,6 +708,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       setTyping,
       processUIEvent,
       transformCard,
+      updateCardPayload,
+      deleteCardWithTwin,
+      getCardById,
       archiveCard,
       favoriteCard,
       unfavoriteCard,
@@ -616,6 +733,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       setTyping,
       processUIEvent,
       transformCard,
+      updateCardPayload,
+      deleteCardWithTwin,
+      getCardById,
       archiveCard,
       favoriteCard,
       unfavoriteCard,

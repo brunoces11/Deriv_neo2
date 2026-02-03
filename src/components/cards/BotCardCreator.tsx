@@ -21,7 +21,7 @@ interface BotCardCreatorProps {
  */
 export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorProps) {
   const { theme } = useTheme();
-  const { transformCard, hideCard } = useChat();
+  const { transformCard, deleteCardWithTwin } = useChat();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const payload = card.payload as unknown as BotCreatorPayload;
 
@@ -51,8 +51,13 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
   };
 
   const handleDiscard = () => {
-    console.log('[BotCardCreator] Discard bot creation:', { botName });
-    hideCard(card.id);
+    console.log('[BotCardCreator] Discard bot creation (deleting twins):', { botName, cardId: card.id });
+    deleteCardWithTwin(card.id);
+  };
+
+  const handleDelete = () => {
+    console.log('[BotCardCreator] Delete from menu (deleting twins):', { botName, cardId: card.id });
+    deleteCardWithTwin(card.id);
   };
 
   // Box component for flowchart nodes
@@ -92,7 +97,8 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
           <CardMenuActions 
             card={card} 
             isExpanded={isExpanded} 
-            onToggleExpand={() => setIsExpanded(!isExpanded)} 
+            onToggleExpand={() => setIsExpanded(!isExpanded)}
+            onDelete={handleDelete}
           />
         </div>
 

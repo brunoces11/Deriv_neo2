@@ -430,7 +430,7 @@ export async function getSessionExecutions(sessionId: string): Promise<BaseCard[
 
 export async function updateSessionExecution(
   executionId: string,
-  updates: Partial<Pick<BaseCard, 'status' | 'isFavorite'>>
+  updates: Partial<Pick<BaseCard, 'status' | 'isFavorite' | 'type' | 'payload'>>
 ): Promise<boolean> {
   const updateData: Record<string, unknown> = {};
 
@@ -439,6 +439,12 @@ export async function updateSessionExecution(
   }
   if (updates.isFavorite !== undefined) {
     updateData.is_favorite = updates.isFavorite;
+  }
+  if (updates.type !== undefined) {
+    updateData.type = updates.type;
+  }
+  if (updates.payload !== undefined) {
+    updateData.payload = updates.payload;
   }
 
   const { error } = await supabase
@@ -458,3 +464,24 @@ export async function updateSessionExecution(
 export const addCardToSession = addExecutionToSession;
 export const getSessionCards = getSessionExecutions;
 export const updateCardInSession = updateSessionExecution;
+
+// ============================================
+// Delete Card (permanent removal)
+// ============================================
+
+export async function deleteCardFromSession(cardId: string): Promise<boolean> {
+  console.log('deleteCardFromSession called:', { cardId });
+  
+  const { error } = await supabase
+    .from(EXECUTIONS_TABLE)
+    .delete()
+    .eq('id', cardId);
+
+  if (error) {
+    console.error('Error deleting card:', error);
+    return false;
+  }
+
+  console.log('Card deleted successfully:', cardId);
+  return true;
+}

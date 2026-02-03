@@ -20,7 +20,7 @@ interface TradeCardProps {
  */
 export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
   const { theme } = useTheme();
-  const { favoriteCard, unfavoriteCard } = useChat();
+  const { favoriteCard, unfavoriteCard, deleteCardWithTwin } = useChat();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -87,7 +87,8 @@ export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
   };
 
   const handleDelete = () => {
-    console.log('[TradeCard] Delete trade:', { tradeId });
+    console.log('[TradeCard] Delete trade (deleting twins):', { tradeId, cardId: card.id });
+    deleteCardWithTwin(card.id);
     setIsDropdownOpen(false);
   };
 

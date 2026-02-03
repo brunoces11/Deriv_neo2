@@ -20,7 +20,7 @@ interface ActionsCardProps {
  */
 export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps) {
   const { theme } = useTheme();
-  const { favoriteCard, unfavoriteCard } = useChat();
+  const { favoriteCard, unfavoriteCard, deleteCardWithTwin } = useChat();
   const payload = card.payload as unknown as ActionsCardPayload;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
@@ -85,7 +85,8 @@ export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps)
   };
 
   const handleDelete = () => {
-    console.log('[ActionsCard] Delete action:', { actionId, name });
+    console.log('[ActionsCard] Delete action (deleting twins):', { actionId, name, cardId: card.id });
+    deleteCardWithTwin(card.id);
     setIsDropdownOpen(false);
   };
 
