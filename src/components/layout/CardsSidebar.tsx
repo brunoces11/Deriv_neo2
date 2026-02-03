@@ -1,12 +1,13 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Zap, ChevronLeft, ChevronRight, Play, Bot, LayoutGrid, BotMessageSquare } from 'lucide-react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import { useViewMode } from '../../store/ViewModeContext';
 import { useDrawingTools } from '../../store/DrawingToolsContext';
-import { ExecutionCard } from './ExecutionCard';
+import { ExecutionCard, getCardPanelTab } from './ExecutionCard';
 import { ChatMessages } from '../chat/ChatMessages';
 import { ChatInput_NEO } from '../chat/ChatInput_NEO';
+import type { CardType } from '../../types';
 
 type RightSidebarTab = 'cards' | 'actions' | 'bots';
 
@@ -100,6 +101,22 @@ export function CardsSidebar({
   }, []);
 
   const setActiveTab = (tab: RightSidebarTab) => updateRightSidebarState({ activeTab: tab });
+
+  // Filter cards by panel type
+  const cardsForCardsPanel = useMemo(() => 
+    activeCards.filter(card => getCardPanelTab(card.type as CardType) === 'cards'),
+    [activeCards]
+  );
+  
+  const cardsForActionsPanel = useMemo(() => 
+    activeCards.filter(card => getCardPanelTab(card.type as CardType) === 'actions'),
+    [activeCards]
+  );
+  
+  const cardsForBotsPanel = useMemo(() => 
+    activeCards.filter(card => getCardPanelTab(card.type as CardType) === 'bots'),
+    [activeCards]
+  );
 
   // Handler para icebreaker buttons
   const handleIcebreaker = useCallback((text: string) => {
@@ -388,7 +405,7 @@ export function CardsSidebar({
             style={{ height: cardsHeight, minHeight: MIN_CARDS_HEIGHT }}
           >
             {activeTab === 'cards' && (
-              activeCards.length === 0 ? (
+              cardsForCardsPanel.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                   <LayoutGrid className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
                   <p className={`text-sm text-center leading-relaxed max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
@@ -397,47 +414,63 @@ export function CardsSidebar({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {activeCards.map(card => (
+                  {cardsForCardsPanel.map(card => (
                     <ExecutionCard key={card.id} card={card} />
                   ))}
                 </div>
               )
             )}
             {activeTab === 'actions' && (
-              <div className="flex flex-col items-center justify-center h-full py-8 px-4">
-                <Zap className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
-                <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
-                  Actions são automações inteligentes que executam tarefas ou trades automaticamente com base em regras do usuário.
-                </p>
-                <button 
-                  onClick={() => handleIcebreaker('I want to create an Action')}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
-                    theme === 'dark' 
-                      ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
-                  }`}
-                >
-                  Criar Action
-                </button>
-              </div>
+              cardsForActionsPanel.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                  <Zap className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
+                    Actions são automações inteligentes que executam tarefas ou trades automaticamente com base em regras do usuário.
+                  </p>
+                  <button 
+                    onClick={() => handleIcebreaker('I want to create an Action')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
+                      theme === 'dark' 
+                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
+                    }`}
+                  >
+                    Criar Action
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {cardsForActionsPanel.map(card => (
+                    <ExecutionCard key={card.id} card={card} />
+                  ))}
+                </div>
+              )
             )}
             {activeTab === 'bots' && (
-              <div className="flex flex-col items-center justify-center h-full py-8 px-4">
-                <BotMessageSquare className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
-                <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
-                  Bots são agentes de trading autônomos que executam estratégias de investimento definidas pelo usuário.
-                </p>
-                <button 
-                  onClick={() => handleIcebreaker('I want to create a trading Bot')}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
-                    theme === 'dark' 
-                      ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
-                  }`}
-                >
-                  Criar Bot
-                </button>
-              </div>
+              cardsForBotsPanel.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                  <BotMessageSquare className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
+                    Bots são agentes de trading autônomos que executam estratégias de investimento definidas pelo usuário.
+                  </p>
+                  <button 
+                    onClick={() => handleIcebreaker('I want to create a trading Bot')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
+                      theme === 'dark' 
+                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
+                    }`}
+                  >
+                    Criar Bot
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {cardsForBotsPanel.map(card => (
+                    <ExecutionCard key={card.id} card={card} />
+                  ))}
+                </div>
+              )
             )}
           </div>
 
@@ -490,14 +523,14 @@ export function CardsSidebar({
             }`}>
               <Zap className="w-4 h-4 text-red-500" />
               <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Cards</span>
-              {activeCards.length > 0 && (
+              {cardsForCardsPanel.length > 0 && (
                 <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                   theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
-                }`}>{activeCards.length}</span>
+                }`}>{cardsForCardsPanel.length}</span>
               )}
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-              {activeCards.length === 0 ? (
+              {cardsForCardsPanel.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                   <LayoutGrid className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
                   <p className={`text-sm text-center leading-relaxed max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
@@ -506,7 +539,7 @@ export function CardsSidebar({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {activeCards.map(card => (
+                  {cardsForCardsPanel.map(card => (
                     <ExecutionCard key={card.id} card={card} />
                   ))}
                 </div>
@@ -540,24 +573,37 @@ export function CardsSidebar({
             }`}>
               <Play className="w-4 h-4 text-red-500" />
               <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Actions</span>
+              {cardsForActionsPanel.length > 0 && (
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                  theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+                }`}>{cardsForActionsPanel.length}</span>
+              )}
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-              <div className="flex flex-col items-center justify-center h-full py-8 px-4">
-                <Zap className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
-                <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
-                  Actions são automações inteligentes que executam tarefas ou trades automaticamente com base em regras do usuário.
-                </p>
-                <button 
-                  onClick={() => handleIcebreaker('I want to create an Action')}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
-                    theme === 'dark' 
-                      ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
-                  }`}
-                >
-                  Criar Action
-                </button>
-              </div>
+              {cardsForActionsPanel.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                  <Zap className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
+                    Actions são automações inteligentes que executam tarefas ou trades automaticamente com base em regras do usuário.
+                  </p>
+                  <button 
+                    onClick={() => handleIcebreaker('I want to create an Action')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
+                      theme === 'dark' 
+                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
+                    }`}
+                  >
+                    Criar Action
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {cardsForActionsPanel.map(card => (
+                    <ExecutionCard key={card.id} card={card} />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -587,24 +633,37 @@ export function CardsSidebar({
             }`}>
               <Bot className="w-4 h-4 text-red-500" />
               <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Bots</span>
+              {cardsForBotsPanel.length > 0 && (
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                  theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+                }`}>{cardsForBotsPanel.length}</span>
+              )}
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-              <div className="flex flex-col items-center justify-center h-full py-8 px-4">
-                <BotMessageSquare className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
-                <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
-                  Bots são agentes de trading autônomos que executam estratégias de investimento definidas pelo usuário.
-                </p>
-                <button 
-                  onClick={() => handleIcebreaker('I want to create a trading Bot')}
-                  className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
-                    theme === 'dark' 
-                      ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
-                  }`}
-                >
-                  Criar Bot
-                </button>
-              </div>
+              {cardsForBotsPanel.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                  <BotMessageSquare className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
+                    Bots são agentes de trading autônomos que executam estratégias de investimento definidas pelo usuário.
+                  </p>
+                  <button 
+                    onClick={() => handleIcebreaker('I want to create a trading Bot')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
+                      theme === 'dark' 
+                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
+                    }`}
+                  >
+                    Criar Bot
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {cardsForBotsPanel.map(card => (
+                    <ExecutionCard key={card.id} card={card} />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
