@@ -572,8 +572,30 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                             pre: ({ children }) => <pre className="mb-2">{children}</pre>,
                             strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
                             em: ({ children }) => <em className="italic">{children}</em>,
+                            del: ({ children }) => <del className="line-through">{children}</del>,
+                            // Headings
+                            h1: ({ children }) => <h1 className="text-lg font-bold mb-2 mt-3 first:mt-0">{children}</h1>,
+                            h2: ({ children }) => <h2 className="text-base font-bold mb-2 mt-2 first:mt-0">{children}</h2>,
+                            h3: ({ children }) => <h3 className="text-sm font-bold mb-1 mt-2 first:mt-0">{children}</h3>,
+                            h4: ({ children }) => <h4 className="text-sm font-semibold mb-1 mt-1 first:mt-0">{children}</h4>,
+                            h5: ({ children }) => <h5 className="text-xs font-semibold mb-1 mt-1 first:mt-0">{children}</h5>,
+                            h6: ({ children }) => <h6 className="text-xs font-semibold mb-1 mt-1 first:mt-0">{children}</h6>,
                             a: ({ href, children }) => (
                               <a href={href} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600 underline transition-colors">{children}</a>
+                            ),
+                            // Blockquotes
+                            blockquote: ({ children }) => (
+                              <blockquote className={`border-l-4 pl-3 py-1 italic my-2 ${
+                                theme === 'dark' 
+                                  ? 'border-zinc-600 text-zinc-400 bg-zinc-800/30' 
+                                  : 'border-gray-300 text-gray-600 bg-gray-100/50'
+                              }`}>{children}</blockquote>
+                            ),
+                            // Linhas horizontais
+                            hr: () => (
+                              <hr className={`my-3 border-t ${
+                                theme === 'dark' ? 'border-zinc-700' : 'border-gray-300'
+                              }`} />
                             ),
                           }}
                         >
