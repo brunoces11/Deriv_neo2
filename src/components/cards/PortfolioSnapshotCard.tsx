@@ -7,13 +7,14 @@ import type { BaseCard, PortfolioSnapshotPayload } from '../../types';
 
 interface PortfolioSnapshotCardProps {
   card: BaseCard;
+  defaultExpanded?: boolean;
 }
 
 const assetColors = ['bg-red-500', 'bg-cyan-500', 'bg-amber-500', 'bg-rose-500', 'bg-violet-500'];
 
-export function PortfolioSnapshotCard({ card }: PortfolioSnapshotCardProps) {
+export function PortfolioSnapshotCard({ card, defaultExpanded = false }: PortfolioSnapshotCardProps) {
   const { theme } = useTheme();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const payload = card.payload as unknown as PortfolioSnapshotPayload;
   const isPositive = payload.changePercent.startsWith('+');
   const TrendIcon = isPositive ? TrendingUp : TrendingDown;

@@ -1,5 +1,5 @@
 import { createContext, useContext, useReducer, useCallback, useMemo, useEffect, ReactNode } from 'react';
-import type { BaseCard, ChatMessage, UIEvent, CardStatus, ChatSession } from '../types';
+import type { BaseCard, ChatMessage, UIEvent, CardStatus, ChatSession, CardType } from '../types';
 import type { Drawing, DrawingTag } from './DrawingToolsContext';
 import * as supabaseService from '../services/supabase';
 import type { ChatTagWithSnapshot } from '../services/supabase';
@@ -29,6 +29,7 @@ type ChatAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'ADD_CARD'; payload: BaseCard }
   | { type: 'SET_CARDS'; payload: BaseCard[] }
+  | { type: 'TRANSFORM_CARD'; payload: { cardId: string; newType: CardType; newPayload: Record<string, unknown> } }
   | { type: 'ARCHIVE_CARD'; payload: string }
   | { type: 'FAVORITE_CARD'; payload: string }
   | { type: 'UNFAVORITE_CARD'; payload: string }
@@ -96,6 +97,28 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 
     case 'ADD_CARD':
       return { ...state, activeCards: [...state.activeCards, action.payload] };
+
+    case 'TRANSFORM_CARD': {
+      const { cardId, newType, newPayload } = action.payload;
+      return {
+        ...state,
+        activeCards: state.activeCards.map(card =>
+          card.id === cardId || card.id === `panel-${cardId}` || card.id.replace('panel-', '') === cardId
+            ? { ...card, type: newType, payload: newPayload }
+            : card
+        ),
+        archivedCards: state.archivedCards.map(card =>
+          card.id === cardId || card.id === `panel-${cardId}` || card.id.replace('panel-', '') === cardId
+            ? { ...card, type: newType, payload: newPayload }
+            : card
+        ),
+        favoriteCards: state.favoriteCards.map(card =>
+          card.id === cardId || card.id === `panel-${cardId}` || card.id.replace('panel-', '') === cardId
+            ? { ...card, type: newType, payload: newPayload }
+            : card
+        ),
+      };
+    }
 
     case 'SET_CARDS': {
       const activeCards = action.payload.filter(c => c.status === 'active');
@@ -190,6 +213,7 @@ interface ChatContextValue extends ChatState {
   addMessage: (message: ChatMessage, sessionId?: string) => Promise<void>;
   setTyping: (typing: boolean) => void;
   processUIEvent: (event: UIEvent, sessionId?: string) => Promise<void>;
+  transformCard: (cardId: string, newType: CardType, newPayload: Record<string, unknown>) => void;
   archiveCard: (cardId: string) => Promise<void>;
   favoriteCard: (cardId: string) => Promise<void>;
   unfavoriteCard: (cardId: string) => Promise<void>;
@@ -417,6 +441,15 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     supabaseService.updateCardInSession(cardId, { status: 'hidden' });
   }, []);
 
+  const transformCard = useCallback((cardId: string, newType: CardType, newPayload: Record<string, unknown>) => {
+    dispatch({ 
+      type: 'TRANSFORM_CARD', 
+      payload: { cardId, newType, newPayload } 
+    });
+    // Note: Supabase persistence for card type/payload transformation 
+    // would require schema changes. For now, transformation is UI-only.
+  }, []);
+
   const resetChat = useCallback(() => {
     dispatch({ type: 'RESET_CHAT' });
   }, []);
@@ -513,6 +546,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       addMessage,
       setTyping,
       processUIEvent,
+      transformCard,
       archiveCard,
       favoriteCard,
       unfavoriteCard,
@@ -534,6 +568,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       addMessage,
       setTyping,
       processUIEvent,
+      transformCard,
       archiveCard,
       favoriteCard,
       unfavoriteCard,

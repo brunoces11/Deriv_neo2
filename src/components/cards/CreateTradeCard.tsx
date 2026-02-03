@@ -3,10 +3,13 @@ import { TrendingUp, TrendingDown, ChevronDown, Minus, Plus } from 'lucide-react
 import { CardWrapper } from './CardWrapper';
 import { CardMenuActions } from './CardMenuActions';
 import { useTheme } from '../../store/ThemeContext';
-import type { BaseCard, CreateTradeCardPayload } from '../../types';
+import { useChat } from '../../store/ChatContext';
+import { transformCard as transformCardRule } from '../../services/placeholderRules';
+import type { BaseCard, CreateTradeCardPayload, CardType } from '../../types';
 
 interface CreateTradeCardProps {
   card: BaseCard;
+  defaultExpanded?: boolean;
 }
 
 /**
@@ -16,14 +19,15 @@ interface CreateTradeCardProps {
  * Displays trade configuration with duration, barrier, stake sections
  * and Higher/Lower action buttons.
  */
-export function CreateTradeCard({ card }: CreateTradeCardProps) {
+export function CreateTradeCard({ card, defaultExpanded = true }: CreateTradeCardProps) {
   const { theme } = useTheme();
+  const { transformCard } = useChat();
   const payload = card.payload as unknown as CreateTradeCardPayload;
   
   const [durationMode, setDurationMode] = useState<'duration' | 'end-time'>(payload?.duration?.mode || 'duration');
   const [stakeMode, setStakeMode] = useState<'stake' | 'payout'>(payload?.stake?.mode || 'stake');
   const [stakeValue, setStakeValue] = useState(payload?.stake?.value || 10);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   const asset = payload?.asset || 'BTC/USD';
   const tradeType = payload?.tradeType || 'higher-lower';
@@ -51,8 +55,35 @@ export function CreateTradeCard({ card }: CreateTradeCardProps) {
 
   const formatDurationUnit = (unit: string) => unit.charAt(0).toUpperCase() + unit.slice(1);
 
-  const handleHigherClick = () => console.log('[TradeCard] HIGHER:', { asset, stakeValue });
-  const handleLowerClick = () => console.log('[TradeCard] LOWER:', { asset, stakeValue });
+  const handleHigherClick = () => {
+    console.log('[TradeCard] HIGHER:', { asset, stakeValue });
+    const result = transformCardRule('create-trade-card', 'onHigher', {
+      asset,
+      assetName: payload?.assetName || 'Bitcoin',
+      stake: `$${stakeValue.toFixed(2)}`,
+      payout: payout.higher.amount,
+      barrier: barrier.value.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      expiryDate: duration.expiryDate,
+    });
+    if (result) {
+      transformCard(card.id, result.newType as CardType, result.newPayload);
+    }
+  };
+  
+  const handleLowerClick = () => {
+    console.log('[TradeCard] LOWER:', { asset, stakeValue });
+    const result = transformCardRule('create-trade-card', 'onLower', {
+      asset,
+      assetName: payload?.assetName || 'Bitcoin',
+      stake: `$${stakeValue.toFixed(2)}`,
+      payout: payout.lower.amount,
+      barrier: barrier.value.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      expiryDate: duration.expiryDate,
+    });
+    if (result) {
+      transformCard(card.id, result.newType as CardType, result.newPayload);
+    }
+  };
   const handleStakeIncrement = () => setStakeValue(prev => Math.round((prev + 1) * 100) / 100);
   const handleStakeDecrement = () => setStakeValue(prev => Math.max(1, Math.round((prev - 1) * 100) / 100));
 

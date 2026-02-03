@@ -3,10 +3,13 @@ import { Bot, Rocket, Settings, X } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { CardMenuActions } from './CardMenuActions';
 import { useTheme } from '../../store/ThemeContext';
-import type { BaseCard, BotCreatorPayload } from '../../types';
+import { useChat } from '../../store/ChatContext';
+import { transformCard as transformCardRule } from '../../services/placeholderRules';
+import type { BaseCard, BotCreatorPayload, CardType } from '../../types';
 
 interface BotCardCreatorProps {
   card: BaseCard;
+  defaultExpanded?: boolean;
 }
 
 /**
@@ -16,9 +19,10 @@ interface BotCardCreatorProps {
  * Shows trigger, action, target, and condition boxes connected by lines.
  * Used when AI has mapped user intentions and is ready to deploy a new bot.
  */
-export function BotCardCreator({ card }: BotCardCreatorProps) {
+export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorProps) {
   const { theme } = useTheme();
-  const [isExpanded, setIsExpanded] = useState(true);
+  const { transformCard } = useChat();
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const payload = card.payload as unknown as BotCreatorPayload;
 
   const botName = payload?.botName || 'New Bot Strategy';
@@ -29,6 +33,17 @@ export function BotCardCreator({ card }: BotCardCreatorProps) {
 
   const handleDeploy = () => {
     console.log('[BotCardCreator] Deploy bot:', { botName, trigger, action, target, condition });
+    const result = transformCardRule('bot-creator', 'onDeployBot', {
+      name: botName,
+      strategy: `${trigger.type} ${action.type} ${action.asset}`,
+      trigger,
+      action,
+      target,
+      condition,
+    });
+    if (result) {
+      transformCard(card.id, result.newType as CardType, result.newPayload);
+    }
   };
 
   const handleEditConfig = () => {

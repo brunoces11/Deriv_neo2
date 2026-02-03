@@ -1,4 +1,24 @@
-export type CardType = 'card_portfolio_exemple_compacto' | 'card_portfolio_sidebar' | 'card_portfolio' | 'card_trade_creator' | 'card_trade' | 'card_actions_creator' | 'card_actions' | 'card_bot_creator' | 'card_bot';
+export type CardType = 
+  // Legacy names (for backward compatibility)
+  | 'card_portfolio_exemple_compacto' 
+  | 'card_portfolio_sidebar' 
+  | 'card_portfolio' 
+  | 'card_trade_creator' 
+  | 'card_trade' 
+  | 'card_actions_creator' 
+  | 'card_actions' 
+  | 'card_bot_creator' 
+  | 'card_bot'
+  // New kebab-case names (used by placeholder system)
+  | 'portfolio-table-complete'
+  | 'portfolio-sidebar'
+  | 'portfolio-snapshot'
+  | 'create-trade-card'
+  | 'trade-card'
+  | 'actions-card'
+  | 'actions-creator'
+  | 'bot-creator'
+  | 'bot-card';
 
 export type CardStatus = 'active' | 'archived' | 'hidden';
 

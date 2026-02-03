@@ -7,13 +7,14 @@ import type { BaseCard, PortfolioTablePayload } from '../../types';
 
 interface PortfolioTableCardCompleteProps {
   card: BaseCard;
+  defaultExpanded?: boolean;
 }
 
 const assetColors = ['bg-red-500', 'bg-cyan-500', 'bg-amber-500', 'bg-rose-500', 'bg-violet-500'];
 
-export function PortfolioTableCardComplete({ card }: PortfolioTableCardCompleteProps) {
+export function PortfolioTableCardComplete({ card, defaultExpanded = true }: PortfolioTableCardCompleteProps) {
   const { theme } = useTheme();
-  const [isExpanded, setIsExpanded] = useState(true); // Default expanded for this card
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const payload = card.payload as unknown as PortfolioTablePayload;
   const isPositive = payload.changePercent.startsWith('+');
   const TrendIcon = isPositive ? TrendingUp : TrendingDown;

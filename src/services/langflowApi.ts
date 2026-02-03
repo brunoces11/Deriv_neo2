@@ -1,4 +1,5 @@
 import type { CardType, UIEvent } from '../types';
+import { findPlaceholdersInText } from './placeholderRules';
 
 // Langflow API endpoint and API key
 const LANGFLOW_ENDPOINT = import.meta.env.VITE_LANGFLOW_ENDPOINT;
@@ -110,8 +111,20 @@ function extractMessage(text: string): string {
 /**
  * Search for card type names in the entire payload (case-insensitive, exact match)
  * Returns array of found CardTypes
+ * 
+ * NOTE: This is the legacy method. New placeholder-based detection is handled
+ * directly in ChatMessages.tsx via [[PLACEHOLDER]] patterns.
  */
 function findCardsInPayload(payload: string): CardType[] {
+  // First check for new [[PLACEHOLDER]] format
+  const placeholders = findPlaceholdersInText(payload);
+  if (placeholders.length > 0) {
+    console.log('[LangflowAPI] Found placeholders (handled by ChatMessages):', placeholders);
+    // Return empty - placeholders are handled inline by ChatMessages
+    return [];
+  }
+  
+  // Legacy: search for card type names directly
   const foundCards: CardType[] = [];
   const lowerPayload = payload.toLowerCase();
   

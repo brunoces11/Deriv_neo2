@@ -1,6 +1,6 @@
 import { ChatMessages } from '../chat/ChatMessages';
 import { ChatInput_NEO } from '../chat/ChatInput_NEO';
-import { ActiveCards } from '../cards/ActiveCards';
+// ActiveCards removed - cards now render inline via placeholders in ChatMessages
 import { ModeToggle } from './ModeToggle';
 import { DrawingToolsPanel } from '../chart/DrawingToolsPanel';
 import { AssetSelector } from '../chart/AssetSelector';
@@ -69,7 +69,7 @@ export function MainArea({ isGraphMode, isDashboardMode, isHubMode }: MainAreaPr
           <div className="flex-1 overflow-y-auto custom-scrollbar">
             <div className="mx-auto w-full px-4 chat-content-width">
               <ChatMessages />
-              <ActiveCards />
+              {/* ActiveCards removed - cards now render inline via [[PLACEHOLDER]] in messages */}
             </div>
           </div>
         )}

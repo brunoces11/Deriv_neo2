@@ -7,6 +7,7 @@ import type { BaseCard, BotCardPayload } from '../../types';
 
 interface BotCardProps {
   card: BaseCard;
+  defaultExpanded?: boolean;
 }
 
 /**
@@ -17,12 +18,12 @@ interface BotCardProps {
  * Expanded mode: Shows visual flowchart of bot configuration with edit buttons
  * Dropdown contains: Favorite, Edit, Delete, Schedule
  */
-export function BotCard({ card }: BotCardProps) {
+export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
   const { theme } = useTheme();
   const { favoriteCard, unfavoriteCard } = useChat();
   const payload = card.payload as unknown as BotCardPayload;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isPlaying, setIsPlaying] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 

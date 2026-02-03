@@ -7,6 +7,7 @@ import type { BaseCard, ActionsCardPayload } from '../../types';
 
 interface ActionsCardProps {
   card: BaseCard;
+  defaultExpanded?: boolean;
 }
 
 /**
@@ -17,12 +18,12 @@ interface ActionsCardProps {
  * Expanded mode: Shows visual flowchart of action configuration with edit buttons
  * Dropdown contains: Favorite, Edit, Delete, Schedule
  */
-export function ActionsCard({ card }: ActionsCardProps) {
+export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps) {
   const { theme } = useTheme();
   const { favoriteCard, unfavoriteCard } = useChat();
   const payload = card.payload as unknown as ActionsCardPayload;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isPlaying, setIsPlaying] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 

@@ -7,6 +7,7 @@ import type { BaseCard, TradeCardPayload } from '../../types';
 
 interface TradeCardProps {
   card: BaseCard;
+  defaultExpanded?: boolean;
 }
 
 /**
@@ -17,10 +18,10 @@ interface TradeCardProps {
  * Displays key trade info: asset, direction, stake, payout, barrier, expiry, status.
  * Can be collapsed to show minimal info or expanded to show full details.
  */
-export function TradeCard({ card }: TradeCardProps) {
+export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
   const { theme } = useTheme();
   const { favoriteCard, unfavoriteCard } = useChat();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const payload = card.payload as unknown as TradeCardPayload;

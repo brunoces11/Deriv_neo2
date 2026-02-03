@@ -3,10 +3,13 @@ import { Zap, Rocket, Settings, X } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { CardMenuActions } from './CardMenuActions';
 import { useTheme } from '../../store/ThemeContext';
-import type { BaseCard, ActionsCreatorPayload } from '../../types';
+import { useChat } from '../../store/ChatContext';
+import { transformCard as transformCardRule } from '../../services/placeholderRules';
+import type { BaseCard, ActionsCreatorPayload, CardType } from '../../types';
 
 interface ActionsCardCreatorProps {
   card: BaseCard;
+  defaultExpanded?: boolean;
 }
 
 /**
@@ -16,9 +19,10 @@ interface ActionsCardCreatorProps {
  * Shows trigger, action, schedule, and condition boxes connected by lines.
  * Used when AI has mapped user intentions and is ready to deploy a new action.
  */
-export function ActionsCardCreator({ card }: ActionsCardCreatorProps) {
+export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCardCreatorProps) {
   const { theme } = useTheme();
-  const [isExpanded, setIsExpanded] = useState(true);
+  const { transformCard } = useChat();
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const payload = card.payload as unknown as ActionsCreatorPayload;
 
   const actionName = payload?.actionName || 'New Action';
@@ -29,6 +33,17 @@ export function ActionsCardCreator({ card }: ActionsCardCreatorProps) {
 
   const handleDeploy = () => {
     console.log('[ActionsCardCreator] Deploy action:', { actionName, trigger, action, schedule, condition });
+    const result = transformCardRule('actions-creator', 'onDeployAction', {
+      name: actionName,
+      description: `${trigger.type} → ${action.type}${action.asset ? ` ${action.asset}` : ''}`,
+      trigger,
+      action,
+      schedule,
+      condition,
+    });
+    if (result) {
+      transformCard(card.id, result.newType as CardType, result.newPayload);
+    }
   };
 
   const handleEditConfig = () => {

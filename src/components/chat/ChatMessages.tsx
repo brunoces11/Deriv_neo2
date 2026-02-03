@@ -1,11 +1,32 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { Bot, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
-import type { ChatMessage } from '../../types';
+import { useViewMode } from '../../store/ViewModeContext';
+import type { ChatMessage, BaseCard, CardType } from '../../types';
+
+// Placeholder rendering imports
+import { 
+  PLACEHOLDER_REGEX, 
+  getRuleForMode, 
+  type ViewMode as PlaceholderViewMode,
+  type ModeConfig,
+  type RenderCardType,
+  type PanelTab
+} from '../../services/placeholderRules';
+
+// Card components for inline rendering
+import { BotCard } from '../cards/BotCard';
+import { PortfolioSnapshotCard } from '../cards/PortfolioSnapshotCard';
+import { PortfolioTableCardComplete } from '../cards/PortfolioTableCardComplete';
+import { CreateTradeCard } from '../cards/CreateTradeCard';
+import { TradeCard } from '../cards/TradeCard';
+import { ActionsCard } from '../cards/ActionsCard';
+import { ActionsCardCreator } from '../cards/ActionsCardCreator';
+import { BotCardCreator } from '../cards/BotCardCreator';
 
 // URL da foto do usuário (mesma usada no UserProfile)
 const USER_AVATAR_URL = "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=200";
@@ -41,6 +62,225 @@ const TAG_COLORS: Record<string, { bg: string; textLight: string; textDark: stri
   market: { bg: 'rgba(147, 51, 234, 0.25)', textLight: '#3b1a5c', textDark: '#d8b4fe', border: 'rgba(147, 51, 234, 0.4)' },
   default: { bg: 'rgba(113, 113, 122, 0.25)', textLight: '#3d3d3d', textDark: '#d4d4d8', border: 'rgba(113, 113, 122, 0.4)' },
 };
+
+// ============================================================================
+// Card Components Map for Inline Rendering
+// ============================================================================
+
+const cardComponents: Record<RenderCardType, React.ComponentType<{ card: BaseCard; defaultExpanded?: boolean }>> = {
+  'bot-card': BotCard,
+  'portfolio-snapshot': PortfolioSnapshotCard,
+  'portfolio-sidebar': PortfolioSnapshotCard, // Fallback to snapshot
+  'portfolio-table-complete': PortfolioTableCardComplete,
+  'create-trade-card': CreateTradeCard,
+  'trade-card': TradeCard,
+  'actions-card': ActionsCard,
+  'actions-creator': ActionsCardCreator,
+  'bot-creator': BotCardCreator,
+};
+
+// ============================================================================
+// Placeholder Parsing Types and Functions
+// ============================================================================
+
+type MessagePart = 
+  | { type: 'text'; content: string }
+  | { type: 'card'; placeholder: string; config: ModeConfig; cardId: string };
+
+/**
+ * Parse message content and extract placeholders for inline card rendering
+ */
+function parseMessageWithPlaceholders(
+  content: string, 
+  mode: PlaceholderViewMode
+): MessagePart[] {
+  const parts: MessagePart[] = [];
+  let lastIndex = 0;
+  
+  // Reset regex state
+  PLACEHOLDER_REGEX.lastIndex = 0;
+  let match;
+  
+  while ((match = PLACEHOLDER_REGEX.exec(content)) !== null) {
+    // Text before the placeholder
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', content: content.slice(lastIndex, match.index) });
+    }
+    
+    // Placeholder → Card config
+    const placeholder = `[[${match[1]}]]`;
+    const config = getRuleForMode(placeholder, mode);
+    
+    if (config) {
+      parts.push({ 
+        type: 'card', 
+        placeholder, 
+        config,
+        cardId: `inline-${placeholder}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+      });
+    } else {
+      // Unknown placeholder, keep as text
+      parts.push({ type: 'text', content: match[0] });
+    }
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  // Remaining text after last placeholder
+  if (lastIndex < content.length) {
+    parts.push({ type: 'text', content: content.slice(lastIndex) });
+  }
+  
+  return parts.length > 0 ? parts : [{ type: 'text', content }];
+}
+
+/**
+ * Create a mock BaseCard for inline rendering
+ */
+function createMockCard(cardType: RenderCardType, cardId: string): BaseCard {
+  return {
+    id: cardId,
+    type: cardType as any, // Type coercion needed due to CardType mismatch
+    status: 'active',
+    isFavorite: false,
+    createdAt: new Date(),
+    payload: getDefaultPayloadForCard(cardType),
+  };
+}
+
+/**
+ * Get default payload for each card type (for inline rendering)
+ */
+function getDefaultPayloadForCard(cardType: RenderCardType): Record<string, unknown> {
+  const defaultPortfolioAssets = [
+    { symbol: 'BTC', name: 'Bitcoin', allocation: 45, value: '$20,353.50', invested: '$18,000.00', change: '+$2,353.50', changePercent: '+13.07%' },
+    { symbol: 'ETH', name: 'Ethereum', allocation: 30, value: '$13,569.00', invested: '$12,500.00', change: '+$1,069.00', changePercent: '+8.55%' },
+    { symbol: 'SOL', name: 'Solana', allocation: 15, value: '$6,784.50', invested: '$7,200.00', change: '-$415.50', changePercent: '-5.77%' },
+    { symbol: 'Other', name: 'Others', allocation: 10, value: '$4,523.00', invested: '$4,500.00', change: '+$23.00', changePercent: '+0.51%' },
+  ];
+
+  switch (cardType) {
+    case 'trade-card':
+      return {
+        tradeId: `TRD-${Math.floor(Math.random() * 10000)}`,
+        asset: 'BTC/USD',
+        assetName: 'Bitcoin',
+        direction: 'higher',
+        stake: '$100.00',
+        payout: '$195.00',
+        barrier: '42,500.00',
+        expiryDate: '28 Jan 2026, 23:59:59',
+        status: 'open',
+      };
+    case 'create-trade-card':
+      return {
+        asset: 'BTC/USD',
+        assetName: 'Bitcoin',
+        tradeType: 'higher-lower',
+        duration: {
+          mode: 'duration',
+          unit: 'days',
+          value: 1,
+          range: { min: 1, max: 365 },
+          expiryDate: '28 Jan 2026, 23:59:59 GMT +0',
+        },
+        barrier: { value: 42500.00, spotPrice: 42350.75 },
+        stake: { mode: 'stake', value: 100, currency: 'USD' },
+        payout: {
+          higher: { amount: '$195.00', percentage: '95%' },
+          lower: { amount: '$195.00', percentage: '95%' },
+        },
+      };
+    case 'bot-card':
+    case 'bot-creator':
+      return {
+        botId: `BOT-${Math.floor(Math.random() * 1000)}`,
+        botName: 'DCA Bitcoin Weekly',
+        name: 'DCA Bitcoin Weekly',
+        strategy: 'Dollar Cost Averaging',
+        status: 'active',
+        performance: '+12.5%',
+        trigger: { type: 'Weekly', value: 'Monday' },
+        action: { type: 'Buy', asset: 'BTC' },
+        target: { type: 'Amount', value: '$100' },
+      };
+    case 'actions-card':
+    case 'actions-creator':
+      return {
+        actionId: `ACT-${Math.floor(Math.random() * 1000)}`,
+        actionName: 'Price Alert BTC',
+        name: 'Price Alert BTC',
+        description: 'Alert when BTC reaches target',
+        status: 'active',
+        trigger: { type: 'price', value: '$50,000' },
+        action: { type: 'Alert', asset: 'BTC' },
+        schedule: { frequency: 'once', time: '09:00' },
+      };
+    case 'portfolio-snapshot':
+    case 'portfolio-sidebar':
+      return {
+        totalValue: '$45,230.00',
+        change24h: '+$1,250.00',
+        changePercent: '+2.84%',
+        assets: [
+          { symbol: 'BTC', allocation: 45, value: '$20,353.50' },
+          { symbol: 'ETH', allocation: 30, value: '$13,569.00' },
+          { symbol: 'SOL', allocation: 15, value: '$6,784.50' },
+          { symbol: 'Other', allocation: 10, value: '$4,523.00' },
+        ],
+      };
+    case 'portfolio-table-complete':
+      return {
+        totalValue: '$45,230.00',
+        change24h: '+$1,250.00',
+        changePercent: '+2.84%',
+        assets: defaultPortfolioAssets,
+      };
+    default:
+      return {};
+  }
+}
+
+// ============================================================================
+// InlineCard Component
+// ============================================================================
+
+interface InlineCardProps {
+  config: ModeConfig;
+  cardId: string;
+  onAddToPanel: (
+    cardId: string, 
+    cardType: RenderCardType, 
+    panelTab: PanelTab,
+    payload: Record<string, unknown>
+  ) => void;
+}
+
+function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
+  const { inline, panel } = config;
+  const CardComponent = cardComponents[inline.cardType];
+  
+  if (!CardComponent) {
+    console.warn(`[InlineCard] Unknown card type: ${inline.cardType}`);
+    return null;
+  }
+  
+  const mockCard = createMockCard(inline.cardType, cardId);
+  const isExpanded = inline.visualState === 'expanded';
+  
+  // Add card to panel on mount (only once)
+  useEffect(() => {
+    if (panel && panel.panel) {
+      onAddToPanel(cardId, panel.cardType, panel.panel, mockCard.payload);
+    }
+  }, [cardId, panel, mockCard.payload, onAddToPanel]);
+  
+  return (
+    <div className="my-4 max-w-full">
+      <CardComponent card={mockCard} defaultExpanded={isExpanded} />
+    </div>
+  );
+}
 
 // Mapeia nomes de tags para tipos de drawing
 function getDrawingTypeFromTagName(tagName: string): 'trendline' | 'horizontal' | 'rectangle' | 'note' | null {
@@ -134,10 +374,52 @@ interface ChatMessagesProps {
   displayMode?: 'center' | 'sidebar';
 }
 
+// Track which cards have been added to panel to avoid duplicates
+const addedToPanelSet = new Set<string>();
+
 export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
-  const { messages, isTyping } = useChat();
+  const { messages, isTyping, processUIEvent, currentSessionId } = useChat();
+  const { currentMode } = useViewMode();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isSidebar = displayMode === 'sidebar';
+
+  // Callback to add card to panel (called by InlineCard)
+  const addCardToPanel = useCallback(async (
+    cardId: string, 
+    cardType: RenderCardType, 
+    panelTab: PanelTab,
+    payload: Record<string, unknown>
+  ) => {
+    // Create unique key for this card in this session
+    const uniqueKey = `${currentSessionId}-${cardId}`;
+    
+    // Skip if already added to panel
+    if (addedToPanelSet.has(uniqueKey)) {
+      return;
+    }
+    
+    // Mark as added
+    addedToPanelSet.add(uniqueKey);
+    
+    // Add to panel via processUIEvent
+    await processUIEvent({
+      type: 'ADD_CARD',
+      cardType: cardType as CardType,
+      cardId: `panel-${cardId}`,
+      payload: {
+        ...payload,
+        visualState: 'compacted',
+        panelTab,
+      },
+    });
+  }, [processUIEvent, currentSessionId]);
+
+  // Clear tracked cards when session changes
+  useEffect(() => {
+    // When session changes, we could clear the set, but keeping it prevents
+    // re-adding cards when switching back to a session
+    // For now, we keep the set persistent
+  }, [currentSessionId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -146,7 +428,13 @@ export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
   return (
     <div className={`space-y-4 ${isSidebar ? 'py-3' : 'py-6 space-y-6'}`}>
       {messages.map((message) => (
-        <MessageBubble key={message.id} message={message} isSidebar={isSidebar} />
+        <MessageBubble 
+          key={message.id} 
+          message={message} 
+          isSidebar={isSidebar}
+          currentMode={currentMode as PlaceholderViewMode}
+          onAddCardToPanel={addCardToPanel}
+        />
       ))}
       {isTyping && <TypingIndicator isSidebar={isSidebar} />}
       <div ref={messagesEndRef} />
@@ -157,11 +445,26 @@ export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
 interface MessageBubbleProps {
   message: ChatMessage;
   isSidebar?: boolean;
+  currentMode: PlaceholderViewMode;
+  onAddCardToPanel: (
+    cardId: string, 
+    cardType: RenderCardType, 
+    panelTab: PanelTab,
+    payload: Record<string, unknown>
+  ) => void;
 }
 
-function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
+function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPanel }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const { theme } = useTheme();
+  
+  // Parse message for placeholders (only for AI messages)
+  const messageParts = !isUser 
+    ? parseMessageWithPlaceholders(message.content, currentMode)
+    : null;
+  
+  // Check if message has inline cards
+  const hasInlineCards = messageParts?.some(part => part.type === 'card') ?? false;
 
   return (
     <div className="animate-slide-up opacity-0">
@@ -218,8 +521,64 @@ function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
               {isUser ? (
                 // Para mensagens do usuário, renderiza tags como badges (line-height aumentado para tags)
                 <p className="mb-0 leading-[1.77]">{parseMessageWithTags(message.content, theme)}</p>
+              ) : hasInlineCards && messageParts ? (
+                // Para mensagens da IA com placeholders, renderiza texto + cards inline
+                <div className="space-y-2">
+                  {messageParts.map((part, index) => {
+                    if (part.type === 'text') {
+                      // Render text parts with ReactMarkdown
+                      const trimmedContent = part.content.trim();
+                      if (!trimmedContent) return null;
+                      return (
+                        <ReactMarkdown
+                          key={`text-${index}`}
+                          remarkPlugins={[remarkGfm, remarkBreaks]}
+                          components={{
+                            p: ({ children }) => <p className="mb-2 last:mb-0 whitespace-pre-wrap">{children}</p>,
+                            br: () => <br />,
+                            ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
+                            ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
+                            li: ({ children }) => <li className="mb-0.5">{children}</li>,
+                            code: ({ inline, children }) => {
+                              if (inline) {
+                                return (
+                                  <code className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                                    theme === 'dark' ? 'bg-zinc-700 text-zinc-200' : 'bg-gray-200 text-gray-800'
+                                  }`}>{children}</code>
+                                );
+                              }
+                              return (
+                                <code className={`block p-3 rounded overflow-x-auto text-xs font-mono mb-2 ${
+                                  theme === 'dark' ? 'bg-zinc-900 text-zinc-200' : 'bg-gray-100 text-gray-800'
+                                }`}>{children}</code>
+                              );
+                            },
+                            pre: ({ children }) => <pre className="mb-2">{children}</pre>,
+                            strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                            em: ({ children }) => <em className="italic">{children}</em>,
+                            a: ({ href, children }) => (
+                              <a href={href} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600 underline transition-colors">{children}</a>
+                            ),
+                          }}
+                        >
+                          {trimmedContent}
+                        </ReactMarkdown>
+                      );
+                    } else {
+                      // Render inline card
+                      return (
+                        <InlineCard 
+                          key={`card-${index}-${part.cardId}`} 
+                          config={part.config} 
+                          cardId={part.cardId}
+                          onAddToPanel={onAddCardToPanel}
+                        />
+                      );
+                    }
+                  })}
+                </div>
               ) : (
-                // Para mensagens da IA, usa ReactMarkdown com suporte completo
+                // Para mensagens da IA sem placeholders, usa ReactMarkdown com suporte completo
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkBreaks]}
                   components={{
