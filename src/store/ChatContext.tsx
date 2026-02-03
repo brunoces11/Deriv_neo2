@@ -4,6 +4,30 @@ import type { Drawing, DrawingTag } from './DrawingToolsContext';
 import * as supabaseService from '../services/supabase';
 import type { ChatTagWithSnapshot } from '../services/supabase';
 
+// Helper to determine which panel a card should go to
+function getCardTargetPanel(cardType: CardType): { sidebar: 'left' | 'right'; panel: string } {
+  // Trade cards go to left sidebar 'positions' panel
+  if (cardType === 'create-trade-card' || cardType === 'trade-card' ||
+      cardType === 'card_trade' || cardType === 'card_trade_creator') {
+    return { sidebar: 'left', panel: 'positions' };
+  }
+  
+  // Bot cards go to right sidebar 'bots' panel
+  if (cardType === 'bot-card' || cardType === 'bot-creator' ||
+      cardType === 'card_bot' || cardType === 'card_bot_creator') {
+    return { sidebar: 'right', panel: 'bots' };
+  }
+  
+  // Action cards go to right sidebar 'actions' panel
+  if (cardType === 'actions-card' || cardType === 'actions-creator' ||
+      cardType === 'card_actions' || cardType === 'card_actions_creator') {
+    return { sidebar: 'right', panel: 'actions' };
+  }
+  
+  // Everything else (portfolio, etc.) goes to right sidebar 'cards' panel
+  return { sidebar: 'right', panel: 'cards' };
+}
+
 interface ChatState {
   currentSessionId: string | null;
   sessions: ChatSession[];
@@ -212,7 +236,7 @@ interface ChatContextValue extends ChatState {
   sessionTags: ChatTagWithSnapshot[];
   addMessage: (message: ChatMessage, sessionId?: string) => Promise<void>;
   setTyping: (typing: boolean) => void;
-  processUIEvent: (event: UIEvent, sessionId?: string) => Promise<void>;
+  processUIEvent: (event: UIEvent, sessionId?: string, onCardAdded?: (sidebar: 'left' | 'right', panel: string) => void) => Promise<void>;
   transformCard: (cardId: string, newType: CardType, newPayload: Record<string, unknown>) => void;
   archiveCard: (cardId: string) => Promise<void>;
   favoriteCard: (cardId: string) => Promise<void>;
@@ -380,7 +404,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_TYPING', payload: typing });
   }, []);
 
-  const processUIEvent = useCallback(async (event: UIEvent, sessionId?: string) => {
+  const processUIEvent = useCallback(async (event: UIEvent, sessionId?: string, onCardAdded?: (sidebar: 'left' | 'right', panel: string) => void) => {
     const targetSessionId = sessionId || state.currentSessionId;
     console.log('processUIEvent called:', { 
       eventType: event.type, 
@@ -419,6 +443,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       console.log('Adding card to state:', card.id, card.type);
       dispatch({ type: 'ADD_CARD', payload: card });
 
+      // Notify which panel should be activated
+      if (onCardAdded) {
+        const targetPanel = getCardTargetPanel(event.cardType as CardType);
+        onCardAdded(targetPanel.sidebar, targetPanel.panel);
+      }
+
       if (targetSessionId) {
         console.log('Persisting card to session:', targetSessionId);
         const success = await supabaseService.addCardToSession(targetSessionId, card);
@@ -436,7 +466,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'HIDE_CARD', payload: event.cardId });
       await supabaseService.updateCardInSession(event.cardId, { status: 'hidden' });
     }
-  }, [state.currentSessionId]);
+  }, [state.currentSessionId, state.activeCards]);
 
   const archiveCard = useCallback(async (cardId: string) => {
     dispatch({ type: 'ARCHIVE_CARD', payload: cardId });

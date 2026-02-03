@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, X } from 'lucide-react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
+import { useViewMode } from '../../store/ViewModeContext';
 import { useDrawingTools, DRAWING_COLORS } from '../../store/DrawingToolsContext';
 import { callLangflow } from '../../services/langflowApi';
 import { simulateLangFlowResponse } from '../../services/mockSimulation';
@@ -25,6 +26,7 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
     addTagToSession,
   } = useChat();
   const { theme } = useTheme();
+  const { notifyPanelActivation } = useViewMode();
   const { chatTags, removeTagFromChat, clearChatTags, selectDrawing, selectedDrawingId, drawings } = useDrawingTools();
 
   const isSidebar = displayMode === 'sidebar';
@@ -105,8 +107,10 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
 
       for (let i = 0; i < response.ui_events.length; i++) {
         await new Promise(resolve => setTimeout(resolve, 300 * (i + 1)));
-        // Pass sessionId explicitly
-        await processUIEvent(response.ui_events[i], sessionId);
+        // Pass sessionId explicitly with panel notification callback
+        await processUIEvent(response.ui_events[i], sessionId, (sidebar, panel) => {
+          notifyPanelActivation(sidebar, panel);
+        });
       }
     } catch (err) {
       console.error('Error in handleSubmit:', err);

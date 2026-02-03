@@ -395,7 +395,7 @@ const addedToPanelSet = new Set<string>();
 
 export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
   const { messages, isTyping, processUIEvent, currentSessionId } = useChat();
-  const { currentMode } = useViewMode();
+  const { currentMode, notifyPanelActivation } = useViewMode();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isSidebar = displayMode === 'sidebar';
 
@@ -429,7 +429,7 @@ export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
       ? `panel-singleton-${cardType}`
       : `panel-${cardId}`;
     
-    // Add to panel via processUIEvent
+    // Add to panel via processUIEvent with notification callback
     await processUIEvent({
       type: 'ADD_CARD',
       cardType: cardType as CardType,
@@ -439,8 +439,11 @@ export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
         visualState: 'compacted',
         panelTab,
       },
+    }, undefined, (sidebar, panel) => {
+      // Notify to expand and activate the panel where the card was added
+      notifyPanelActivation(sidebar, panel);
     });
-  }, [processUIEvent, currentSessionId]);
+  }, [processUIEvent, currentSessionId, notifyPanelActivation]);
 
   // Clear tracked cards when session changes
   useEffect(() => {

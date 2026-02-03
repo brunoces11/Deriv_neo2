@@ -77,7 +77,7 @@ export function CardsSidebar({
 }: CardsSidebarProps) {
   const { activeCards } = useChat();
   const { theme } = useTheme();
-  const { updateDraftInput, clearDraftInput } = useViewMode();
+  const { updateDraftInput, clearDraftInput, panelNotification, clearPanelNotification } = useViewMode();
   const { clearChatTags } = useDrawingTools();
   const [localWidth, setLocalWidth] = useState(propWidth);
   const [isResizing, setIsResizing] = useState(false);
@@ -101,6 +101,23 @@ export function CardsSidebar({
   }, []);
 
   const setActiveTab = (tab: RightSidebarTab) => updateRightSidebarState({ activeTab: tab });
+
+  // React to panel notification - expand sidebar and switch to correct tab
+  useEffect(() => {
+    if (panelNotification && panelNotification.sidebar === 'right') {
+      const targetTab = panelNotification.panel as RightSidebarTab;
+      if (targetTab === 'cards' || targetTab === 'actions' || targetTab === 'bots') {
+        // Expand sidebar if collapsed
+        if (isCollapsed) {
+          onToggleCollapse();
+        }
+        // Switch to the target tab
+        updateRightSidebarState({ activeTab: targetTab });
+        // Clear the notification
+        clearPanelNotification();
+      }
+    }
+  }, [panelNotification, isCollapsed, onToggleCollapse, clearPanelNotification, updateRightSidebarState]);
 
   // Helper: verifica se é QUALQUER tipo de card de portfolio (singleton - não pode duplicar no painel)
   // Inclui TODOS os tipos possíveis: snapshot, table-complete, e variantes legacy
@@ -381,6 +398,11 @@ export function CardsSidebar({
           >
             <Zap className="w-3.5 h-3.5" />
             <span>Cards</span>
+            {cardsForCardsPanel.length > 0 && (
+              <span className={`text-xs px-1.5 py-0.5 rounded-full text-brand-green ${
+                theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
+              }`}>{cardsForCardsPanel.length}</span>
+            )}
             {activeTab === 'cards' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
             )}
@@ -395,6 +417,11 @@ export function CardsSidebar({
           >
             <Play className="w-3.5 h-3.5" />
             <span>Actions</span>
+            {cardsForActionsPanel.length > 0 && (
+              <span className={`text-xs px-1.5 py-0.5 rounded-full text-brand-green ${
+                theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
+              }`}>{cardsForActionsPanel.length}</span>
+            )}
             {activeTab === 'actions' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
             )}
@@ -409,6 +436,11 @@ export function CardsSidebar({
           >
             <Bot className="w-3.5 h-3.5" />
             <span>Bots</span>
+            {cardsForBotsPanel.length > 0 && (
+              <span className={`text-xs px-1.5 py-0.5 rounded-full text-brand-green ${
+                theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
+              }`}>{cardsForBotsPanel.length}</span>
+            )}
             {activeTab === 'bots' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
             )}
@@ -545,8 +577,8 @@ export function CardsSidebar({
               <Zap className="w-4 h-4 text-red-500" />
               <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Cards</span>
               {cardsForCardsPanel.length > 0 && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                  theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+                <span className={`text-xs px-1.5 py-0.5 rounded-full text-brand-green ${
+                  theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
                 }`}>{cardsForCardsPanel.length}</span>
               )}
             </div>
@@ -595,8 +627,8 @@ export function CardsSidebar({
               <Play className="w-4 h-4 text-red-500" />
               <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Actions</span>
               {cardsForActionsPanel.length > 0 && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                  theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+                <span className={`text-xs px-1.5 py-0.5 rounded-full text-brand-green ${
+                  theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
                 }`}>{cardsForActionsPanel.length}</span>
               )}
             </div>
@@ -655,8 +687,8 @@ export function CardsSidebar({
               <Bot className="w-4 h-4 text-red-500" />
               <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Bots</span>
               {cardsForBotsPanel.length > 0 && (
-                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                  theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+                <span className={`text-xs px-1.5 py-0.5 rounded-full text-brand-green ${
+                  theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
                 }`}>{cardsForBotsPanel.length}</span>
               )}
             </div>

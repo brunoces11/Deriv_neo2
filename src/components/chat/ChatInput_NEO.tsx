@@ -140,7 +140,7 @@ interface ChatInput_NEOProps {
 
 export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
   // Draft state from context (persisted)
-  const { draftInput, updateDraftInput, clearDraftInput } = useViewMode();
+  const { draftInput, updateDraftInput, clearDraftInput, notifyPanelActivation } = useViewMode();
   const { plainText, selectedAgents, selectedProducts, autoMode } = draftInput;
   
   // Local UI state (not persisted)
@@ -649,7 +649,10 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
 
       for (let i = 0; i < response.ui_events.length; i++) {
         await new Promise(resolve => setTimeout(resolve, 300 * (i + 1)));
-        await processUIEvent(response.ui_events[i], sessionId);
+        await processUIEvent(response.ui_events[i], sessionId, (sidebar, panel) => {
+          // Notify to expand and activate the panel where the card was added
+          notifyPanelActivation(sidebar, panel);
+        });
       }
     } catch (err) {
       console.error('Error in handleSubmit:', err);

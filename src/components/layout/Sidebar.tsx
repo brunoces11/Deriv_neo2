@@ -59,7 +59,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
   const { favoriteCards, archivedCards, sessions, resetChat, activeCards } = useChat();
   const { theme } = useTheme();
   const { clearChatTags, clearAllDrawings } = useDrawingTools();
-  const { setMode, resetAllUISettings } = useViewMode();
+  const { setMode, resetAllUISettings, panelNotification, clearPanelNotification } = useViewMode();
   
   const [sidebarState, setSidebarState] = useState<SidebarState>(loadSidebarState);
   const { chatsOpen, favoritesOpen, archivedOpen } = sidebarState;
@@ -76,6 +76,24 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
     activeCards.filter(card => isTradeCard(card.type as CardType)),
     [activeCards]
   );
+
+  // React to panel notification - expand sidebar and switch to positions tab
+  useEffect(() => {
+    if (panelNotification && panelNotification.sidebar === 'left' && panelNotification.panel === 'positions') {
+      // Expand sidebar if collapsed
+      if (isCollapsed && onToggleCollapse) {
+        onToggleCollapse();
+      }
+      // Switch to positions tab
+      setSidebarState(prev => {
+        const newState = { ...prev, activeTab: 'positions' as SidebarTab };
+        saveSidebarState(newState);
+        return newState;
+      });
+      // Clear the notification
+      clearPanelNotification();
+    }
+  }, [panelNotification, isCollapsed, onToggleCollapse, clearPanelNotification]);
 
   // Handler para iniciar novo chat - limpa tudo, volta pro chat mode e reseta layout
   const handleNewChat = useCallback(() => {
@@ -302,6 +320,11 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
         >
           <Target className="w-4 h-4" />
           <span>Positions</span>
+          {positionCards.length > 0 && (
+            <span className={`text-xs px-1.5 py-0.5 rounded-full text-brand-green ${
+              theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
+            }`}>{positionCards.length}</span>
+          )}
           {activeTab === 'positions' && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
           )}

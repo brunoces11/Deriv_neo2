@@ -3,6 +3,13 @@ import { createContext, useContext, useReducer, useEffect, useRef, useCallback, 
 // Types
 type ViewMode = 'chat' | 'graph' | 'dashboard' | 'hub';
 
+// Panel notification types - which panel should be activated when a card is added
+export type PanelNotification = {
+  sidebar: 'left' | 'right';
+  panel: string; // 'positions' for left, 'cards' | 'actions' | 'bots' for right
+  timestamp: number;
+} | null;
+
 interface UserPoint {
   sidebarCollapsed?: boolean;
   cardsSidebarCollapsed?: boolean;
@@ -29,6 +36,7 @@ interface ViewModeState {
   userPoints: Record<ViewMode, UserPoint>;
   isResizing: boolean;
   draftInput: DraftInput;
+  panelNotification: PanelNotification;
 }
 
 // Start Points - configuração padrão de cada modo
@@ -80,6 +88,7 @@ interface ViewModeContextValue {
   cardsSidebarWidth: number;
   chartVisible: boolean;
   draftInput: DraftInput;
+  panelNotification: PanelNotification;
   toggleMode: () => void;
   setMode: (mode: ViewMode) => void;
   updateUserPoint: (updates: Partial<UserPoint>) => void;
@@ -88,6 +97,8 @@ interface ViewModeContextValue {
   resetAllUISettings: () => void;
   updateDraftInput: (updates: Partial<DraftInput>) => void;
   clearDraftInput: () => void;
+  notifyPanelActivation: (sidebar: 'left' | 'right', panel: string) => void;
+  clearPanelNotification: () => void;
 }
 
 const ViewModeContext = createContext<ViewModeContextValue | null>(null);
@@ -101,7 +112,9 @@ type Action =
   | { type: 'RESET_ALL_UI_SETTINGS' }
   | { type: 'LOAD_STATE'; payload: { currentMode: ViewMode; userPoints: Record<ViewMode, UserPoint>; draftInput?: DraftInput } }
   | { type: 'UPDATE_DRAFT_INPUT'; payload: Partial<DraftInput> }
-  | { type: 'CLEAR_DRAFT_INPUT' };
+  | { type: 'CLEAR_DRAFT_INPUT' }
+  | { type: 'NOTIFY_PANEL_ACTIVATION'; payload: { sidebar: 'left' | 'right'; panel: string } }
+  | { type: 'CLEAR_PANEL_NOTIFICATION' };
 
 function reducer(state: ViewModeState, action: Action): ViewModeState {
   switch (action.type) {
@@ -168,6 +181,22 @@ function reducer(state: ViewModeState, action: Action): ViewModeState {
         draftInput: DEFAULT_DRAFT_INPUT,
       };
     
+    case 'NOTIFY_PANEL_ACTIVATION':
+      return {
+        ...state,
+        panelNotification: {
+          sidebar: action.payload.sidebar,
+          panel: action.payload.panel,
+          timestamp: Date.now(),
+        },
+      };
+    
+    case 'CLEAR_PANEL_NOTIFICATION':
+      return {
+        ...state,
+        panelNotification: null,
+      };
+    
     default:
       return state;
   }
@@ -215,6 +244,7 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     userPoints: { chat: {}, graph: {}, dashboard: {}, hub: {} },
     isResizing: false,
     draftInput: DEFAULT_DRAFT_INPUT,
+    panelNotification: null,
   }, (initialState) => {
     // Load from storage synchronously during initialization
     const stored = loadFromStorage();
@@ -283,6 +313,14 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'CLEAR_DRAFT_INPUT' });
   }, []);
 
+  const notifyPanelActivation = useCallback((sidebar: 'left' | 'right', panel: string) => {
+    dispatch({ type: 'NOTIFY_PANEL_ACTIVATION', payload: { sidebar, panel } });
+  }, []);
+
+  const clearPanelNotification = useCallback(() => {
+    dispatch({ type: 'CLEAR_PANEL_NOTIFICATION' });
+  }, []);
+
   // Computed config
   const config = useMemo(
     () => computeConfig(state.currentMode, state.userPoints[state.currentMode]),
@@ -293,6 +331,7 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     currentMode: state.currentMode,
     isResizing: state.isResizing,
     draftInput: state.draftInput,
+    panelNotification: state.panelNotification,
     ...config,
     toggleMode,
     setMode,
@@ -302,6 +341,8 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     resetAllUISettings,
     updateDraftInput,
     clearDraftInput,
+    notifyPanelActivation,
+    clearPanelNotification,
   };
 
   return (
