@@ -21,7 +21,6 @@ interface ActionsCardProps {
 export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps) {
   const { theme } = useTheme();
   const { favoriteCard, unfavoriteCard, deleteCardWithTwin } = useChat();
-  const payload = card.payload as unknown as ActionsCardPayload;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -38,9 +37,21 @@ export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps)
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Sync isPlaying with status on mount - safe access to payload
+  const payload = card?.payload as unknown as ActionsCardPayload | undefined;
+  const status = payload?.status || 'inactive';
+  
+  useEffect(() => {
+    setIsPlaying(status === 'active');
+  }, [status]);
+  
+  // Guard against invalid card - MUST be after all hooks
+  if (!card || !card.id) {
+    return null;
+  }
+
   const actionId = payload?.actionId || 'ACT-000';
   const name = payload?.name || 'Unnamed Action';
-  const status = payload?.status || 'inactive';
   const lastExecution = payload?.lastExecution;
   
   // Action configuration data (from payload or defaults)
@@ -48,11 +59,6 @@ export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps)
   const action = payload?.action || { type: 'Alert', asset: 'BTC' };
   const schedule = payload?.schedule || { frequency: 'daily' as const, time: '09:00' };
   const condition = payload?.condition;
-
-  // Sync isPlaying with status on mount
-  useEffect(() => {
-    setIsPlaying(status === 'active');
-  }, [status]);
 
   const formatDate = (isoString: string) => {
     const date = new Date(isoString);
@@ -84,10 +90,11 @@ export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps)
     setIsDropdownOpen(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     console.log('[ActionsCard] Delete action (deleting twins):', { actionId, name, cardId: card.id });
-    deleteCardWithTwin(card.id);
     setIsDropdownOpen(false);
+    // Call delete after closing dropdown to avoid state updates on unmounted component
+    await deleteCardWithTwin(card.id);
   };
 
   const handleSchedule = () => {

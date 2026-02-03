@@ -23,14 +23,17 @@ const assetColors = ['bg-red-500', 'bg-cyan-500', 'bg-amber-500', 'bg-rose-500',
  * Expanded mode: Full portfolio details with allocation bar and asset breakdown
  */
 export function PortfolioSnapshotCard({ card, defaultExpanded = false }: PortfolioSnapshotCardProps) {
+  // === ALL HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL RETURNS ===
   const { theme } = useTheme();
   const { favoriteCard, unfavoriteCard } = useChat();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
-  const payload = card.payload as unknown as PortfolioSnapshotPayload;
-  const isPositive = payload.changePercent.startsWith('+');
+  // Safe payload access - card may be undefined during deletion
+  const payload = card?.payload as unknown as PortfolioSnapshotPayload | undefined;
+  const changePercent = payload?.changePercent || '+0%';
+  const isPositive = changePercent.startsWith('+');
   const TrendIcon = isPositive ? TrendingUp : TrendingDown;
 
   // Close dropdown when clicking outside
@@ -43,6 +46,11 @@ export function PortfolioSnapshotCard({ card, defaultExpanded = false }: Portfol
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // === GUARD CHECK - All hooks must be ABOVE this line ===
+  if (!card || !card.id || !payload) {
+    return null;
+  }
 
   const handleFavorite = () => {
     if (card.isFavorite) {

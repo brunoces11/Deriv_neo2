@@ -61,8 +61,9 @@ export function CardMenuActions({
   };
 
   const handleDelete = () => {
-    onDelete?.();
     setIsDropdownOpen(false);
+    // Call onDelete after closing dropdown to avoid state updates on unmounted component
+    onDelete?.();
   };
 
   const handleSchedule = () => {

@@ -23,13 +23,17 @@ interface CreateTradeCardProps {
 export function CreateTradeCard({ card, defaultExpanded = true }: CreateTradeCardProps) {
   const { theme } = useTheme();
   const { transformCard, deleteCardWithTwin } = useChat();
-  const payload = card.payload as unknown as CreateTradeCardPayload;
-  
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [durationMode, setDurationMode] = useState<'duration' | 'end-time'>('duration');
+  const [stakeMode, setStakeMode] = useState<'stake' | 'payout'>('stake');
+  const [stakeValue, setStakeValue] = useState(10);
   
-  const [durationMode, setDurationMode] = useState<'duration' | 'end-time'>(payload?.duration?.mode || 'duration');
-  const [stakeMode, setStakeMode] = useState<'stake' | 'payout'>(payload?.stake?.mode || 'stake');
-  const [stakeValue, setStakeValue] = useState(payload?.stake?.value || 10);
+  // Guard against invalid card - MUST be after all hooks
+  if (!card || !card.id) {
+    return null;
+  }
+  
+  const payload = card.payload as unknown as CreateTradeCardPayload;
 
   const asset = payload?.asset || 'BTC/USD';
   const tradeType = payload?.tradeType || 'higher-lower';
@@ -87,9 +91,9 @@ export function CreateTradeCard({ card, defaultExpanded = true }: CreateTradeCar
     }
   };
 
-  const handleDiscard = () => {
+  const handleDiscard = async () => {
     console.log('[CreateTradeCard] Discard trade (deleting twins):', { cardId: card.id });
-    deleteCardWithTwin(card.id);
+    await deleteCardWithTwin(card.id);
   };
 
   const handleStakeIncrement = () => setStakeValue(prev => Math.round((prev + 1) * 100) / 100);

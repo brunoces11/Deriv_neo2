@@ -24,7 +24,6 @@ export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const payload = card.payload as unknown as TradeCardPayload;
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -36,6 +35,13 @@ export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+  
+  // Guard against invalid card - MUST be after all hooks
+  if (!card || !card.id) {
+    return null;
+  }
+  
+  const payload = card.payload as unknown as TradeCardPayload;
 
   const tradeId = payload?.tradeId || 'TRD-000';
   const asset = payload?.asset || 'BTC/USD';
@@ -86,10 +92,11 @@ export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
     setIsDropdownOpen(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     console.log('[TradeCard] Delete trade (deleting twins):', { tradeId, cardId: card.id });
-    deleteCardWithTwin(card.id);
     setIsDropdownOpen(false);
+    // Call delete after closing dropdown to avoid state updates on unmounted component
+    await deleteCardWithTwin(card.id);
   };
 
   const handleSchedule = () => {

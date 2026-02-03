@@ -21,7 +21,6 @@ interface BotCardProps {
 export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
   const { theme } = useTheme();
   const { favoriteCard, unfavoriteCard, deleteCardWithTwin } = useChat();
-  const payload = card.payload as unknown as BotCardPayload;
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -38,9 +37,21 @@ export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Sync isPlaying with status on mount - safe access to payload
+  const payload = card?.payload as unknown as BotCardPayload | undefined;
+  const status = payload?.status || 'stopped';
+  
+  useEffect(() => {
+    setIsPlaying(status === 'active');
+  }, [status]);
+  
+  // Guard against invalid card - MUST be after all hooks
+  if (!card || !card.id) {
+    return null;
+  }
+
   const botId = payload?.botId || 'BOT-000';
   const name = payload?.name || 'Unnamed Bot';
-  const status = payload?.status || 'stopped';
   const performance = payload?.performance;
   
   // Bot configuration data (from payload or defaults)
@@ -48,11 +59,6 @@ export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
   const action = payload?.action || { type: 'Buy', asset: 'BTC' };
   const target = payload?.target || { type: 'Amount', value: '$100' };
   const condition = payload?.condition;
-
-  // Sync isPlaying with status on mount
-  useEffect(() => {
-    setIsPlaying(status === 'active');
-  }, [status]);
 
   const isPositivePerformance = performance?.startsWith('+');
 
@@ -86,10 +92,11 @@ export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
     setIsDropdownOpen(false);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     console.log('[BotCard] Delete bot (deleting twins):', { botId, name, cardId: card.id });
-    deleteCardWithTwin(card.id);
     setIsDropdownOpen(false);
+    // Call delete after closing dropdown to avoid state updates on unmounted component
+    await deleteCardWithTwin(card.id);
   };
 
   const handleSchedule = () => {

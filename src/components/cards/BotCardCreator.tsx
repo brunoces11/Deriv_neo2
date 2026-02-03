@@ -23,6 +23,11 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
   const { theme } = useTheme();
   const { transformCard, deleteCardWithTwin } = useChat();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  
+  // Guard against invalid card - MUST be after all hooks
+  if (!card || !card.id) {
+    return null;
+  }
   const payload = card.payload as unknown as BotCreatorPayload;
 
   const botName = payload?.botName || 'New Bot Strategy';
@@ -50,14 +55,14 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
     console.log('[BotCardCreator] Edit config:', { botName });
   };
 
-  const handleDiscard = () => {
+  const handleDiscard = async () => {
     console.log('[BotCardCreator] Discard bot creation (deleting twins):', { botName, cardId: card.id });
-    deleteCardWithTwin(card.id);
+    await deleteCardWithTwin(card.id);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     console.log('[BotCardCreator] Delete from menu (deleting twins):', { botName, cardId: card.id });
-    deleteCardWithTwin(card.id);
+    await deleteCardWithTwin(card.id);
   };
 
   // Box component for flowchart nodes

@@ -8,10 +8,19 @@ interface PortfolioSidebarCardProps {
 }
 
 export function PortfolioSidebarCard({ card }: PortfolioSidebarCardProps) {
+  // === ALL HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL RETURNS ===
   const { theme } = useTheme();
-  const payload = card.payload as unknown as PortfolioTablePayload;
-  const isPositive = payload.changePercent.startsWith('+');
+  
+  // Safe payload access - card may be undefined during deletion
+  const payload = card?.payload as unknown as PortfolioTablePayload | undefined;
+  const changePercent = payload?.changePercent || '+0%';
+  const isPositive = changePercent.startsWith('+');
   const TrendIcon = isPositive ? TrendingUp : TrendingDown;
+
+  // === GUARD CHECK - All hooks must be ABOVE this line ===
+  if (!card || !card.id || !payload) {
+    return null;
+  }
 
   const handleBuy = (symbol: string) => {
     console.log(`Buy action for ${symbol}`);

@@ -23,6 +23,11 @@ export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCard
   const { theme } = useTheme();
   const { transformCard, deleteCardWithTwin } = useChat();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  
+  // Guard against invalid card - MUST be after all hooks
+  if (!card || !card.id) {
+    return null;
+  }
   const payload = card.payload as unknown as ActionsCreatorPayload;
 
   const actionName = payload?.actionName || 'New Action';
@@ -50,9 +55,9 @@ export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCard
     console.log('[ActionsCardCreator] Edit config:', { actionName });
   };
 
-  const handleDiscard = () => {
+  const handleDiscard = async () => {
     console.log('[ActionsCardCreator] Discard action (deleting twins):', { actionName, cardId: card.id });
-    deleteCardWithTwin(card.id);
+    await deleteCardWithTwin(card.id);
   };
 
   // Box component for flowchart nodes

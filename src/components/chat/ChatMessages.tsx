@@ -266,28 +266,16 @@ interface InlineCardProps {
 function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
   const { inline, panel } = config;
   const { getCardById, deleteCardWithTwin } = useChat();
-  const CardComponent = cardComponents[inline.cardType];
   // Track if we've already added to panel for this specific card instance
   const hasAddedToPanelRef = useRef(false);
-  
-  if (!CardComponent) {
-    console.warn(`[InlineCard] Unknown card type: ${inline.cardType}`);
-    return null;
-  }
   
   // Try to get the card from centralized state (panel card)
   // Panel cards use 'panel-' prefix, so we look for that
   const panelCardId = `panel-${cardId}`;
   const existingCard = getCardById(panelCardId);
   
-  // Se já foi adicionado ao painel mas não existe mais, foi deletado
-  // Não renderiza nada - o placeholder desaparece permanentemente
-  if (hasAddedToPanelRef.current && !existingCard) {
-    return null;
-  }
-  
-  // Use existing card data if available, otherwise create mock
-  const card: BaseCard = existingCard || createMockCard(inline.cardType, cardId);
+  // Get card component - may be null for unknown types
+  const CardComponent = cardComponents[inline.cardType];
   
   // If we have an existing card, use its type (might have been transformed)
   const actualCardType = existingCard ? existingCard.type : inline.cardType;
@@ -295,10 +283,22 @@ function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
   
   const isExpanded = inline.visualState === 'expanded';
   
+  // Use existing card data if available, otherwise create mock
+  // Safe access - only create if we have a valid card type
+  const card: BaseCard | null = CardComponent 
+    ? (existingCard || createMockCard(inline.cardType, cardId))
+    : null;
+  
   // Add card to panel on mount (only once per card instance)
+  // IMPORTANT: This hook MUST be called unconditionally (before any returns)
   useEffect(() => {
     // Only add to panel once per card instance
     if (hasAddedToPanelRef.current) {
+      return;
+    }
+    
+    // Skip if no valid card component
+    if (!CardComponent) {
       return;
     }
     
@@ -307,7 +307,25 @@ function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
       const payload = existingCard?.payload || getDefaultPayloadForCard(panel.cardType);
       onAddToPanel(cardId, panel.cardType, panel.panel, payload as Record<string, unknown>);
     }
-  }, [cardId, panel, onAddToPanel, existingCard]);
+  }, [cardId, panel, onAddToPanel, existingCard, CardComponent]);
+  
+  // === GUARD CHECKS - All hooks must be ABOVE this line ===
+  
+  if (!CardComponent) {
+    console.warn(`[InlineCard] Unknown card type: ${inline.cardType}`);
+    return null;
+  }
+  
+  // Se já foi adicionado ao painel mas não existe mais, foi deletado
+  // Não renderiza nada - o placeholder desaparece permanentemente
+  if (hasAddedToPanelRef.current && !existingCard) {
+    return null;
+  }
+  
+  // Safety check - card should exist at this point
+  if (!card) {
+    return null;
+  }
   
   // Create a card object that includes the deleteCardWithTwin function
   // This allows inline cards to trigger deletion of both twins

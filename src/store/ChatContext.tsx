@@ -580,23 +580,27 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const deleteCardWithTwin = useCallback(async (cardId: string) => {
     console.log('[ChatContext] deleteCardWithTwin called:', cardId);
     
-    // Get the base ID (without 'panel-' prefix) for twin matching
-    const baseId = cardId.replace(/^panel-/, '');
-    const panelId = `panel-${baseId}`;
-    
-    // Find the panel card to get its Supabase ID (if it exists)
-    const panelCard = state.activeCards.find(c => c.id === panelId);
-    
-    // Delete from UI state (removes both twins)
-    dispatch({ type: 'DELETE_CARD_WITH_TWIN', payload: cardId });
-    
-    // Delete from Supabase if the panel card exists
-    // Panel cards are the ones persisted to Supabase
-    if (panelCard) {
-      await supabaseService.deleteCardFromSession(panelCard.id);
+    try {
+      // Get the base ID (without 'panel-' prefix) for twin matching
+      const baseId = cardId.replace(/^panel-/, '');
+      const panelId = `panel-${baseId}`;
+      
+      // Find the panel card to get its Supabase ID (if it exists)
+      const panelCard = state.activeCards.find(c => c.id === panelId);
+      
+      // Delete from UI state first (removes both twins)
+      dispatch({ type: 'DELETE_CARD_WITH_TWIN', payload: cardId });
+      
+      // Delete from Supabase if the panel card exists
+      // Panel cards are the ones persisted to Supabase
+      if (panelCard) {
+        await supabaseService.deleteCardFromSession(panelCard.id);
+      }
+      
+      console.log('[ChatContext] Card twins deleted:', { baseId, panelId });
+    } catch (error) {
+      console.error('[ChatContext] Error deleting card twins:', error);
     }
-    
-    console.log('[ChatContext] Card twins deleted:', { baseId, panelId });
   }, [state.activeCards]);
 
   const getCardById = useCallback((cardId: string): BaseCard | undefined => {
