@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, ChevronDown, Minus, Plus } from 'lucide-react';
+import { TrendingUp, TrendingDown, ChevronDown, ChevronUp, Minus, Plus } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
-import { CardMenuActions } from './CardMenuActions';
 import { useTheme } from '../../store/ThemeContext';
 import { useChat } from '../../store/ChatContext';
 import { transformCard as transformCardRule } from '../../services/placeholderRules';
@@ -18,16 +17,19 @@ interface CreateTradeCardProps {
  * Compact trading interface for configuring and executing trades.
  * Displays trade configuration with duration, barrier, stake sections
  * and Higher/Lower action buttons.
+ * 
+ * Features expand/collapse toggle (chevron button only, no three-dots menu).
  */
 export function CreateTradeCard({ card, defaultExpanded = true }: CreateTradeCardProps) {
   const { theme } = useTheme();
   const { transformCard } = useChat();
   const payload = card.payload as unknown as CreateTradeCardPayload;
   
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  
   const [durationMode, setDurationMode] = useState<'duration' | 'end-time'>(payload?.duration?.mode || 'duration');
   const [stakeMode, setStakeMode] = useState<'stake' | 'payout'>(payload?.stake?.mode || 'stake');
   const [stakeValue, setStakeValue] = useState(payload?.stake?.value || 10);
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   const asset = payload?.asset || 'BTC/USD';
   const tradeType = payload?.tradeType || 'higher-lower';
@@ -110,9 +112,21 @@ export function CreateTradeCard({ card, defaultExpanded = true }: CreateTradeCar
               <span className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>• {duration.value} {duration.unit}</span>
             </div>
           </div>
-          <CardMenuActions card={card} isExpanded={isExpanded} onToggleExpand={() => setIsExpanded(!isExpanded)} />
+          {/* Expand/Collapse Button (no three-dots menu) */}
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            title={isExpanded ? 'Collapse' : 'Expand'}
+            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${
+              theme === 'dark'
+                ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
+                : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+            }`}
+          >
+            {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          </button>
         </div>
 
+        {/* Expanded Content */}
         {isExpanded && (
           <div className="space-y-3 pt-1">
             {/* Duration */}

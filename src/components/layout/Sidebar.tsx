@@ -1,5 +1,5 @@
 import { Star, Archive, ChevronDown, ChevronRight, ChevronLeft, MessageSquare, Target } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import { useDrawingTools } from '../../store/DrawingToolsContext';
@@ -7,8 +7,10 @@ import { useViewMode } from '../../store/ViewModeContext';
 import { SidebarCard } from './SidebarCard';
 import { ChatSessionCard } from './ChatSessionCard';
 import { UserProfile } from './UserProfile';
+import { ExecutionCard } from './ExecutionCard';
 import derivNeoDark from '../../assets/deriv_neo_dark_mode.svg';
 import derivNeoLight from '../../assets/deriv_neo_light_mode.svg';
+import type { CardType } from '../../types';
 
 const SIDEBAR_STATE_KEY = 'deriv-neo-sidebar-state';
 
@@ -54,13 +56,26 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps) {
-  const { favoriteCards, archivedCards, sessions, resetChat } = useChat();
+  const { favoriteCards, archivedCards, sessions, resetChat, activeCards } = useChat();
   const { theme } = useTheme();
   const { clearChatTags, clearAllDrawings } = useDrawingTools();
   const { setMode, resetAllUISettings } = useViewMode();
   
   const [sidebarState, setSidebarState] = useState<SidebarState>(loadSidebarState);
   const { chatsOpen, favoritesOpen, archivedOpen } = sidebarState;
+
+  // Helper: verifica se é um trade card (vai para aba Positions)
+  const isTradeCard = (cardType: CardType) => 
+    cardType === 'create-trade-card' || 
+    cardType === 'trade-card' ||
+    cardType === 'card_trade' ||
+    cardType === 'card_trade_creator';
+
+  // Filtrar cards de trade para a aba Positions
+  const positionCards = useMemo(() => 
+    activeCards.filter(card => isTradeCard(card.type as CardType)),
+    [activeCards]
+  );
 
   // Handler para iniciar novo chat - limpa tudo, volta pro chat mode e reseta layout
   const handleNewChat = useCallback(() => {
@@ -448,15 +463,23 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
         ) : (
           /* Positions Tab Content */
           <div className="p-3">
-            <div className={`text-center py-8 transition-colors ${
-              theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'
-            }`}>
-              <Target className={`w-8 h-8 mx-auto mb-2 ${
-                theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'
-              }`} />
-              <p className="text-sm">No positions yet</p>
-              <p className="text-xs mt-1">Your open positions will appear here</p>
-            </div>
+            {positionCards.length === 0 ? (
+              <div className={`text-center py-8 transition-colors ${
+                theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'
+              }`}>
+                <Target className={`w-8 h-8 mx-auto mb-2 ${
+                  theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'
+                }`} />
+                <p className="text-sm">No positions yet</p>
+                <p className="text-xs mt-1">Your open positions will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {positionCards.map(card => (
+                  <ExecutionCard key={card.id} card={card} defaultExpanded={true} />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

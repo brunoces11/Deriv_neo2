@@ -90,7 +90,7 @@ Como desenvolvedor, quero que as regras de placeholder→card fiquem em arquivo 
 }
 
 '[[CREATE_TRADE_CARD]]': {
-  *: inline 'create-trade-card' expandido + painel 'cards' 'create-trade-card' compactado
+  *: inline 'create-trade-card' expandido + painel 'positions' 'create-trade-card' expandido
 }
 
 '[[CREATE_BOT_CARD]]': {
@@ -207,7 +207,7 @@ A área "Active Cards" deixa de existir. Cards inline são renderizados diretame
 
 ```typescript
 type ViewMode = 'chat' | 'graph' | 'dashboard' | 'hub';
-type PanelTab = 'cards' | 'actions' | 'bots';
+type PanelTab = 'cards' | 'actions' | 'bots' | 'positions';
 type VisualState = 'expandido' | 'compactado';
 
 interface RenderAction {

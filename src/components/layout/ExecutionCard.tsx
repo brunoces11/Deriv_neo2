@@ -13,18 +13,20 @@ import { PortfolioSidebarCard } from '../cards/PortfolioSidebarCard';
 
 interface ExecutionCardProps {
   card: BaseCard;
+  defaultExpanded?: boolean;
 }
 
 /**
  * ExecutionCard Component
  * 
  * Renders the actual card component based on card type.
- * Cards in the panel are rendered in compacted mode (defaultExpanded=false).
+ * Cards in the panel are rendered in compacted mode (defaultExpanded=false) by default,
+ * but this can be overridden via the defaultExpanded prop.
  * This ensures the same card component is used both inline and in the panel.
  */
-export function ExecutionCard({ card }: ExecutionCardProps) {
-  // Render the actual card component based on type, always in compacted mode
-  return renderCardByType(card, false);
+export function ExecutionCard({ card, defaultExpanded = false }: ExecutionCardProps) {
+  // Render the actual card component based on type
+  return renderCardByType(card, defaultExpanded);
 }
 
 /**

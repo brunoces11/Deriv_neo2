@@ -10,7 +10,7 @@
 // ============================================================================
 
 export type ViewMode = 'chat' | 'graph' | 'dashboard' | 'hub';
-export type PanelTab = 'cards' | 'actions' | 'bots';
+export type PanelTab = 'cards' | 'actions' | 'bots' | 'positions';
 export type VisualState = 'expanded' | 'compacted';
 
 // Card type names used in the rendering system
@@ -60,11 +60,11 @@ export const PLACEHOLDER_RULES: Record<string, PlaceholderRule> = {
   '[[CREATE_TRADE_CARD]]': {
     chatmode: {
       inline: { cardType: 'create-trade-card', location: 'inline', visualState: 'expanded' },
-      panel: { cardType: 'create-trade-card', location: 'panel', panel: 'cards', visualState: 'compacted' }
+      panel: { cardType: 'create-trade-card', location: 'panel', panel: 'positions', visualState: 'expanded' }
     },
     otherModes: {
       inline: { cardType: 'create-trade-card', location: 'inline', visualState: 'expanded' },
-      panel: { cardType: 'create-trade-card', location: 'panel', panel: 'cards', visualState: 'compacted' }
+      panel: { cardType: 'create-trade-card', location: 'panel', panel: 'positions', visualState: 'expanded' }
     }
   },
   '[[CREATE_BOT_CARD]]': {
