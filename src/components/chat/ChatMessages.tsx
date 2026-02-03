@@ -90,13 +90,16 @@ type MessagePart =
 
 /**
  * Parse message content and extract placeholders for inline card rendering
+ * Uses deterministic cardId based on message content and placeholder position
  */
 function parseMessageWithPlaceholders(
   content: string, 
-  mode: PlaceholderViewMode
+  mode: PlaceholderViewMode,
+  messageId: string
 ): MessagePart[] {
   const parts: MessagePart[] = [];
   let lastIndex = 0;
+  let placeholderIndex = 0;
   
   // Reset regex state
   PLACEHOLDER_REGEX.lastIndex = 0;
@@ -113,12 +116,15 @@ function parseMessageWithPlaceholders(
     const config = getRuleForMode(placeholder, mode);
     
     if (config) {
+      // Use deterministic cardId based on messageId and placeholder position
+      // This ensures the same placeholder in the same message always gets the same ID
       parts.push({ 
         type: 'card', 
         placeholder, 
         config,
-        cardId: `inline-${placeholder}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
+        cardId: `${messageId}-placeholder-${placeholderIndex}`
       });
+      placeholderIndex++;
     } else {
       // Unknown placeholder, keep as text
       parts.push({ type: 'text', content: match[0] });
@@ -260,6 +266,8 @@ interface InlineCardProps {
 function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
   const { inline, panel } = config;
   const CardComponent = cardComponents[inline.cardType];
+  // Track if we've already added to panel for this specific card instance
+  const hasAddedToPanelRef = useRef(false);
   
   if (!CardComponent) {
     console.warn(`[InlineCard] Unknown card type: ${inline.cardType}`);
@@ -269,12 +277,19 @@ function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
   const mockCard = createMockCard(inline.cardType, cardId);
   const isExpanded = inline.visualState === 'expanded';
   
-  // Add card to panel on mount (only once)
+  // Add card to panel on mount (only once per card instance)
   useEffect(() => {
-    if (panel && panel.panel) {
-      onAddToPanel(cardId, panel.cardType, panel.panel, mockCard.payload);
+    // Only add to panel once per card instance
+    if (hasAddedToPanelRef.current) {
+      return;
     }
-  }, [cardId, panel, mockCard.payload, onAddToPanel]);
+    
+    if (panel && panel.panel) {
+      hasAddedToPanelRef.current = true;
+      const payload = getDefaultPayloadForCard(panel.cardType);
+      onAddToPanel(cardId, panel.cardType, panel.panel, payload);
+    }
+  }, [cardId, panel, onAddToPanel]);
   
   return (
     <div className="my-4 max-w-full">
@@ -461,7 +476,7 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
   
   // Parse message for placeholders (only for AI messages)
   const messageParts = !isUser 
-    ? parseMessageWithPlaceholders(message.content, currentMode)
+    ? parseMessageWithPlaceholders(message.content, currentMode, message.id)
     : null;
   
   // Check if message has inline cards
