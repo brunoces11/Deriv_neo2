@@ -8,6 +8,9 @@ import { DashboardView } from './DashboardView';
 import { HubView } from './HubView';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
+import { useViewMode } from '../../store/ViewModeContext';
+import { useDrawingTools } from '../../store/DrawingToolsContext';
+import { useCallback } from 'react';
 
 interface MainAreaProps {
   isGraphMode: boolean;
@@ -92,6 +95,21 @@ export function MainArea({ isGraphMode, isDashboardMode, isHubMode }: MainAreaPr
 
 function WelcomeScreen() {
   const { theme } = useTheme();
+  const { updateDraftInput, clearDraftInput } = useViewMode();
+  const { clearChatTags } = useDrawingTools();
+
+  // Handler para icebreaker buttons
+  const handleIcebreaker = useCallback((text: string) => {
+    // 1. Limpar completamente o draft input (texto, agentes, produtos, tags)
+    clearDraftInput();
+    clearChatTags();
+    
+    // 2. Usar setTimeout para garantir que o clear seja processado primeiro
+    setTimeout(() => {
+      // 3. Inserir o novo texto
+      updateDraftInput({ plainText: text });
+    }, 50);
+  }, [clearDraftInput, clearChatTags, updateDraftInput]);
 
   return (
     <div className="flex-1 flex items-center justify-center px-4">
@@ -117,25 +135,28 @@ function WelcomeScreen() {
           I'll create actionable cards based on your requests.
         </p>
         <div className="grid grid-cols-2 gap-3 text-left">
-          <SuggestionCard text="Show my portfolio" />
-          <SuggestionCard text="Buy 0.1 BTC" />
-          <SuggestionCard text="Set up a DCA bot" />
-          <SuggestionCard text="Swap ETH to USDC" />
+          <SuggestionCard text="Show my portfolio" onClick={() => handleIcebreaker('Show my portfolio')} />
+          <SuggestionCard text="Buy 0.1 BTC" onClick={() => handleIcebreaker('Buy 0.1 BTC')} />
+          <SuggestionCard text="Set up a DCA bot" onClick={() => handleIcebreaker('Set up a DCA bot')} />
+          <SuggestionCard text="Swap ETH to USDC" onClick={() => handleIcebreaker('Swap ETH to USDC')} />
         </div>
       </div>
     </div>
   );
 }
 
-function SuggestionCard({ text }: { text: string }) {
+function SuggestionCard({ text, onClick }: { text: string; onClick: () => void }) {
   const { theme } = useTheme();
 
   return (
-    <button className={`group px-4 py-3 rounded-xl border transition-all text-sm text-left ${
-      theme === 'dark'
-        ? 'bg-zinc-800/50 border-zinc-700/50 hover:border-zinc-600 hover:bg-zinc-800 text-zinc-300'
-        : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:bg-gray-100 text-gray-700'
-    }`}>
+    <button 
+      onClick={onClick}
+      className={`group px-4 py-3 rounded-xl border transition-all text-sm text-left ${
+        theme === 'dark'
+          ? 'bg-zinc-800/50 border-zinc-700/50 hover:border-zinc-600 hover:bg-zinc-800 text-zinc-300'
+          : 'bg-gray-50 border-gray-200 hover:border-gray-300 hover:bg-gray-100 text-gray-700'
+      }`}
+    >
       <span className={`transition-colors ${
         theme === 'dark' ? 'group-hover:text-white' : 'group-hover:text-gray-900'
       }`}>{text}</span>
