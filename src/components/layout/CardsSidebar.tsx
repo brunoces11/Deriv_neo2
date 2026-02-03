@@ -458,8 +458,16 @@ export function CardsSidebar({
           </div>
 
           {/* Chat Messages Section */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar px-3">
-            <ChatMessages displayMode="sidebar" />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className={`px-3 py-2 flex items-center gap-2 border-b flex-shrink-0 ${
+              theme === 'dark' ? 'border-zinc-800/50 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'
+            }`}>
+              <BotMessageSquare className="w-4 h-4 text-red-500" />
+              <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Chats</span>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-3">
+              <ChatMessages displayMode="sidebar" />
+            </div>
           </div>
 
           {/* Chat Input Section */}
