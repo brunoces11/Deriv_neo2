@@ -134,24 +134,24 @@ export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps)
           <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200/70'}`}>
             <Zap className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
           </div>
-          {/* Status dot - top right */}
+          {/* Status dot - top right - Blue when active */}
           <div 
             className={`absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${
               theme === 'dark' ? 'border-zinc-900' : 'border-white'
-            } ${isPlaying ? 'bg-[#00d0a0]' : theme === 'dark' ? 'bg-zinc-500' : 'bg-gray-400'}`}
+            } ${isPlaying ? 'bg-cyan-500' : theme === 'dark' ? 'bg-zinc-500' : 'bg-gray-400'}`}
           />
         </div>
 
         {/* Content - 2 lines only */}
         <div className="flex-1 min-w-0">
-          {/* Line 1: Name */}
-          <h3 className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+          {/* Line 1: Name - Blue when active */}
+          <h3 className={`text-sm font-semibold ${isPlaying ? 'text-cyan-500' : theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
             {name}
           </h3>
 
-          {/* Line 2: Status + Last Execution */}
+          {/* Line 2: Status + Last Execution - Blue when active */}
           <div className="flex items-center gap-2 mt-0.5">
-            <span className={`text-xs font-medium ${isPlaying ? 'text-[#00d0a0]' : theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+            <span className={`text-xs font-medium ${isPlaying ? 'text-cyan-500' : theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
               {isPlaying ? 'Active' : 'Inactive'}
             </span>
             {lastExecution && (
@@ -164,13 +164,13 @@ export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps)
 
         {/* Action Buttons - Compact: Play/Pause, Dropdown, Expand */}
         <div className="flex items-center gap-1 flex-shrink-0">
-          {/* Play/Pause Button */}
+          {/* Play/Pause Button - Blue when active */}
           <button
             onClick={handlePlayPause}
             title={isPlaying ? 'Pause' : 'Play'}
             className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
               isPlaying
-                ? 'bg-[#00d0a0]/20 text-[#00d0a0] hover:bg-[#00d0a0]/30'
+                ? 'bg-cyan-500/20 text-cyan-500 hover:bg-cyan-500/30'
                 : theme === 'dark'
                   ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-400'
                   : 'bg-gray-200 hover:bg-gray-300 text-gray-400'
@@ -281,15 +281,15 @@ export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps)
               }}
             />
 
-            {/* Top Row: Trigger → Action → Schedule */}
+            {/* Top Row: Trigger → Action → Schedule - All neutral gray */}
             <div className="relative flex items-center justify-center gap-2 mb-4">
               {/* Trigger Box */}
               <FlowBox 
                 label="Trigger" 
                 value={trigger.value ? `${trigger.type} (${trigger.value})` : trigger.type}
                 colorClass={theme === 'dark' 
-                  ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
-                  : 'bg-amber-50 border-amber-300 text-amber-700'
+                  ? 'bg-zinc-700/50 border-zinc-600 text-zinc-300' 
+                  : 'bg-gray-100 border-gray-300 text-gray-700'
                 }
               />
 
@@ -301,8 +301,8 @@ export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps)
                 label="Action" 
                 value={action.asset ? `${action.type} ${action.asset}` : action.type}
                 colorClass={theme === 'dark' 
-                  ? 'bg-[#00d0a0]/10 border-[#00d0a0]/30 text-[#00d0a0]' 
-                  : 'bg-green-50 border-green-300 text-green-700'
+                  ? 'bg-zinc-700/50 border-zinc-600 text-zinc-300' 
+                  : 'bg-gray-100 border-gray-300 text-gray-700'
                 }
               />
 
@@ -314,8 +314,8 @@ export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps)
                 label="Schedule" 
                 value={schedule.time ? `${schedule.frequency} @ ${schedule.time}` : schedule.frequency}
                 colorClass={theme === 'dark' 
-                  ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' 
-                  : 'bg-cyan-50 border-cyan-300 text-cyan-700'
+                  ? 'bg-zinc-700/50 border-zinc-600 text-zinc-300' 
+                  : 'bg-gray-100 border-gray-300 text-gray-700'
                 }
               />
             </div>
@@ -333,8 +333,8 @@ export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps)
                     label="Condition" 
                     value={`${condition.type} ${condition.operator} ${condition.value}`}
                     colorClass={theme === 'dark' 
-                      ? 'bg-orange-500/10 border-orange-500/30 text-orange-400' 
-                      : 'bg-orange-50 border-orange-300 text-orange-700'
+                      ? 'bg-zinc-700/50 border-zinc-600 text-zinc-300' 
+                      : 'bg-gray-100 border-gray-300 text-gray-700'
                     }
                   />
                 </div>

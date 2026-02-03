@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bot, Rocket, Settings, X } from 'lucide-react';
+import { Bot, Rocket, Settings, Trash2 } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { CardMenuActions } from './CardMenuActions';
 import { useTheme } from '../../store/ThemeContext';
@@ -21,7 +21,7 @@ interface BotCardCreatorProps {
  */
 export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorProps) {
   const { theme } = useTheme();
-  const { transformCard } = useChat();
+  const { transformCard, hideCard } = useChat();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const payload = card.payload as unknown as BotCreatorPayload;
 
@@ -50,8 +50,9 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
     console.log('[BotCardCreator] Edit config:', { botName });
   };
 
-  const handleCancel = () => {
-    console.log('[BotCardCreator] Cancel bot creation:', { botName });
+  const handleDiscard = () => {
+    console.log('[BotCardCreator] Discard bot creation:', { botName });
+    hideCard(card.id);
   };
 
   // Box component for flowchart nodes
@@ -80,8 +81,8 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
               <Bot className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             </div>
             <div>
-              <span className="text-[10px] font-medium text-cyan-500 uppercase tracking-wider block">
-                New Bot Configuration
+              <span className="text-[10px] font-medium text-amber-500 uppercase tracking-wider block">
+                New Bot Waiting Approval
               </span>
               <h3 className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 "{botName}"
@@ -113,15 +114,15 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
             }}
           />
 
-          {/* Top Row: Trigger → Action → Target */}
+          {/* Top Row: Trigger → Action → Target - All neutral gray */}
           <div className="relative flex items-center justify-center gap-2 mb-4">
             {/* Trigger Box */}
             <FlowBox 
               label="Trigger" 
               value={trigger.value ? `${trigger.type} (${trigger.value})` : trigger.type}
               colorClass={theme === 'dark' 
-                ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-400' 
-                : 'bg-cyan-50 border-cyan-300 text-cyan-700'
+                ? 'bg-zinc-700/50 border-zinc-600 text-zinc-300' 
+                : 'bg-gray-100 border-gray-300 text-gray-700'
               }
             />
 
@@ -133,8 +134,8 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
               label="Action" 
               value={`${action.type} ${action.asset}`}
               colorClass={theme === 'dark' 
-                ? 'bg-[#00d0a0]/10 border-[#00d0a0]/30 text-[#00d0a0]' 
-                : 'bg-green-50 border-green-300 text-green-700'
+                ? 'bg-zinc-700/50 border-zinc-600 text-zinc-300' 
+                : 'bg-gray-100 border-gray-300 text-gray-700'
               }
             />
 
@@ -146,8 +147,8 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
               label="Target" 
               value={target.value}
               colorClass={theme === 'dark' 
-                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' 
-                : 'bg-amber-50 border-amber-300 text-amber-700'
+                ? 'bg-zinc-700/50 border-zinc-600 text-zinc-300' 
+                : 'bg-gray-100 border-gray-300 text-gray-700'
               }
             />
           </div>
@@ -165,8 +166,8 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
                   label="Condition" 
                   value={`${condition.type} ${condition.operator} ${condition.value}`}
                   colorClass={theme === 'dark' 
-                    ? 'bg-orange-500/10 border-orange-500/30 text-orange-400' 
-                    : 'bg-orange-50 border-orange-300 text-orange-700'
+                    ? 'bg-zinc-700/50 border-zinc-600 text-zinc-300' 
+                    : 'bg-gray-100 border-gray-300 text-gray-700'
                   }
                 />
               </div>
@@ -196,19 +197,19 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
             Edit
           </button>
           <button
-            onClick={handleCancel}
+            onClick={handleDiscard}
             className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-colors ${
               theme === 'dark'
                 ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
                 : 'bg-gray-800 hover:bg-gray-700 text-gray-100'
             }`}
           >
-            <X className="w-4 h-4" />
-            Cancel
+            <Trash2 className="w-4 h-4" />
+            Discard
           </button>
           <button
             onClick={handleDeploy}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-colors ${
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg font-medium text-sm transition-colors border border-amber-500 ${
               theme === 'dark'
                 ? 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200'
                 : 'bg-gray-800 hover:bg-gray-700 text-gray-100'
