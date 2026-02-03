@@ -86,10 +86,20 @@ export function renderCardByType(card: BaseCard, defaultExpanded: boolean): JSX.
 
 /**
  * Helper to determine which panel tab a card belongs to
+ * 'positions' = left sidebar only (trade cards)
+ * 'cards' = right sidebar cards panel
+ * 'actions' = right sidebar actions panel
+ * 'bots' = right sidebar bots panel
  */
-export type PanelTab = 'cards' | 'actions' | 'bots';
+export type PanelTab = 'cards' | 'actions' | 'bots' | 'positions';
 
 export function getCardPanelTab(cardType: CardType): PanelTab {
+  // Trade cards go to 'positions' panel (left sidebar only)
+  if (cardType === 'create-trade-card' || cardType === 'trade-card' ||
+      cardType === 'card_trade' || cardType === 'card_trade_creator') {
+    return 'positions';
+  }
+  
   // Bot cards go to 'bots' panel
   if (cardType === 'bot-card' || cardType === 'bot-creator' || 
       cardType === 'card_bot' || cardType === 'card_bot_creator') {
@@ -102,6 +112,6 @@ export function getCardPanelTab(cardType: CardType): PanelTab {
     return 'actions';
   }
   
-  // Everything else goes to 'cards' panel (portfolio, trade, etc.)
+  // Everything else goes to 'cards' panel (portfolio, etc.)
   return 'cards';
 }

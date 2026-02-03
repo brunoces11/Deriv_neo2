@@ -499,7 +499,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
             ) : (
               <div className="space-y-2">
                 {positionCards.map(card => (
-                  <ExecutionCard key={card.id} card={card} defaultExpanded={true} />
+                  <ExecutionCard key={card.id} card={card} />
                 ))}
               </div>
             )}
