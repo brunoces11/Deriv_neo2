@@ -588,13 +588,13 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                             strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
                             em: ({ children }) => <em className="italic">{children}</em>,
                             del: ({ children }) => <del className="line-through">{children}</del>,
-                            // Headings
-                            h1: ({ children }) => <h1 className="text-lg font-bold mb-2 mt-3 first:mt-0">{children}</h1>,
-                            h2: ({ children }) => <h2 className="text-base font-bold mb-2 mt-2 first:mt-0">{children}</h2>,
-                            h3: ({ children }) => <h3 className="text-sm font-bold mb-1 mt-2 first:mt-0">{children}</h3>,
-                            h4: ({ children }) => <h4 className="text-sm font-semibold mb-1 mt-1 first:mt-0">{children}</h4>,
-                            h5: ({ children }) => <h5 className="text-xs font-semibold mb-1 mt-1 first:mt-0">{children}</h5>,
-                            h6: ({ children }) => <h6 className="text-xs font-semibold mb-1 mt-1 first:mt-0">{children}</h6>,
+                            // Headings - enhanced hierarchy with better spacing
+                            h1: ({ children }) => <h1 className="text-2xl font-bold mb-2 mt-10 first:mt-0">{children}</h1>,
+                            h2: ({ children }) => <h2 className="text-xl font-bold mb-2 mt-8 first:mt-0">{children}</h2>,
+                            h3: ({ children }) => <h3 className="text-lg font-bold mb-1.5 mt-6 first:mt-0">{children}</h3>,
+                            h4: ({ children }) => <h4 className="text-sm font-semibold mb-1 mt-5 first:mt-0">{children}</h4>,
+                            h5: ({ children }) => <h5 className="text-sm font-semibold mb-1 mt-4 first:mt-0">{children}</h5>,
+                            h6: ({ children }) => <h6 className="text-xs font-semibold mb-1 mt-3 first:mt-0">{children}</h6>,
                             a: ({ href, children }) => (
                               <a href={href} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600 underline transition-colors">{children}</a>
                             ),
@@ -668,13 +668,13 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                     em: ({ children }) => <em className="italic">{children}</em>,
                     del: ({ children }) => <del className="line-through">{children}</del>,
                     
-                    // Headings
-                    h1: ({ children }) => <h1 className="text-lg font-bold mb-2 mt-3 first:mt-0">{children}</h1>,
-                    h2: ({ children }) => <h2 className="text-base font-bold mb-2 mt-2 first:mt-0">{children}</h2>,
-                    h3: ({ children }) => <h3 className="text-sm font-bold mb-1 mt-2 first:mt-0">{children}</h3>,
-                    h4: ({ children }) => <h4 className="text-sm font-semibold mb-1 mt-1 first:mt-0">{children}</h4>,
-                    h5: ({ children }) => <h5 className="text-xs font-semibold mb-1 mt-1 first:mt-0">{children}</h5>,
-                    h6: ({ children }) => <h6 className="text-xs font-semibold mb-1 mt-1 first:mt-0">{children}</h6>,
+                    // Headings - enhanced hierarchy with better spacing
+                    h1: ({ children }) => <h1 className="text-2xl font-bold mb-2 mt-10 first:mt-0">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-xl font-bold mb-2 mt-8 first:mt-0">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-lg font-bold mb-1.5 mt-6 first:mt-0">{children}</h3>,
+                    h4: ({ children }) => <h4 className="text-sm font-semibold mb-1 mt-5 first:mt-0">{children}</h4>,
+                    h5: ({ children }) => <h5 className="text-sm font-semibold mb-1 mt-4 first:mt-0">{children}</h5>,
+                    h6: ({ children }) => <h6 className="text-xs font-semibold mb-1 mt-3 first:mt-0">{children}</h6>,
                     
                     // Links
                     a: ({ href, children }) => (
