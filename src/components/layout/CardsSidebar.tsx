@@ -102,11 +102,32 @@ export function CardsSidebar({
 
   const setActiveTab = (tab: RightSidebarTab) => updateRightSidebarState({ activeTab: tab });
 
-  // Filter cards by panel type
-  const cardsForCardsPanel = useMemo(() => 
-    activeCards.filter(card => getCardPanelTab(card.type as CardType) === 'cards'),
-    [activeCards]
-  );
+  // Helper: verifica se é QUALQUER tipo de card de portfolio (singleton - não pode duplicar no painel)
+  // Inclui TODOS os tipos possíveis: snapshot, table-complete, e variantes legacy
+  const isAnyPortfolioCard = (cardType: CardType) => 
+    cardType === 'portfolio-snapshot' ||
+    cardType === 'portfolio-table-complete' ||
+    cardType === 'portfolio-sidebar' ||
+    cardType === 'card_portfolio' ||
+    cardType === 'card_portfolio_exemple_compacto' ||
+    cardType === 'card_portfolio_sidebar';
+
+  // Filter cards by panel type, com deduplicação de TODOS os tipos de portfolio
+  const cardsForCardsPanel = useMemo(() => {
+    const filtered = activeCards.filter(card => getCardPanelTab(card.type as CardType) === 'cards');
+    
+    // Deduplicar cards de portfolio: manter apenas o primeiro de qualquer tipo
+    let hasPortfolioCard = false;
+    return filtered.filter(card => {
+      if (isAnyPortfolioCard(card.type as CardType)) {
+        if (hasPortfolioCard) {
+          return false; // Já existe um portfolio card, não mostrar duplicata
+        }
+        hasPortfolioCard = true;
+      }
+      return true;
+    });
+  }, [activeCards]);
   
   const cardsForActionsPanel = useMemo(() => 
     activeCards.filter(card => getCardPanelTab(card.type as CardType) === 'actions'),

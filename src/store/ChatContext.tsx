@@ -390,6 +390,23 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     });
     
     if (event.type === 'ADD_CARD' && event.cardType && event.payload) {
+      // REGRA: Cards de portfolio-table são singleton no painel
+      // Podem aparecer múltiplas vezes inline, mas só uma vez no painel
+      const isPortfolioTableCard = event.cardType === 'portfolio-table-complete' || 
+                                    event.cardType === 'card_portfolio';
+      
+      if (isPortfolioTableCard) {
+        // Verificar se já existe um card de portfolio-table no activeCards
+        const existingPortfolioTable = state.activeCards.find(
+          c => c.type === 'portfolio-table-complete' || c.type === 'card_portfolio'
+        );
+        
+        if (existingPortfolioTable) {
+          console.log('Portfolio table card already exists, skipping duplicate:', existingPortfolioTable.id);
+          return; // Não adicionar duplicata
+        }
+      }
+      
       const card: BaseCard = {
         id: event.cardId,
         type: event.cardType,

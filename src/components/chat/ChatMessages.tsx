@@ -406,8 +406,15 @@ export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
     panelTab: PanelTab,
     payload: Record<string, unknown>
   ) => {
-    // Create unique key for this card in this session
-    const uniqueKey = `${currentSessionId}-${cardId}`;
+    // REGRA ESPECIAL: Portfolio table cards são singleton no painel
+    // Podem aparecer múltiplas vezes inline, mas só uma vez no painel
+    const isSingletonCard = cardType === 'portfolio-table-complete';
+    
+    // Para singleton cards, usar o tipo como chave (garante única instância)
+    // Para outros cards, usar cardId (permite múltiplas instâncias diferentes)
+    const uniqueKey = isSingletonCard 
+      ? `${currentSessionId}-singleton-${cardType}`
+      : `${currentSessionId}-${cardId}`;
     
     // Skip if already added to panel
     if (addedToPanelSet.has(uniqueKey)) {
@@ -417,11 +424,16 @@ export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
     // Mark as added
     addedToPanelSet.add(uniqueKey);
     
+    // Para singleton cards, usar um ID fixo baseado no tipo
+    const panelCardId = isSingletonCard 
+      ? `panel-singleton-${cardType}`
+      : `panel-${cardId}`;
+    
     // Add to panel via processUIEvent
     await processUIEvent({
       type: 'ADD_CARD',
       cardType: cardType as CardType,
-      cardId: `panel-${cardId}`,
+      cardId: panelCardId,
       payload: {
         ...payload,
         visualState: 'compacted',
