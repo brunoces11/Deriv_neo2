@@ -509,7 +509,31 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
       lastCursorRangeRef.current = savedRange.cloneRange();
     }
     
-    updateDraftInput({ plainText: text });
+    // Sincronizar selectedProducts com as tags de market que realmente existem no texto
+    // Isso garante que o contador reflita as tags presentes no editor
+    const currentMarketTags: string[] = [];
+    TAG_REGEX.lastIndex = 0;
+    let tagMatch;
+    while ((tagMatch = TAG_REGEX.exec(text)) !== null) {
+      const tagName = tagMatch[1];
+      // Verificar se é uma tag de market
+      const matchedProduct = PRODUCTS.find(p => 
+        p.toLowerCase().replace(/\s+/g, '') === tagName.toLowerCase().replace(/\s+/g, '')
+      );
+      if (matchedProduct && !currentMarketTags.includes(matchedProduct)) {
+        currentMarketTags.push(matchedProduct);
+      }
+    }
+    
+    // Atualizar selectedProducts se houver diferença
+    const productsChanged = selectedProducts.length !== currentMarketTags.length ||
+      !selectedProducts.every(p => currentMarketTags.includes(p));
+    
+    if (productsChanged) {
+      updateDraftInput({ plainText: text, selectedProducts: currentMarketTags });
+    } else {
+      updateDraftInput({ plainText: text });
+    }
     
     // Re-renderizar tags se o usuário digitou uma tag manualmente
     // Mas APENAS se detectarmos uma tag completa nova que não está renderizada
@@ -544,7 +568,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
         }
       }
     }
-  }, [saveCaretPosition, restoreCaretPosition, theme, updateDraftInput]);
+  }, [saveCaretPosition, restoreCaretPosition, theme, updateDraftInput, selectedProducts]);
 
   const handleSubmit = async () => {
     if (!plainText.trim() || isTyping) return;
