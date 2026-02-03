@@ -144,21 +144,16 @@ export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps)
 
         {/* Content - 2 lines only */}
         <div className="flex-1 min-w-0">
-          {/* Line 1: Name - Blue when active */}
-          <h3 className={`text-sm font-semibold ${isPlaying ? 'text-cyan-500' : theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+          {/* Line 1: Name - Always neutral */}
+          <h3 className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
             {name}
           </h3>
 
-          {/* Line 2: Status + Last Execution - Blue when active */}
+          {/* Line 2: Last Run - Subtle gray */}
           <div className="flex items-center gap-2 mt-0.5">
-            <span className={`text-xs font-medium ${isPlaying ? 'text-cyan-500' : theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-              {isPlaying ? 'Active' : 'Inactive'}
+            <span className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+              Last Run: {formatDate(lastExecution || (card.createdAt instanceof Date ? card.createdAt.toISOString() : card.createdAt))}
             </span>
-            {lastExecution && (
-              <span className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
-                Last run: {formatDate(lastExecution)}
-              </span>
-            )}
           </div>
         </div>
 

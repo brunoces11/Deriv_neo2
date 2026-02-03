@@ -187,6 +187,7 @@ export interface BotCardPayload {
   strategy: string;
   status: 'active' | 'paused' | 'stopped';
   performance?: string;
+  lastRun?: string;
   trigger?: {
     type: string;
     value?: string;
