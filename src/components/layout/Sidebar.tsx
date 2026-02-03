@@ -224,8 +224,8 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
             className={`p-2 rounded-lg transition-colors ${
               activeTab === 'chats'
                 ? theme === 'dark'
-                  ? 'bg-zinc-800 text-brand-green'
-                  : 'bg-gray-200 text-brand-green'
+                  ? 'bg-zinc-800 text-zinc-300'
+                  : 'bg-gray-200 text-gray-700'
                 : theme === 'dark'
                   ? 'hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300'
                   : 'hover:bg-gray-200 text-gray-400 hover:text-gray-600'
@@ -242,8 +242,8 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
             className={`p-2 rounded-lg transition-colors ${
               activeTab === 'positions'
                 ? theme === 'dark'
-                  ? 'bg-zinc-800 text-brand-green'
-                  : 'bg-gray-200 text-brand-green'
+                  ? 'bg-zinc-800 text-zinc-300'
+                  : 'bg-gray-200 text-gray-700'
                 : theme === 'dark'
                   ? 'hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300'
                   : 'hover:bg-gray-200 text-gray-400 hover:text-gray-600'
@@ -321,8 +321,8 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
           <Target className="w-4 h-4" />
           <span>Positions</span>
           {positionCards.length > 0 && (
-            <span className={`text-xs px-1.5 py-0.5 rounded-full text-brand-green ${
-              theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
+            <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+              theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
             }`}>{positionCards.length}</span>
           )}
           {activeTab === 'positions' && (
@@ -350,11 +350,11 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
-            <MessageSquare className="w-4 h-4 text-brand-green" />
+            <MessageSquare className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             <span className="flex-1 text-left">Chats</span>
             {activeChats.length > 0 && (
-              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors text-brand-green ${
-                theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
+              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
               }`}>
                 {activeChats.length}
               </span>
@@ -396,11 +396,11 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
-            <Star className="w-4 h-4 text-brand-green" />
+            <Star className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             <span className="flex-1 text-left">Favorites</span>
             {(favoriteCards.length + favoriteChats.length) > 0 && (
-              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors text-brand-green ${
-                theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
+              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
               }`}>
                 {favoriteCards.length + favoriteChats.length}
               </span>
@@ -447,11 +447,11 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
-            <Archive className="w-4 h-4 text-brand-green" />
+            <Archive className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             <span className="flex-1 text-left">Archived</span>
             {(archivedCards.length + archivedChats.length) > 0 && (
-              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors text-brand-green ${
-                theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
+              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
               }`}>
                 {archivedCards.length + archivedChats.length}
               </span>
