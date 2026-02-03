@@ -76,9 +76,9 @@ export function PortfolioSnapshotCard({ card, defaultExpanded = false }: Portfol
   return (
     <CardWrapper card={card} accentColor="red">
       <div className="flex items-center gap-3">
-        {/* Icon */}
-        <div className="w-10 h-10 rounded-xl bg-red-500/10 flex items-center justify-center flex-shrink-0">
-          <Wallet className="w-5 h-5 text-red-500" />
+        {/* Icon - neutral gray */}
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${theme === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200/70'}`}>
+          <Wallet className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
         </div>
 
         {/* Content - 2 lines */}

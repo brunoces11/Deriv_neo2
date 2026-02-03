@@ -76,8 +76,8 @@ export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCard
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center flex-shrink-0">
-              <Zap className="w-5 h-5 text-amber-500" />
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${theme === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200/70'}`}>
+              <Zap className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             </div>
             <div>
               <span className="text-[10px] font-medium text-amber-500 uppercase tracking-wider block">

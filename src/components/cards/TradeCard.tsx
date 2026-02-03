@@ -51,6 +51,7 @@ export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
 
   const isHigher = direction === 'higher' || direction === 'rise';
   const DirectionIcon = isHigher ? TrendingUp : TrendingDown;
+  // Keep direction colors for the badge only, icon uses neutral gray
   const directionColor = isHigher ? '#00d0a0' : '#ff444f';
   const directionLabel = direction.charAt(0).toUpperCase() + direction.slice(1);
 
@@ -100,13 +101,14 @@ export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
     return (
       <CardWrapper card={card} accentColor={isHigher ? 'green' : 'red'}>
         <div className="flex items-center gap-3">
-          {/* Icon with status indicator */}
+          {/* Icon with status indicator - neutral gray */}
           <div className="relative flex-shrink-0">
             <div 
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: `${directionColor}20` }}
+              className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                theme === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200/70'
+              }`}
             >
-              <DirectionIcon className="w-5 h-5" style={{ color: directionColor }} />
+              <DirectionIcon className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             </div>
             {/* Status dot */}
             <div 
@@ -240,10 +242,11 @@ export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div 
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: `${directionColor}20` }}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                theme === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200/70'
+              }`}
             >
-              <DirectionIcon className="w-4 h-4" style={{ color: directionColor }} />
+              <DirectionIcon className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             </div>
             <div>
               <div className="flex items-center gap-2">

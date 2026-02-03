@@ -94,10 +94,10 @@ export function CreateTradeCard({ card, defaultExpanded = true }: CreateTradeCar
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[#00d0a0]/20 to-[#ff444f]/20 flex items-center justify-center flex-shrink-0">
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${theme === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200/70'}`}>
             <div className="flex items-center">
-              <TrendingUp className="w-4 h-4 text-[#00d0a0]" />
-              <TrendingDown className="w-4 h-4 text-[#ff444f] -ml-1.5" />
+              <TrendingUp className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
+              <TrendingDown className={`w-4 h-4 -ml-1.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             </div>
           </div>
           <div className="flex-1 min-w-0">

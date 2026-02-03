@@ -11,30 +11,16 @@ interface CardWrapperProps {
 export function CardWrapper({ children, accentColor = 'red' }: CardWrapperProps) {
   const { theme } = useTheme();
 
-  const colorClasses: Record<string, { border: string; hover: string; icon: string }> = {
-    red: {
-      border: 'border-red-500/20 hover:border-red-500/40',
-      hover: 'hover:bg-red-500/10',
-      icon: 'text-red-500',
-    },
-    amber: {
-      border: 'border-amber-500/20 hover:border-amber-500/40',
-      hover: 'hover:bg-amber-500/10',
-      icon: 'text-amber-500',
-    },
-    cyan: {
-      border: 'border-cyan-500/20 hover:border-cyan-500/40',
-      hover: 'hover:bg-cyan-500/10',
-      icon: 'text-cyan-500',
-    },
-    rose: {
-      border: 'border-rose-500/20 hover:border-rose-500/40',
-      hover: 'hover:bg-rose-500/10',
-      icon: 'text-rose-500',
-    },
+  // All cards now use neutral gray borders and icons
+  const neutralColors = {
+    border: theme === 'dark' 
+      ? 'border-zinc-600/40 hover:border-zinc-500/60' 
+      : 'border-gray-300/60 hover:border-gray-400/80',
+    hover: theme === 'dark' ? 'hover:bg-zinc-700/10' : 'hover:bg-gray-100/50',
+    icon: theme === 'dark' ? 'text-zinc-400' : 'text-gray-500',
   };
 
-  const colors = colorClasses[accentColor] || colorClasses.red;
+  const colors = neutralColors;
 
   return (
     <div className={`relative group backdrop-blur-sm rounded-xl border transition-all duration-300 overflow-visible ${colors.border} ${

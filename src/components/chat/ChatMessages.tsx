@@ -291,8 +291,9 @@ function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
     }
   }, [cardId, panel, onAddToPanel]);
   
+  // margin-bottom 22px to push the next markdown text element
   return (
-    <div className="my-4 max-w-full">
+    <div className="my-4 max-w-full" style={{ marginBottom: '22px' }}>
       <CardComponent card={mockCard} defaultExpanded={isExpanded} />
     </div>
   );

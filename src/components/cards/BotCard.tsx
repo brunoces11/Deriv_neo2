@@ -122,8 +122,8 @@ export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
       <div className="flex items-center gap-3">
         {/* Icon with status dot overlay */}
         <div className="relative flex-shrink-0">
-          <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center">
-            <Bot className="w-5 h-5 text-amber-500" />
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${theme === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200/70'}`}>
+            <Bot className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
           </div>
           {/* Status dot - top right */}
           <div 
