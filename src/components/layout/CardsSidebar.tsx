@@ -7,6 +7,7 @@ import { useDrawingTools } from '../../store/DrawingToolsContext';
 import { ExecutionCard, getCardPanelTab } from './ExecutionCard';
 import { ChatMessages } from '../chat/ChatMessages';
 import { ChatInput_NEO } from '../chat/ChatInput_NEO';
+import { WelcomeMessageCompact } from '../chat/WelcomeMessageCompact';
 import type { CardType } from '../../types';
 
 type RightSidebarTab = 'cards' | 'actions' | 'bots';
@@ -75,7 +76,7 @@ export function CardsSidebar({
   onResizeStart,
   onResizeEnd,
 }: CardsSidebarProps) {
-  const { activeCards } = useChat();
+  const { activeCards, messages } = useChat();
   const { theme } = useTheme();
   const { updateDraftInput, clearDraftInput, panelNotification, clearPanelNotification } = useViewMode();
   const { clearChatTags } = useDrawingTools();
@@ -86,6 +87,9 @@ export function CardsSidebar({
   const sidebarRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const finalWidthRef = useRef(propWidth);
+  
+  // Check if chat has messages
+  const hasMessages = messages.length > 0;
   
   // Right sidebar state (tabs + section heights)
   const [rightSidebarState, setRightSidebarState] = useState<RightSidebarState>(loadRightSidebarState);
@@ -551,8 +555,14 @@ export function CardsSidebar({
               <BotMessageSquare className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
               <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Chats</span>
             </div>
-            <div className="flex-1 overflow-y-auto custom-scrollbar px-3">
-              <ChatMessages displayMode="sidebar" />
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              {!hasMessages ? (
+                <WelcomeMessageCompact />
+              ) : (
+                <div className="px-3">
+                  <ChatMessages displayMode="sidebar" />
+                </div>
+              )}
             </div>
           </div>
 
