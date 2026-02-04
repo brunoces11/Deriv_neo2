@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Bot, Play, Pause, MoreVertical, ChevronDown, ChevronUp, Pencil, Trash2, Calendar, Star, TrendingUp, TrendingDown, Settings, Save, RotateCcw } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { useTheme } from '../../store/ThemeContext';
@@ -24,18 +25,63 @@ export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Calculate dropdown position based on button location
+  const updateDropdownPosition = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const dropdownWidth = 160;
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.right - dropdownWidth,
+      });
+    }
+  }, []);
+
+  // Update position when dropdown opens
+  useEffect(() => {
+    if (isDropdownOpen) {
+      updateDropdownPosition();
+    }
+  }, [isDropdownOpen, updateDropdownPosition]);
+
+  // Update position on scroll/resize
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+    const handlePositionUpdate = () => updateDropdownPosition();
+    window.addEventListener('scroll', handlePositionUpdate, true);
+    window.addEventListener('resize', handlePositionUpdate);
+    return () => {
+      window.removeEventListener('scroll', handlePositionUpdate, true);
+      window.removeEventListener('resize', handlePositionUpdate);
+    };
+  }, [isDropdownOpen, updateDropdownPosition]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
+    if (!isDropdownOpen) return;
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (!buttonRef.current?.contains(target) && !dropdownRef.current?.contains(target)) {
         setIsDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isDropdownOpen]);
+
+  // Close dropdown on Escape key
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsDropdownOpen(false);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isDropdownOpen]);
 
   // Sync isPlaying with status on mount - safe access to payload
   const payload = card?.payload as unknown as BotCardPayload | undefined;
@@ -203,9 +249,13 @@ export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
           </button>
 
           {/* Dropdown Menu (3 dots) */}
-          <div className={`relative ${isDropdownOpen ? 'z-[9999]' : ''}`} ref={dropdownRef}>
+          <div className="relative">
             <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              ref={buttonRef}
+              onClick={() => {
+                if (!isDropdownOpen) updateDropdownPosition();
+                setIsDropdownOpen(!isDropdownOpen);
+              }}
               title="More options"
               className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                 theme === 'dark'
@@ -216,16 +266,23 @@ export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
               <MoreVertical className="w-4 h-4" />
             </button>
 
-            {/* Dropdown Content */}
-            {isDropdownOpen && (
-              <div className={`absolute right-0 top-full mt-1 w-40 rounded-lg shadow-lg border z-[9999] ${
-                theme === 'dark'
-                  ? 'bg-zinc-800 border-zinc-700'
-                  : 'bg-white border-gray-200'
-              }`}>
+            {/* Dropdown Content - Rendered via Portal */}
+            {isDropdownOpen && createPortal(
+              <div 
+                ref={dropdownRef}
+                className={`fixed w-40 rounded-lg shadow-xl border z-[99999] ${
+                  theme === 'dark'
+                    ? 'bg-zinc-800 border-zinc-700'
+                    : 'bg-white border-gray-200'
+                }`}
+                style={{
+                  top: dropdownPosition.top,
+                  left: dropdownPosition.left,
+                }}
+              >
                 <button
                   onClick={handleFavorite}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-t-lg ${
                     theme === 'dark'
                       ? 'text-zinc-300 hover:bg-zinc-700'
                       : 'text-gray-700 hover:bg-gray-100'
@@ -258,7 +315,7 @@ export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
                 </button>
                 <button
                   onClick={handleSchedule}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-b-lg ${
                     theme === 'dark'
                       ? 'text-zinc-300 hover:bg-zinc-700'
                       : 'text-gray-700 hover:bg-gray-100'
@@ -267,7 +324,8 @@ export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
                   <Calendar className="w-4 h-4" />
                   Schedule
                 </button>
-              </div>
+              </div>,
+              document.body
             )}
           </div>
 
