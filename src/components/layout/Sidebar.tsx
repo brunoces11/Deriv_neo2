@@ -350,7 +350,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
-            <MessageSquare className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
+            <MessageSquare className="w-4 h-4 text-[#00d0a0]" />
             <span className="flex-1 text-left">Chats</span>
             {activeChats.length > 0 && (
               <span className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
@@ -396,7 +396,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
-            <Star className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
+            <Star className="w-4 h-4 text-[#00d0a0]" />
             <span className="flex-1 text-left">Favorites</span>
             {(favoriteCards.length + favoriteChats.length) > 0 && (
               <span className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
@@ -447,7 +447,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
-            <Archive className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
+            <Archive className="w-4 h-4 text-[#00d0a0]" />
             <span className="flex-1 text-left">Archived</span>
             {(archivedCards.length + archivedChats.length) > 0 && (
               <span className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
