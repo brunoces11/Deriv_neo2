@@ -12,6 +12,7 @@ interface CardMenuActionsProps {
   onEdit?: () => void;
   onDelete?: () => void;
   onSchedule?: () => void;
+  onDropdownChange?: (isOpen: boolean) => void;
 }
 
 /**
@@ -29,17 +30,24 @@ export function CardMenuActions({
   onEdit,
   onDelete,
   onSchedule,
+  onDropdownChange,
 }: CardMenuActionsProps) {
   const { theme } = useTheme();
   const { favoriteCard, unfavoriteCard } = useChat();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Helper to update dropdown state and notify parent
+  const updateDropdownState = (open: boolean) => {
+    setIsDropdownOpen(open);
+    onDropdownChange?.(open);
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsDropdownOpen(false);
+        updateDropdownState(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -52,31 +60,31 @@ export function CardMenuActions({
     } else {
       favoriteCard(card.id);
     }
-    setIsDropdownOpen(false);
+    updateDropdownState(false);
   };
 
   const handleEdit = () => {
     onEdit?.();
-    setIsDropdownOpen(false);
+    updateDropdownState(false);
   };
 
   const handleDelete = () => {
-    setIsDropdownOpen(false);
+    updateDropdownState(false);
     // Call onDelete after closing dropdown to avoid state updates on unmounted component
     onDelete?.();
   };
 
   const handleSchedule = () => {
     onSchedule?.();
-    setIsDropdownOpen(false);
+    updateDropdownState(false);
   };
 
   return (
     <div className="flex items-center gap-1 flex-shrink-0">
       {/* Dropdown Menu (3 dots) */}
-      <div className="relative" ref={dropdownRef}>
+      <div className={`relative ${isDropdownOpen ? 'z-[9999]' : ''}`} ref={dropdownRef}>
         <button
-          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          onClick={() => updateDropdownState(!isDropdownOpen)}
           title="More options"
           className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
             theme === 'dark'

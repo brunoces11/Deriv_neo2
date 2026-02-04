@@ -23,6 +23,7 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
   const { theme } = useTheme();
   const { transformCard, deleteCardWithTwin } = useChat();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [isMenuDropdownOpen, setIsMenuDropdownOpen] = useState(false);
   
   // Guard against invalid card - MUST be after all hooks
   if (!card || !card.id) {
@@ -82,7 +83,7 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
   );
 
   return (
-    <CardWrapper card={card} accentColor="cyan">
+    <CardWrapper card={card} accentColor="cyan" hasOpenDropdown={isMenuDropdownOpen}>
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -104,6 +105,7 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
             isExpanded={isExpanded} 
             onToggleExpand={() => setIsExpanded(!isExpanded)}
             onDelete={handleDelete}
+            onDropdownChange={setIsMenuDropdownOpen}
           />
         </div>
 

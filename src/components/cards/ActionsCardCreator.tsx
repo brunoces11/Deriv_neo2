@@ -23,6 +23,7 @@ export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCard
   const { theme } = useTheme();
   const { transformCard, deleteCardWithTwin } = useChat();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [isMenuDropdownOpen, setIsMenuDropdownOpen] = useState(false);
   
   // Guard against invalid card - MUST be after all hooks
   if (!card || !card.id) {
@@ -77,7 +78,7 @@ export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCard
   );
 
   return (
-    <CardWrapper card={card} accentColor="amber">
+    <CardWrapper card={card} accentColor="amber" hasOpenDropdown={isMenuDropdownOpen}>
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -97,7 +98,8 @@ export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCard
           <CardMenuActions 
             card={card} 
             isExpanded={isExpanded} 
-            onToggleExpand={() => setIsExpanded(!isExpanded)} 
+            onToggleExpand={() => setIsExpanded(!isExpanded)}
+            onDropdownChange={setIsMenuDropdownOpen}
           />
         </div>
 

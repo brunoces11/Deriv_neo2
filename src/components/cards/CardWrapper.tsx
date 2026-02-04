@@ -6,9 +6,10 @@ interface CardWrapperProps {
   card: BaseCard;
   children: ReactNode;
   accentColor?: string;
+  hasOpenDropdown?: boolean;
 }
 
-export function CardWrapper({ children, accentColor = 'red' }: CardWrapperProps) {
+export function CardWrapper({ children, accentColor = 'red', hasOpenDropdown = false }: CardWrapperProps) {
   const { theme } = useTheme();
 
   // All cards now use neutral gray borders and icons
@@ -25,7 +26,7 @@ export function CardWrapper({ children, accentColor = 'red' }: CardWrapperProps)
   return (
     <div className={`relative group backdrop-blur-sm rounded-xl border transition-all duration-300 overflow-visible ${colors.border} ${
       theme === 'dark' ? 'bg-zinc-900/80' : 'bg-white'
-    }`}>
+    } ${hasOpenDropdown ? 'z-[9999]' : ''}`}>
       <div className={`absolute inset-0 bg-gradient-to-br pointer-events-none rounded-xl ${
         theme === 'dark' ? 'from-white/[0.02] to-transparent' : 'from-gray-50/50 to-transparent'
       }`} />

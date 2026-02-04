@@ -137,7 +137,7 @@ export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps)
   );
 
   return (
-    <CardWrapper card={card} accentColor="amber">
+    <CardWrapper card={card} accentColor="amber" hasOpenDropdown={isDropdownOpen}>
       <div className="flex items-center gap-3">
         {/* Icon with status dot overlay */}
         <div className="relative flex-shrink-0">
@@ -185,7 +185,7 @@ export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps)
           </button>
 
           {/* Dropdown Menu (3 dots) */}
-          <div className="relative" ref={dropdownRef}>
+          <div className={`relative ${isDropdownOpen ? 'z-[9999]' : ''}`} ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               title="More options"

@@ -107,7 +107,7 @@ export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
   // Compact view (collapsed)
   if (!isExpanded) {
     return (
-      <CardWrapper card={card} accentColor={isHigher ? 'green' : 'red'}>
+      <CardWrapper card={card} accentColor={isHigher ? 'green' : 'red'} hasOpenDropdown={isDropdownOpen}>
         <div className="flex items-center gap-3">
           {/* Icon with status indicator - neutral gray */}
           <div className="relative flex-shrink-0">
@@ -157,7 +157,7 @@ export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
             </span>
 
             {/* Dropdown Menu (3 dots) */}
-            <div className="relative" ref={dropdownRef}>
+            <div className={`relative ${isDropdownOpen ? 'z-[9999]' : ''}`} ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 title="More options"
@@ -244,7 +244,7 @@ export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
 
   // Expanded view
   return (
-    <CardWrapper card={card} accentColor={isHigher ? 'green' : 'red'}>
+    <CardWrapper card={card} accentColor={isHigher ? 'green' : 'red'} hasOpenDropdown={isDropdownOpen}>
       <div className="space-y-3">
         {/* Header: Asset + Direction + Status + Collapse Button */}
         <div className="flex items-center justify-between">
@@ -281,7 +281,7 @@ export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
             </div>
 
             {/* Dropdown Menu (3 dots) */}
-            <div className="relative" ref={dropdownRef}>
+            <div className={`relative ${isDropdownOpen ? 'z-[9999]' : ''}`} ref={dropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 title="More options"

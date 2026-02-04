@@ -83,7 +83,7 @@ export function PortfolioSnapshotCard({ card, defaultExpanded = false }: Portfol
   };
 
   return (
-    <CardWrapper card={card} accentColor="red">
+    <CardWrapper card={card} accentColor="red" hasOpenDropdown={isDropdownOpen}>
       <div className="flex items-center gap-3">
         {/* Icon - neutral gray */}
         <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${theme === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200/70'}`}>
@@ -117,7 +117,7 @@ export function PortfolioSnapshotCard({ card, defaultExpanded = false }: Portfol
         {/* Action Buttons - Three-dots menu + Expand/Collapse */}
         <div className="flex items-center gap-1 flex-shrink-0">
           {/* Dropdown Menu (3 dots) */}
-          <div className="relative" ref={dropdownRef}>
+          <div className={`relative ${isDropdownOpen ? 'z-[9999]' : ''}`} ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               title="More options"

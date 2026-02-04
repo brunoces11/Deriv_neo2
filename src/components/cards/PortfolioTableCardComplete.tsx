@@ -16,6 +16,7 @@ export function PortfolioTableCardComplete({ card, defaultExpanded = true }: Por
   // === ALL HOOKS MUST BE DECLARED BEFORE ANY CONDITIONAL RETURNS ===
   const { theme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [isMenuDropdownOpen, setIsMenuDropdownOpen] = useState(false);
   
   // Safe payload access - card may be undefined during deletion
   const payload = card?.payload as unknown as PortfolioTablePayload | undefined;
@@ -38,7 +39,7 @@ export function PortfolioTableCardComplete({ card, defaultExpanded = true }: Por
   };
 
   return (
-    <CardWrapper card={card} accentColor="red">
+    <CardWrapper card={card} accentColor="red" hasOpenDropdown={isMenuDropdownOpen}>
       <div className="space-y-5">
         {/* Header */}
         <div className="flex items-start justify-between">
@@ -69,7 +70,8 @@ export function PortfolioTableCardComplete({ card, defaultExpanded = true }: Por
             <CardMenuActions 
               card={card} 
               isExpanded={isExpanded} 
-              onToggleExpand={() => setIsExpanded(!isExpanded)} 
+              onToggleExpand={() => setIsExpanded(!isExpanded)}
+              onDropdownChange={setIsMenuDropdownOpen}
             />
           </div>
         </div>
