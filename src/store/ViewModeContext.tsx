@@ -37,6 +37,7 @@ interface ViewModeState {
   isResizing: boolean;
   draftInput: DraftInput;
   panelNotification: PanelNotification;
+  btcPrice: number | null;
 }
 
 // Start Points - configuração padrão de cada modo
@@ -89,6 +90,7 @@ interface ViewModeContextValue {
   chartVisible: boolean;
   draftInput: DraftInput;
   panelNotification: PanelNotification;
+  btcPrice: number | null;
   toggleMode: () => void;
   setMode: (mode: ViewMode) => void;
   updateUserPoint: (updates: Partial<UserPoint>) => void;
@@ -99,6 +101,7 @@ interface ViewModeContextValue {
   clearDraftInput: () => void;
   notifyPanelActivation: (sidebar: 'left' | 'right', panel: string) => void;
   clearPanelNotification: () => void;
+  setBtcPrice: (price: number | null) => void;
 }
 
 const ViewModeContext = createContext<ViewModeContextValue | null>(null);
@@ -114,7 +117,8 @@ type Action =
   | { type: 'UPDATE_DRAFT_INPUT'; payload: Partial<DraftInput> }
   | { type: 'CLEAR_DRAFT_INPUT' }
   | { type: 'NOTIFY_PANEL_ACTIVATION'; payload: { sidebar: 'left' | 'right'; panel: string } }
-  | { type: 'CLEAR_PANEL_NOTIFICATION' };
+  | { type: 'CLEAR_PANEL_NOTIFICATION' }
+  | { type: 'SET_BTC_PRICE'; payload: number | null };
 
 function reducer(state: ViewModeState, action: Action): ViewModeState {
   switch (action.type) {
@@ -197,6 +201,12 @@ function reducer(state: ViewModeState, action: Action): ViewModeState {
         panelNotification: null,
       };
     
+    case 'SET_BTC_PRICE':
+      return {
+        ...state,
+        btcPrice: action.payload,
+      };
+    
     default:
       return state;
   }
@@ -245,6 +255,7 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     isResizing: false,
     draftInput: DEFAULT_DRAFT_INPUT,
     panelNotification: null,
+    btcPrice: null,
   }, (initialState) => {
     // Load from storage synchronously during initialization
     const stored = loadFromStorage();
@@ -321,6 +332,10 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'CLEAR_PANEL_NOTIFICATION' });
   }, []);
 
+  const setBtcPrice = useCallback((price: number | null) => {
+    dispatch({ type: 'SET_BTC_PRICE', payload: price });
+  }, []);
+
   // Computed config
   const config = useMemo(
     () => computeConfig(state.currentMode, state.userPoints[state.currentMode]),
@@ -332,6 +347,7 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     isResizing: state.isResizing,
     draftInput: state.draftInput,
     panelNotification: state.panelNotification,
+    btcPrice: state.btcPrice,
     ...config,
     toggleMode,
     setMode,
@@ -343,6 +359,7 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     clearDraftInput,
     notifyPanelActivation,
     clearPanelNotification,
+    setBtcPrice,
   };
 
   return (

@@ -26,7 +26,7 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
     addTagToSession,
   } = useChat();
   const { theme } = useTheme();
-  const { notifyPanelActivation } = useViewMode();
+  const { notifyPanelActivation, btcPrice } = useViewMode();
   const { chatTags, removeTagFromChat, clearChatTags, selectDrawing, selectedDrawingId, drawings } = useDrawingTools();
 
   const isSidebar = displayMode === 'sidebar';
@@ -85,10 +85,15 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
       // Pass sessionId explicitly to ensure message is saved to correct session
       await addMessage(userMessage, sessionId);
 
+      // Add BTC price tag to message before sending to Langflow
+      const messageWithBtcPrice = btcPrice 
+        ? `${userMessage.content} [[PRICE_BTC_NOW:${btcPrice.toFixed(2)}]]`
+        : userMessage.content;
+
       // Try Langflow API first, fallback to mock simulation
       let response;
       try {
-        response = await callLangflow(userMessage.content, sessionId);
+        response = await callLangflow(messageWithBtcPrice, sessionId);
         console.log('[ChatInput] Langflow response received');
       } catch (langflowError) {
         console.warn('[ChatInput] Langflow failed, using mock simulation:', langflowError);

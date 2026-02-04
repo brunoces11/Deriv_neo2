@@ -140,7 +140,7 @@ interface ChatInput_NEOProps {
 
 export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
   // Draft state from context (persisted)
-  const { draftInput, updateDraftInput, clearDraftInput, notifyPanelActivation } = useViewMode();
+  const { draftInput, updateDraftInput, clearDraftInput, notifyPanelActivation, btcPrice } = useViewMode();
   const { plainText, selectedAgents, selectedProducts, autoMode } = draftInput;
   
   // Local UI state (not persisted)
@@ -631,9 +631,14 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
 
       await addMessage(userMessage, sessionId);
       
+      // Add BTC price tag to message before sending to Langflow
+      const messageWithBtcPrice = btcPrice 
+        ? `${userMessage.content} [[PRICE_BTC_NOW:${btcPrice.toFixed(2)}]]`
+        : userMessage.content;
+      
       let response;
       try {
-        response = await callLangflow(userMessage.content, sessionId);
+        response = await callLangflow(messageWithBtcPrice, sessionId);
       } catch (langflowError) {
         response = await simulateLangFlowResponse(userMessage.content);
       }
