@@ -164,12 +164,12 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
       <div className={`p-4 border-b transition-colors ${
         theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'
       }`}>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-center">
           {!isCollapsed && (
             <img
               src={theme === 'dark' ? derivNeoDark : derivNeoLight}
               alt="Deriv Neo"
-              className="h-7 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              className="h-[30.8px] w-auto cursor-pointer hover:opacity-80 transition-opacity"
               onClick={handleNewChat}
             />
           )}
