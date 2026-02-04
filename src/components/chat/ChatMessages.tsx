@@ -269,6 +269,9 @@ function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
   // Track if we've already added to panel for this specific card instance
   const hasAddedToPanelRef = useRef(false);
   
+  // Check if this card was permanently deleted
+  const wasDeleted = isCardDeleted(cardId);
+  
   // Try to get the card from centralized state (panel card)
   // Panel cards use 'panel-' prefix, so we look for that
   const panelCardId = `panel-${cardId}`;
@@ -302,14 +305,24 @@ function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
       return;
     }
     
+    // Skip if card was permanently deleted
+    if (wasDeleted) {
+      return;
+    }
+    
     if (panel && panel.panel) {
       hasAddedToPanelRef.current = true;
       const payload = existingCard?.payload || getDefaultPayloadForCard(panel.cardType);
       onAddToPanel(cardId, panel.cardType, panel.panel, payload as Record<string, unknown>);
     }
-  }, [cardId, panel, onAddToPanel, existingCard, CardComponent]);
+  }, [cardId, panel, onAddToPanel, existingCard, CardComponent, wasDeleted]);
   
   // === GUARD CHECKS - All hooks must be ABOVE this line ===
+  
+  // If card was permanently deleted, don't render anything
+  if (wasDeleted) {
+    return null;
+  }
   
   if (!CardComponent) {
     console.warn(`[InlineCard] Unknown card type: ${inline.cardType}`);
@@ -437,6 +450,9 @@ interface ChatMessagesProps {
 
 // Track which cards have been added to panel to avoid duplicates
 const addedToPanelSet = new Set<string>();
+
+// Import deleted cards tracking from centralized service
+import { isCardDeleted } from '../../services/deletedCardsStorage';
 
 export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
   const { messages, isTyping, processUIEvent, currentSessionId } = useChat();

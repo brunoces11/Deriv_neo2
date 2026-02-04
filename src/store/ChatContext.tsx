@@ -3,6 +3,7 @@ import type { BaseCard, ChatMessage, UIEvent, CardStatus, ChatSession, CardType 
 import type { Drawing, DrawingTag } from './DrawingToolsContext';
 import * as supabaseService from '../services/supabase';
 import type { ChatTagWithSnapshot } from '../services/supabase';
+import { markCardAsDeleted } from '../services/deletedCardsStorage';
 
 // Helper to determine which panel a card should go to
 function getCardTargetPanel(cardType: CardType): { sidebar: 'left' | 'right'; panel: string } {
@@ -588,6 +589,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       // Find the panel card to get its Supabase ID (if it exists)
       const panelCard = state.activeCards.find(c => c.id === panelId);
       
+      // Mark card as permanently deleted (persisted in localStorage)
+      // This prevents the card from being recreated when the page is refreshed
+      markCardAsDeleted(baseId);
+      
       // Delete from UI state first (removes both twins)
       dispatch({ type: 'DELETE_CARD_WITH_TWIN', payload: cardId });
       
@@ -597,7 +602,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
         await supabaseService.deleteCardFromSession(panelCard.id);
       }
       
-      console.log('[ChatContext] Card twins deleted:', { baseId, panelId });
+      console.log('[ChatContext] Card twins deleted permanently:', { baseId, panelId });
     } catch (error) {
       console.error('[ChatContext] Error deleting card twins:', error);
     }
