@@ -51,7 +51,7 @@ export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
   }
 
   const botId = payload?.botId || 'BOT-000';
-  const name = payload?.name || 'Unnamed Bot';
+  const name = payload?.title || payload?.name || 'Unnamed Bot';
   const performance = payload?.performance;
   
   // Bot configuration data (from payload or defaults)

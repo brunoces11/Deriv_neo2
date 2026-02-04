@@ -30,7 +30,7 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
   }
   const payload = card.payload as unknown as BotCreatorPayload;
 
-  const botName = payload?.botName || 'New Bot Strategy';
+  const botName = payload?.title || payload?.botName || 'New Bot Strategy';
   const trigger = payload?.trigger || { type: 'Weekly', value: 'Monday' };
   const action = payload?.action || { type: 'Buy', asset: 'BTC' };
   const target = payload?.target || { type: 'Amount', value: '$100' };

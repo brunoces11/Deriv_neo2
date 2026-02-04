@@ -44,7 +44,7 @@ export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
   const payload = card.payload as unknown as TradeCardPayload;
 
   const tradeId = payload?.tradeId || 'TRD-000';
-  const asset = payload?.asset || 'BTC/USD';
+  const asset = payload?.title || payload?.asset || 'BTC/USD';
   const direction = payload?.direction || 'higher';
   const stake = payload?.stake || '$100.00';
   const payout = payload?.payout || '$195.00';

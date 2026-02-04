@@ -22,6 +22,7 @@ export function PortfolioTableCardComplete({ card, defaultExpanded = true }: Por
   const changePercent = payload?.changePercent || '+0%';
   const isPositive = changePercent.startsWith('+');
   const TrendIcon = isPositive ? TrendingUp : TrendingDown;
+  const cardTitle = payload?.title || 'Portfolio Complete';
 
   // === GUARD CHECK - All hooks must be ABOVE this line ===
   if (!card || !card.id || !payload) {
@@ -47,7 +48,7 @@ export function PortfolioTableCardComplete({ card, defaultExpanded = true }: Por
             </div>
             <div>
               <span className="text-xs font-medium text-red-500 uppercase tracking-wider block mb-1">
-                Portfolio Complete
+                {cardTitle}
               </span>
               <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 {payload.totalValue}

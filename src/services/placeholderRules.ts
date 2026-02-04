@@ -184,8 +184,11 @@ export function transformCard(
 // Regex and Validation
 // ============================================================================
 
-/** Regex to detect [[PLACEHOLDER]] patterns in text */
+/** Regex to detect [[PLACEHOLDER]] patterns in text (without title) */
 export const PLACEHOLDER_REGEX = /\[\[([A-Z_]+)\]\]/g;
+
+/** Regex to detect [[PLACEHOLDER]]:"Title" patterns with optional title */
+export const PLACEHOLDER_WITH_TITLE_REGEX = /\[\[([A-Z_]+)\]\](?::"([^"]*)")?/g;
 
 /** List of valid placeholder names */
 export const VALID_PLACEHOLDERS = Object.keys(PLACEHOLDER_RULES);
@@ -204,6 +207,40 @@ export function findPlaceholdersInText(text: string): string[] {
     const placeholder = `[[${match[1]}]]`;
     if (VALID_PLACEHOLDERS.includes(placeholder) && !found.includes(placeholder)) {
       found.push(placeholder);
+    }
+  }
+  
+  return found;
+}
+
+/** Result of placeholder extraction with optional title */
+export interface PlaceholderWithTitle {
+  placeholder: string;
+  title?: string;
+  fullMatch: string;
+  index: number;
+}
+
+/**
+ * Find all placeholders in text with their optional titles
+ * Format: [[PLACEHOLDER]]:"Optional Title"
+ */
+export function findPlaceholdersWithTitles(text: string): PlaceholderWithTitle[] {
+  const found: PlaceholderWithTitle[] = [];
+  let match;
+  
+  // Reset regex state
+  PLACEHOLDER_WITH_TITLE_REGEX.lastIndex = 0;
+  
+  while ((match = PLACEHOLDER_WITH_TITLE_REGEX.exec(text)) !== null) {
+    const placeholder = `[[${match[1]}]]`;
+    if (VALID_PLACEHOLDERS.includes(placeholder)) {
+      found.push({
+        placeholder,
+        title: match[2] || undefined, // Group 2 is the title between quotes
+        fullMatch: match[0],
+        index: match.index,
+      });
     }
   }
   

@@ -35,6 +35,7 @@ export function PortfolioSnapshotCard({ card, defaultExpanded = false }: Portfol
   const changePercent = payload?.changePercent || '+0%';
   const isPositive = changePercent.startsWith('+');
   const TrendIcon = isPositive ? TrendingUp : TrendingDown;
+  const cardTitle = payload?.title || 'Portfolio';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -94,7 +95,7 @@ export function PortfolioSnapshotCard({ card, defaultExpanded = false }: Portfol
           {/* Line 1: Title + 24h change badge */}
           <div className="flex items-center gap-2">
             <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              Portfolio
+              {cardTitle}
             </span>
             <div className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium ${
               isPositive 

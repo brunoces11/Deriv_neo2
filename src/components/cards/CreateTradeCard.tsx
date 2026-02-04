@@ -35,7 +35,7 @@ export function CreateTradeCard({ card, defaultExpanded = true }: CreateTradeCar
   
   const payload = card.payload as unknown as CreateTradeCardPayload;
 
-  const asset = payload?.asset || 'BTC/USD';
+  const asset = payload?.title || payload?.asset || 'BTC/USD';
   const tradeType = payload?.tradeType || 'higher-lower';
   const duration = payload?.duration || {
     mode: 'duration',

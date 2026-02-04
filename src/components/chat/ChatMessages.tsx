@@ -10,12 +10,13 @@ import type { ChatMessage, BaseCard, CardType } from '../../types';
 
 // Placeholder rendering imports
 import { 
-  PLACEHOLDER_REGEX, 
+  PLACEHOLDER_WITH_TITLE_REGEX, 
   getRuleForMode, 
   type ViewMode as PlaceholderViewMode,
   type ModeConfig,
   type RenderCardType,
-  type PanelTab
+  type PanelTab,
+  VALID_PLACEHOLDERS
 } from '../../services/placeholderRules';
 
 // Card components for inline rendering
@@ -86,11 +87,12 @@ const cardComponents: Record<RenderCardType, React.ComponentType<{ card: BaseCar
 
 type MessagePart = 
   | { type: 'text'; content: string }
-  | { type: 'card'; placeholder: string; config: ModeConfig; cardId: string };
+  | { type: 'card'; placeholder: string; config: ModeConfig; cardId: string; title?: string };
 
 /**
  * Parse message content and extract placeholders for inline card rendering
  * Uses deterministic cardId based on message content and placeholder position
+ * Now supports optional title extraction from format: [[PLACEHOLDER]]:"Title"
  */
 function parseMessageWithPlaceholders(
   content: string, 
@@ -102,10 +104,10 @@ function parseMessageWithPlaceholders(
   let placeholderIndex = 0;
   
   // Reset regex state
-  PLACEHOLDER_REGEX.lastIndex = 0;
+  PLACEHOLDER_WITH_TITLE_REGEX.lastIndex = 0;
   let match;
   
-  while ((match = PLACEHOLDER_REGEX.exec(content)) !== null) {
+  while ((match = PLACEHOLDER_WITH_TITLE_REGEX.exec(content)) !== null) {
     // Text before the placeholder
     if (match.index > lastIndex) {
       parts.push({ type: 'text', content: content.slice(lastIndex, match.index) });
@@ -113,16 +115,18 @@ function parseMessageWithPlaceholders(
     
     // Placeholder → Card config
     const placeholder = `[[${match[1]}]]`;
+    const title = match[2] || undefined; // Group 2 is the title between quotes
     const config = getRuleForMode(placeholder, mode);
     
-    if (config) {
+    if (config && VALID_PLACEHOLDERS.includes(placeholder)) {
       // Use deterministic cardId based on messageId and placeholder position
       // This ensures the same placeholder in the same message always gets the same ID
       parts.push({ 
         type: 'card', 
         placeholder, 
         config,
-        cardId: `${messageId}-placeholder-${placeholderIndex}`
+        cardId: `${messageId}-placeholder-${placeholderIndex}`,
+        title
       });
       placeholderIndex++;
     } else {
@@ -143,22 +147,27 @@ function parseMessageWithPlaceholders(
 
 /**
  * Create a mock BaseCard for inline rendering
+ * @param cardType - The type of card to create
+ * @param cardId - Unique identifier for the card
+ * @param title - Optional dynamic title from LLM
  */
-function createMockCard(cardType: RenderCardType, cardId: string): BaseCard {
+function createMockCard(cardType: RenderCardType, cardId: string, title?: string): BaseCard {
   return {
     id: cardId,
     type: cardType as any, // Type coercion needed due to CardType mismatch
     status: 'active',
     isFavorite: false,
     createdAt: new Date(),
-    payload: getDefaultPayloadForCard(cardType),
+    payload: getDefaultPayloadForCard(cardType, title),
   };
 }
 
 /**
  * Get default payload for each card type (for inline rendering)
+ * @param cardType - The type of card to create
+ * @param title - Optional dynamic title from LLM
  */
-function getDefaultPayloadForCard(cardType: RenderCardType): Record<string, unknown> {
+function getDefaultPayloadForCard(cardType: RenderCardType, title?: string): Record<string, unknown> {
   const defaultPortfolioAssets = [
     { symbol: 'BTC', name: 'Bitcoin', allocation: 45, value: '$20,353.50', invested: '$18,000.00', change: '+$2,353.50', changePercent: '+13.07%' },
     { symbol: 'ETH', name: 'Ethereum', allocation: 30, value: '$13,569.00', invested: '$12,500.00', change: '+$1,069.00', changePercent: '+8.55%' },
@@ -166,9 +175,13 @@ function getDefaultPayloadForCard(cardType: RenderCardType): Record<string, unkn
     { symbol: 'Other', name: 'Others', allocation: 10, value: '$4,523.00', invested: '$4,500.00', change: '+$23.00', changePercent: '+0.51%' },
   ];
 
+  // Base payload with optional title
+  const basePayload = title ? { title } : {};
+
   switch (cardType) {
     case 'trade-card':
       return {
+        ...basePayload,
         tradeId: `TRD-${Math.floor(Math.random() * 10000)}`,
         asset: 'BTC/USD',
         assetName: 'Bitcoin',
@@ -181,6 +194,7 @@ function getDefaultPayloadForCard(cardType: RenderCardType): Record<string, unkn
       };
     case 'create-trade-card':
       return {
+        ...basePayload,
         asset: 'BTC/USD',
         assetName: 'Bitcoin',
         tradeType: 'higher-lower',
@@ -201,6 +215,7 @@ function getDefaultPayloadForCard(cardType: RenderCardType): Record<string, unkn
     case 'bot-card':
     case 'bot-creator':
       return {
+        ...basePayload,
         botId: `BOT-${Math.floor(Math.random() * 1000)}`,
         botName: 'DCA Bitcoin Weekly',
         name: 'DCA Bitcoin Weekly',
@@ -214,6 +229,7 @@ function getDefaultPayloadForCard(cardType: RenderCardType): Record<string, unkn
     case 'actions-card':
     case 'actions-creator':
       return {
+        ...basePayload,
         actionId: `ACT-${Math.floor(Math.random() * 1000)}`,
         actionName: 'Price Alert BTC',
         name: 'Price Alert BTC',
@@ -226,6 +242,7 @@ function getDefaultPayloadForCard(cardType: RenderCardType): Record<string, unkn
     case 'portfolio-snapshot':
     case 'portfolio-sidebar':
       return {
+        ...basePayload,
         totalValue: '$45,230.00',
         change24h: '+$1,250.00',
         changePercent: '+2.84%',
@@ -238,13 +255,14 @@ function getDefaultPayloadForCard(cardType: RenderCardType): Record<string, unkn
       };
     case 'portfolio-table-complete':
       return {
+        ...basePayload,
         totalValue: '$45,230.00',
         change24h: '+$1,250.00',
         changePercent: '+2.84%',
         assets: defaultPortfolioAssets,
       };
     default:
-      return {};
+      return basePayload;
   }
 }
 
@@ -255,6 +273,7 @@ function getDefaultPayloadForCard(cardType: RenderCardType): Record<string, unkn
 interface InlineCardProps {
   config: ModeConfig;
   cardId: string;
+  title?: string;
   onAddToPanel: (
     cardId: string, 
     cardType: RenderCardType, 
@@ -263,7 +282,7 @@ interface InlineCardProps {
   ) => void;
 }
 
-function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
+function InlineCard({ config, cardId, title, onAddToPanel }: InlineCardProps) {
   const { inline, panel } = config;
   const { getCardById, deleteCardWithTwin } = useChat();
   // Track if we've already added to panel for this specific card instance
@@ -286,10 +305,10 @@ function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
   
   const isExpanded = inline.visualState === 'expanded';
   
-  // Use existing card data if available, otherwise create mock
+  // Use existing card data if available, otherwise create mock with title
   // Safe access - only create if we have a valid card type
   const card: BaseCard | null = CardComponent 
-    ? (existingCard || createMockCard(inline.cardType, cardId))
+    ? (existingCard || createMockCard(inline.cardType, cardId, title))
     : null;
   
   // Add card to panel on mount (only once per card instance)
@@ -312,10 +331,11 @@ function InlineCard({ config, cardId, onAddToPanel }: InlineCardProps) {
     
     if (panel && panel.panel) {
       hasAddedToPanelRef.current = true;
-      const payload = existingCard?.payload || getDefaultPayloadForCard(panel.cardType);
+      // Include title in payload when adding to panel
+      const payload = existingCard?.payload || getDefaultPayloadForCard(panel.cardType, title);
       onAddToPanel(cardId, panel.cardType, panel.panel, payload as Record<string, unknown>);
     }
-  }, [cardId, panel, onAddToPanel, existingCard, CardComponent, wasDeleted]);
+  }, [cardId, panel, onAddToPanel, existingCard, CardComponent, wasDeleted, title]);
   
   // === GUARD CHECKS - All hooks must be ABOVE this line ===
   
@@ -685,6 +705,7 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                           key={`card-${index}-${part.cardId}`} 
                           config={part.config} 
                           cardId={part.cardId}
+                          title={part.title}
                           onAddToPanel={onAddCardToPanel}
                         />
                       );

@@ -51,7 +51,7 @@ export function ActionsCard({ card, defaultExpanded = false }: ActionsCardProps)
   }
 
   const actionId = payload?.actionId || 'ACT-000';
-  const name = payload?.name || 'Unnamed Action';
+  const name = payload?.title || payload?.name || 'Unnamed Action';
   const lastExecution = payload?.lastExecution;
   
   // Action configuration data (from payload or defaults)

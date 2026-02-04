@@ -34,6 +34,7 @@ export interface BaseCard {
 
 
 export interface CreateTradeCardPayload {
+  title?: string; // Dynamic title from LLM
   asset: string;
   assetName: string;
   tradeType: 'higher-lower' | 'rise-fall' | 'touch-no-touch';
@@ -60,6 +61,7 @@ export interface CreateTradeCardPayload {
 }
 
 export interface TradeCardPayload {
+  title?: string; // Dynamic title from LLM
   tradeId: string;
   asset: string;
   assetName: string;
@@ -75,6 +77,7 @@ export interface TradeCardPayload {
 }
 
 export interface BotPayload {
+  title?: string; // Dynamic title from LLM
   botId: string;
   name: string;
   strategy: string;
@@ -83,6 +86,7 @@ export interface BotPayload {
 }
 
 export interface PortfolioSnapshotPayload {
+  title?: string; // Dynamic title from LLM
   totalValue: string;
   change24h: string;
   changePercent: string;
@@ -94,6 +98,7 @@ export interface PortfolioSnapshotPayload {
 }
 
 export interface PortfolioTablePayload {
+  title?: string; // Dynamic title from LLM
   totalValue: string;
   change24h: string;
   changePercent: string;
@@ -111,6 +116,7 @@ export interface PortfolioTablePayload {
 
 
 export interface ActionsCardPayload {
+  title?: string; // Dynamic title from LLM
   actionId: string;
   name: string;
   description: string;
@@ -138,6 +144,7 @@ export interface ActionsCardPayload {
 }
 
 export interface ActionsCreatorPayload {
+  title?: string; // Dynamic title from LLM
   actionName: string;
   trigger: {
     type: 'schedule' | 'price' | 'event';
@@ -161,6 +168,7 @@ export interface ActionsCreatorPayload {
 }
 
 export interface BotCreatorPayload {
+  title?: string; // Dynamic title from LLM
   botName: string;
   trigger: {
     type: string;
@@ -182,6 +190,7 @@ export interface BotCreatorPayload {
 }
 
 export interface BotCardPayload {
+  title?: string; // Dynamic title from LLM
   botId: string;
   name: string;
   strategy: string;

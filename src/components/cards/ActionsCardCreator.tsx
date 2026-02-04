@@ -30,7 +30,7 @@ export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCard
   }
   const payload = card.payload as unknown as ActionsCreatorPayload;
 
-  const actionName = payload?.actionName || 'New Action';
+  const actionName = payload?.title || payload?.actionName || 'New Action';
   const trigger = payload?.trigger || { type: 'schedule', value: 'Daily' };
   const action = payload?.action || { type: 'Alert', asset: 'BTC' };
   const schedule = payload?.schedule || { frequency: 'daily', time: '09:00' };
