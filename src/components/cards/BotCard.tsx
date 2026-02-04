@@ -218,7 +218,7 @@ export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
 
             {/* Dropdown Content */}
             {isDropdownOpen && (
-              <div className={`absolute right-0 top-full mt-1 w-40 rounded-lg shadow-lg border z-50 ${
+              <div className={`absolute right-0 top-full mt-1 w-40 rounded-lg shadow-lg border z-[9999] ${
                 theme === 'dark'
                   ? 'bg-zinc-800 border-zinc-700'
                   : 'bg-white border-gray-200'
