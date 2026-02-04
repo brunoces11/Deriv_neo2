@@ -20,7 +20,7 @@ interface BotCardProps {
  */
 export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
   const { theme } = useTheme();
-  const { favoriteCard, unfavoriteCard, deleteCardWithTwin } = useChat();
+  const { favoriteCard, unfavoriteCard, deleteCardWithTwin, updateCardPayload } = useChat();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -74,8 +74,10 @@ export function BotCard({ card, defaultExpanded = false }: BotCardProps) {
   };
 
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-    console.log(`[BotCard] Toggle play/pause:`, { botId, name, newState: !isPlaying ? 'playing' : 'paused' });
+    const newStatus = isPlaying ? 'stopped' : 'active';
+    // Update payload.status which syncs both twins via ChatContext
+    updateCardPayload(card.id, { status: newStatus });
+    console.log(`[BotCard] Toggle play/pause:`, { botId, name, newStatus });
   };
 
   const handleFavorite = () => {
