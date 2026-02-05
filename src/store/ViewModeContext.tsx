@@ -1,7 +1,14 @@
 import { createContext, useContext, useReducer, useEffect, useRef, useCallback, useMemo } from 'react';
 
 // Types
-type ViewMode = 'chat' | 'graph' | 'dashboard';
+type ViewMode = 'chat' | 'graph' | 'dashboard' | 'hub';
+
+// Panel notification types - which panel should be activated when a card is added
+export type PanelNotification = {
+  sidebar: 'left' | 'right';
+  panel: string; // 'positions' for left, 'cards' | 'actions' | 'bots' for right
+  timestamp: number;
+} | null;
 
 interface UserPoint {
   sidebarCollapsed?: boolean;
@@ -29,6 +36,8 @@ interface ViewModeState {
   userPoints: Record<ViewMode, UserPoint>;
   isResizing: boolean;
   draftInput: DraftInput;
+  panelNotification: PanelNotification;
+  btcPrice: number | null;
 }
 
 // Start Points - configuração padrão de cada modo
@@ -36,7 +45,7 @@ const START_POINTS: Record<ViewMode, Required<Omit<UserPoint, never>> & { chartV
   chat: {
     sidebarCollapsed: false,
     cardsSidebarCollapsed: false,
-    cardsSidebarWidth: 660,
+    cardsSidebarWidth: 575,
     chartVisible: false,
   },
   graph: {
@@ -46,6 +55,12 @@ const START_POINTS: Record<ViewMode, Required<Omit<UserPoint, never>> & { chartV
     chartVisible: true,
   },
   dashboard: {
+    sidebarCollapsed: true,
+    cardsSidebarCollapsed: false,
+    cardsSidebarWidth: 690,
+    chartVisible: false,
+  },
+  hub: {
     sidebarCollapsed: true,
     cardsSidebarCollapsed: false,
     cardsSidebarWidth: 690,
@@ -74,13 +89,19 @@ interface ViewModeContextValue {
   cardsSidebarWidth: number;
   chartVisible: boolean;
   draftInput: DraftInput;
+  panelNotification: PanelNotification;
+  btcPrice: number | null;
   toggleMode: () => void;
   setMode: (mode: ViewMode) => void;
   updateUserPoint: (updates: Partial<UserPoint>) => void;
   setResizing: (value: boolean) => void;
   resetMode: () => void;
+  resetAllUISettings: () => void;
   updateDraftInput: (updates: Partial<DraftInput>) => void;
   clearDraftInput: () => void;
+  notifyPanelActivation: (sidebar: 'left' | 'right', panel: string) => void;
+  clearPanelNotification: () => void;
+  setBtcPrice: (price: number | null) => void;
 }
 
 const ViewModeContext = createContext<ViewModeContextValue | null>(null);
@@ -91,9 +112,13 @@ type Action =
   | { type: 'UPDATE_USER_POINT'; payload: Partial<UserPoint> }
   | { type: 'SET_RESIZING'; payload: boolean }
   | { type: 'RESET_MODE' }
+  | { type: 'RESET_ALL_UI_SETTINGS' }
   | { type: 'LOAD_STATE'; payload: { currentMode: ViewMode; userPoints: Record<ViewMode, UserPoint>; draftInput?: DraftInput } }
   | { type: 'UPDATE_DRAFT_INPUT'; payload: Partial<DraftInput> }
-  | { type: 'CLEAR_DRAFT_INPUT' };
+  | { type: 'CLEAR_DRAFT_INPUT' }
+  | { type: 'NOTIFY_PANEL_ACTIVATION'; payload: { sidebar: 'left' | 'right'; panel: string } }
+  | { type: 'CLEAR_PANEL_NOTIFICATION' }
+  | { type: 'SET_BTC_PRICE'; payload: number | null };
 
 function reducer(state: ViewModeState, action: Action): ViewModeState {
   switch (action.type) {
@@ -125,6 +150,18 @@ function reducer(state: ViewModeState, action: Action): ViewModeState {
         },
       };
     
+    case 'RESET_ALL_UI_SETTINGS':
+      return {
+        ...state,
+        currentMode: 'chat', // Volta para o modo chat
+        userPoints: {
+          chat: {},
+          graph: {},
+          dashboard: {},
+          hub: {},
+        },
+      };
+    
     case 'LOAD_STATE':
       return {
         ...state,
@@ -148,6 +185,28 @@ function reducer(state: ViewModeState, action: Action): ViewModeState {
         draftInput: DEFAULT_DRAFT_INPUT,
       };
     
+    case 'NOTIFY_PANEL_ACTIVATION':
+      return {
+        ...state,
+        panelNotification: {
+          sidebar: action.payload.sidebar,
+          panel: action.payload.panel,
+          timestamp: Date.now(),
+        },
+      };
+    
+    case 'CLEAR_PANEL_NOTIFICATION':
+      return {
+        ...state,
+        panelNotification: null,
+      };
+    
+    case 'SET_BTC_PRICE':
+      return {
+        ...state,
+        btcPrice: action.payload,
+      };
+    
     default:
       return state;
   }
@@ -163,11 +222,12 @@ function loadFromStorage(): { currentMode: ViewMode; userPoints: Record<ViewMode
       const parsed = JSON.parse(stored);
       if (parsed.userPoints) {
         return {
-          currentMode: 'chat',
+          currentMode: parsed.currentMode ?? 'chat',
           userPoints: {
             chat: parsed.userPoints.chat ?? {},
             graph: parsed.userPoints.graph ?? {},
             dashboard: parsed.userPoints.dashboard ?? {},
+            hub: parsed.userPoints.hub ?? {},
           },
           draftInput: parsed.draftInput ?? DEFAULT_DRAFT_INPUT,
         };
@@ -191,22 +251,28 @@ function saveToStorage(currentMode: ViewMode, userPoints: Record<ViewMode, UserP
 export function ViewModeProvider({ children }: { children: React.ReactNode }) {
   const [state, dispatch] = useReducer(reducer, {
     currentMode: 'chat',
-    userPoints: { chat: {}, graph: {}, dashboard: {} },
+    userPoints: { chat: {}, graph: {}, dashboard: {}, hub: {} },
     isResizing: false,
     draftInput: DEFAULT_DRAFT_INPUT,
+    panelNotification: null,
+    btcPrice: null,
+  }, (initialState) => {
+    // Load from storage synchronously during initialization
+    const stored = loadFromStorage();
+    if (stored) {
+      return {
+        ...initialState,
+        currentMode: stored.currentMode,
+        userPoints: stored.userPoints,
+        draftInput: stored.draftInput,
+      };
+    }
+    return initialState;
   });
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load from storage on mount
-  useEffect(() => {
-    const stored = loadFromStorage();
-    if (stored) {
-      dispatch({ type: 'LOAD_STATE', payload: stored });
-    }
-  }, []);
-
-  // Save to storage with debounce
+  // Save to storage with debounce (removed the load useEffect since we load synchronously now)
   useEffect(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -224,7 +290,7 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
 
   // Actions
   const toggleMode = useCallback(() => {
-    const modes: ViewMode[] = ['chat', 'graph', 'dashboard'];
+    const modes: ViewMode[] = ['chat', 'graph', 'dashboard', 'hub'];
     const currentIndex = modes.indexOf(state.currentMode);
     const nextIndex = (currentIndex + 1) % modes.length;
     dispatch({ type: 'SET_MODE', payload: modes[nextIndex] });
@@ -246,12 +312,28 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     dispatch({ type: 'RESET_MODE' });
   }, []);
 
+  const resetAllUISettings = useCallback(() => {
+    dispatch({ type: 'RESET_ALL_UI_SETTINGS' });
+  }, []);
+
   const updateDraftInput = useCallback((updates: Partial<DraftInput>) => {
     dispatch({ type: 'UPDATE_DRAFT_INPUT', payload: updates });
   }, []);
 
   const clearDraftInput = useCallback(() => {
     dispatch({ type: 'CLEAR_DRAFT_INPUT' });
+  }, []);
+
+  const notifyPanelActivation = useCallback((sidebar: 'left' | 'right', panel: string) => {
+    dispatch({ type: 'NOTIFY_PANEL_ACTIVATION', payload: { sidebar, panel } });
+  }, []);
+
+  const clearPanelNotification = useCallback(() => {
+    dispatch({ type: 'CLEAR_PANEL_NOTIFICATION' });
+  }, []);
+
+  const setBtcPrice = useCallback((price: number | null) => {
+    dispatch({ type: 'SET_BTC_PRICE', payload: price });
   }, []);
 
   // Computed config
@@ -264,14 +346,20 @@ export function ViewModeProvider({ children }: { children: React.ReactNode }) {
     currentMode: state.currentMode,
     isResizing: state.isResizing,
     draftInput: state.draftInput,
+    panelNotification: state.panelNotification,
+    btcPrice: state.btcPrice,
     ...config,
     toggleMode,
     setMode,
     updateUserPoint,
     setResizing,
     resetMode,
+    resetAllUISettings,
     updateDraftInput,
     clearDraftInput,
+    notifyPanelActivation,
+    clearPanelNotification,
+    setBtcPrice,
   };
 
   return (

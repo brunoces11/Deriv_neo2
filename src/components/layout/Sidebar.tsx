@@ -1,13 +1,16 @@
 import { Star, Archive, ChevronDown, ChevronRight, ChevronLeft, MessageSquare, Target } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import { useDrawingTools } from '../../store/DrawingToolsContext';
+import { useViewMode } from '../../store/ViewModeContext';
 import { SidebarCard } from './SidebarCard';
 import { ChatSessionCard } from './ChatSessionCard';
 import { UserProfile } from './UserProfile';
+import { ExecutionCard } from './ExecutionCard';
 import derivNeoDark from '../../assets/deriv_neo_dark_mode.svg';
 import derivNeoLight from '../../assets/deriv_neo_light_mode.svg';
+import type { CardType } from '../../types';
 
 const SIDEBAR_STATE_KEY = 'deriv-neo-sidebar-state';
 
@@ -53,19 +56,69 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps) {
-  const { favoriteCards, archivedCards, sessions, resetChat } = useChat();
+  const { favoriteCards, archivedCards, sessions, resetChat, activeCards } = useChat();
   const { theme } = useTheme();
   const { clearChatTags, clearAllDrawings } = useDrawingTools();
+  const { setMode, resetAllUISettings, panelNotification, clearPanelNotification } = useViewMode();
   
   const [sidebarState, setSidebarState] = useState<SidebarState>(loadSidebarState);
   const { chatsOpen, favoritesOpen, archivedOpen } = sidebarState;
 
-  // Handler para iniciar novo chat - limpa tudo
+  // Helper: verifica se é um trade card (vai para aba Positions)
+  const isTradeCard = (cardType: CardType) => 
+    cardType === 'create-trade-card' || 
+    cardType === 'trade-card' ||
+    cardType === 'card_trade' ||
+    cardType === 'card_trade_creator';
+
+  // Filtrar cards de trade para a aba Positions
+  const positionCards = useMemo(() => 
+    activeCards.filter(card => isTradeCard(card.type as CardType)),
+    [activeCards]
+  );
+
+  // React to panel notification - expand sidebar and switch to positions tab
+  useEffect(() => {
+    if (panelNotification && panelNotification.sidebar === 'left' && panelNotification.panel === 'positions') {
+      // Expand sidebar if collapsed
+      if (isCollapsed && onToggleCollapse) {
+        onToggleCollapse();
+      }
+      // Switch to positions tab
+      setSidebarState(prev => {
+        const newState = { ...prev, activeTab: 'positions' as SidebarTab };
+        saveSidebarState(newState);
+        return newState;
+      });
+      // Clear the notification
+      clearPanelNotification();
+    }
+  }, [panelNotification, isCollapsed, onToggleCollapse, clearPanelNotification]);
+
+  // Handler para iniciar novo chat - limpa tudo, volta pro chat mode e reseta layout
   const handleNewChat = useCallback(() => {
+    // 1. Limpar dados do chat
     resetChat();
     clearChatTags();
-    clearAllDrawings(); // Limpa os desenhos do chart também
-  }, [resetChat, clearChatTags, clearAllDrawings]);
+    clearAllDrawings();
+    
+    // 2. Resetar modo para chat
+    setMode('chat');
+    
+    // 3. Resetar TODOS os parâmetros de UI (larguras, collapse states, etc.)
+    resetAllUISettings();
+    
+    // 4. Limpar estados persistidos de sidebars no localStorage
+    try {
+      localStorage.removeItem('deriv-neo-sidebar-state');
+      localStorage.removeItem('deriv-neo-right-sidebar-state');
+    } catch {
+      // Ignore storage errors
+    }
+    
+    // 5. Resetar estado local do sidebar para valores padrão
+    setSidebarState(defaultState);
+  }, [resetChat, clearChatTags, clearAllDrawings, setMode, resetAllUISettings]);
 
   // Sync state across tabs/windows
   useEffect(() => {
@@ -102,7 +155,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
 
   return (
     <aside className={`relative z-40 border-r flex flex-col h-full transition-all duration-300 ${
-      isCollapsed ? 'w-16' : 'w-[280px]'
+      isCollapsed ? 'w-16' : 'w-[325px]'
     } ${
       theme === 'dark'
         ? 'bg-zinc-950 border-zinc-800/50'
@@ -111,12 +164,12 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
       <div className={`p-4 border-b transition-colors ${
         theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'
       }`}>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-center">
           {!isCollapsed && (
             <img
               src={theme === 'dark' ? derivNeoDark : derivNeoLight}
               alt="Deriv Neo"
-              className="h-7 w-auto cursor-pointer hover:opacity-80 transition-opacity"
+              className="h-[30.8px] w-auto cursor-pointer hover:opacity-80 transition-opacity"
               onClick={handleNewChat}
             />
           )}
@@ -171,8 +224,8 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
             className={`p-2 rounded-lg transition-colors ${
               activeTab === 'chats'
                 ? theme === 'dark'
-                  ? 'bg-zinc-800 text-brand-green'
-                  : 'bg-gray-200 text-brand-green'
+                  ? 'bg-zinc-800 text-zinc-300'
+                  : 'bg-gray-200 text-gray-700'
                 : theme === 'dark'
                   ? 'hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300'
                   : 'hover:bg-gray-200 text-gray-400 hover:text-gray-600'
@@ -189,8 +242,8 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
             className={`p-2 rounded-lg transition-colors ${
               activeTab === 'positions'
                 ? theme === 'dark'
-                  ? 'bg-zinc-800 text-brand-green'
-                  : 'bg-gray-200 text-brand-green'
+                  ? 'bg-zinc-800 text-zinc-300'
+                  : 'bg-gray-200 text-gray-700'
                 : theme === 'dark'
                   ? 'hover:bg-zinc-800 text-zinc-500 hover:text-zinc-300'
                   : 'hover:bg-gray-200 text-gray-400 hover:text-gray-600'
@@ -267,6 +320,11 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
         >
           <Target className="w-4 h-4" />
           <span>Positions</span>
+          {positionCards.length > 0 && (
+            <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+              theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+            }`}>{positionCards.length}</span>
+          )}
           {activeTab === 'positions' && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
           )}
@@ -292,11 +350,11 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
-            <MessageSquare className="w-4 h-4 text-brand-green" />
+            <MessageSquare className="w-4 h-4 text-[#00d0a0]" />
             <span className="flex-1 text-left">Chats</span>
             {activeChats.length > 0 && (
-              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors text-brand-green ${
-                theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
+              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
               }`}>
                 {activeChats.length}
               </span>
@@ -338,11 +396,11 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
-            <Star className="w-4 h-4 text-brand-green" />
+            <Star className="w-4 h-4 text-[#00d0a0]" />
             <span className="flex-1 text-left">Favorites</span>
             {(favoriteCards.length + favoriteChats.length) > 0 && (
-              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors text-brand-green ${
-                theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
+              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
               }`}>
                 {favoriteCards.length + favoriteChats.length}
               </span>
@@ -389,11 +447,11 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
             }`}
           >
-            <Archive className="w-4 h-4 text-brand-green" />
+            <Archive className="w-4 h-4 text-[#00d0a0]" />
             <span className="flex-1 text-left">Archived</span>
             {(archivedCards.length + archivedChats.length) > 0 && (
-              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors text-brand-green ${
-                theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'
+              <span className={`text-xs px-2 py-0.5 rounded-full transition-colors ${
+                theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
               }`}>
                 {archivedCards.length + archivedChats.length}
               </span>
@@ -428,15 +486,23 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
         ) : (
           /* Positions Tab Content */
           <div className="p-3">
-            <div className={`text-center py-8 transition-colors ${
-              theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'
-            }`}>
-              <Target className={`w-8 h-8 mx-auto mb-2 ${
-                theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'
-              }`} />
-              <p className="text-sm">No positions yet</p>
-              <p className="text-xs mt-1">Your open positions will appear here</p>
-            </div>
+            {positionCards.length === 0 ? (
+              <div className={`text-center py-8 transition-colors ${
+                theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'
+              }`}>
+                <Target className={`w-8 h-8 mx-auto mb-2 ${
+                  theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'
+                }`} />
+                <p className="text-sm">No positions yet</p>
+                <p className="text-xs mt-1">Your open positions will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {positionCards.map(card => (
+                  <ExecutionCard key={card.id} card={card} />
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

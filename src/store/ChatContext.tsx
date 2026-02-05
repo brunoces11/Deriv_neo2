@@ -1,8 +1,33 @@
 import { createContext, useContext, useReducer, useCallback, useMemo, useEffect, ReactNode } from 'react';
-import type { BaseCard, ChatMessage, UIEvent, CardStatus, ChatSession } from '../types';
+import type { BaseCard, ChatMessage, UIEvent, CardStatus, ChatSession, CardType } from '../types';
 import type { Drawing, DrawingTag } from './DrawingToolsContext';
 import * as supabaseService from '../services/supabase';
 import type { ChatTagWithSnapshot } from '../services/supabase';
+import { markCardAsDeleted } from '../services/deletedCardsStorage';
+
+// Helper to determine which panel a card should go to
+function getCardTargetPanel(cardType: CardType): { sidebar: 'left' | 'right'; panel: string } {
+  // Trade cards go to left sidebar 'positions' panel
+  if (cardType === 'create-trade-card' || cardType === 'trade-card' ||
+      cardType === 'card_trade' || cardType === 'card_trade_creator') {
+    return { sidebar: 'left', panel: 'positions' };
+  }
+  
+  // Bot cards go to right sidebar 'bots' panel
+  if (cardType === 'bot-card' || cardType === 'bot-creator' ||
+      cardType === 'card_bot' || cardType === 'card_bot_creator') {
+    return { sidebar: 'right', panel: 'bots' };
+  }
+  
+  // Action cards go to right sidebar 'actions' panel
+  if (cardType === 'actions-card' || cardType === 'actions-creator' ||
+      cardType === 'card_actions' || cardType === 'card_actions_creator') {
+    return { sidebar: 'right', panel: 'actions' };
+  }
+  
+  // Everything else (portfolio, etc.) goes to right sidebar 'cards' panel
+  return { sidebar: 'right', panel: 'cards' };
+}
 
 interface ChatState {
   currentSessionId: string | null;
@@ -29,6 +54,9 @@ type ChatAction =
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'ADD_CARD'; payload: BaseCard }
   | { type: 'SET_CARDS'; payload: BaseCard[] }
+  | { type: 'TRANSFORM_CARD'; payload: { cardId: string; newType: CardType; newPayload: Record<string, unknown> } }
+  | { type: 'UPDATE_CARD_PAYLOAD'; payload: { cardId: string; updates: Record<string, unknown> } }
+  | { type: 'DELETE_CARD_WITH_TWIN'; payload: string }
   | { type: 'ARCHIVE_CARD'; payload: string }
   | { type: 'FAVORITE_CARD'; payload: string }
   | { type: 'UNFAVORITE_CARD'; payload: string }
@@ -96,6 +124,90 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 
     case 'ADD_CARD':
       return { ...state, activeCards: [...state.activeCards, action.payload] };
+
+    case 'TRANSFORM_CARD': {
+      const { cardId, newType, newPayload } = action.payload;
+      // Get the base ID (without 'panel-' prefix) for twin matching
+      const baseId = cardId.replace(/^panel-/, '');
+      const panelId = cardId.startsWith('panel-') ? cardId : `panel-${cardId}`;
+      
+      return {
+        ...state,
+        activeCards: state.activeCards.map(card => {
+          // Match both the inline card (baseId) and panel card (panelId)
+          const cardBaseId = card.id.replace(/^panel-/, '');
+          if (cardBaseId === baseId || card.id === panelId) {
+            return { ...card, type: newType, payload: newPayload };
+          }
+          return card;
+        }),
+        archivedCards: state.archivedCards.map(card => {
+          const cardBaseId = card.id.replace(/^panel-/, '');
+          if (cardBaseId === baseId || card.id === panelId) {
+            return { ...card, type: newType, payload: newPayload };
+          }
+          return card;
+        }),
+        favoriteCards: state.favoriteCards.map(card => {
+          const cardBaseId = card.id.replace(/^panel-/, '');
+          if (cardBaseId === baseId || card.id === panelId) {
+            return { ...card, type: newType, payload: newPayload };
+          }
+          return card;
+        }),
+      };
+    }
+
+    case 'UPDATE_CARD_PAYLOAD': {
+      const { cardId, updates } = action.payload;
+      // Get the base ID for twin matching
+      const baseId = cardId.replace(/^panel-/, '');
+      
+      return {
+        ...state,
+        activeCards: state.activeCards.map(card => {
+          const cardBaseId = card.id.replace(/^panel-/, '');
+          if (cardBaseId === baseId) {
+            return { ...card, payload: { ...card.payload, ...updates } };
+          }
+          return card;
+        }),
+        archivedCards: state.archivedCards.map(card => {
+          const cardBaseId = card.id.replace(/^panel-/, '');
+          if (cardBaseId === baseId) {
+            return { ...card, payload: { ...card.payload, ...updates } };
+          }
+          return card;
+        }),
+        favoriteCards: state.favoriteCards.map(card => {
+          const cardBaseId = card.id.replace(/^panel-/, '');
+          if (cardBaseId === baseId) {
+            return { ...card, payload: { ...card.payload, ...updates } };
+          }
+          return card;
+        }),
+      };
+    }
+
+    case 'DELETE_CARD_WITH_TWIN': {
+      const cardId = action.payload;
+      // Get the base ID for twin matching - remove 'panel-' prefix if present
+      const baseId = cardId.replace(/^panel-/, '');
+      
+      // Filter out both the inline card and its panel twin
+      const filterTwins = (cards: BaseCard[]) => 
+        cards.filter(card => {
+          const cardBaseId = card.id.replace(/^panel-/, '');
+          return cardBaseId !== baseId;
+        });
+      
+      return {
+        ...state,
+        activeCards: filterTwins(state.activeCards),
+        archivedCards: filterTwins(state.archivedCards),
+        favoriteCards: filterTwins(state.favoriteCards),
+      };
+    }
 
     case 'SET_CARDS': {
       const activeCards = action.payload.filter(c => c.status === 'active');
@@ -189,7 +301,11 @@ interface ChatContextValue extends ChatState {
   sessionTags: ChatTagWithSnapshot[];
   addMessage: (message: ChatMessage, sessionId?: string) => Promise<void>;
   setTyping: (typing: boolean) => void;
-  processUIEvent: (event: UIEvent, sessionId?: string) => Promise<void>;
+  processUIEvent: (event: UIEvent, sessionId?: string, onCardAdded?: (sidebar: 'left' | 'right', panel: string) => void) => Promise<void>;
+  transformCard: (cardId: string, newType: CardType, newPayload: Record<string, unknown>) => void;
+  updateCardPayload: (cardId: string, updates: Record<string, unknown>) => void;
+  deleteCardWithTwin: (cardId: string) => Promise<void>;
+  getCardById: (cardId: string) => BaseCard | undefined;
   archiveCard: (cardId: string) => Promise<void>;
   favoriteCard: (cardId: string) => Promise<void>;
   unfavoriteCard: (cardId: string) => Promise<void>;
@@ -211,39 +327,37 @@ interface ChatContextValue extends ChatState {
 
 const ChatContext = createContext<ChatContextValue | null>(null);
 
+// Storage key for persisting current session
+const SESSION_STORAGE_KEY = 'deriv-neo-current-session';
+
+// Load current session ID from localStorage
+function loadCurrentSessionId(): string | null {
+  try {
+    return localStorage.getItem(SESSION_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+// Save current session ID to localStorage
+function saveCurrentSessionId(sessionId: string | null) {
+  try {
+    if (sessionId) {
+      localStorage.setItem(SESSION_STORAGE_KEY, sessionId);
+    } else {
+      localStorage.removeItem(SESSION_STORAGE_KEY);
+    }
+  } catch {
+    // Ignore storage errors
+  }
+}
+
 export function ChatProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(chatReducer, initialState);
 
   const refreshSessions = useCallback(async () => {
     const sessions = await supabaseService.getChatSessions();
     dispatch({ type: 'SET_SESSIONS', payload: sessions });
-  }, []);
-
-  useEffect(() => {
-    refreshSessions();
-  }, [refreshSessions]);
-
-  const createNewSession = useCallback(async (firstMessage: string): Promise<string | null> => {
-    const title = firstMessage.slice(0, 50) + (firstMessage.length > 50 ? '...' : '');
-    console.log('createNewSession called:', { title });
-    
-    const session = await supabaseService.createChatSession(title);
-
-    if (!session) {
-      console.error('Failed to create session in Supabase');
-      return null;
-    }
-
-    console.log('Session created successfully:', session.id);
-    
-    dispatch({ type: 'ADD_SESSION', payload: session });
-    dispatch({ type: 'SET_CURRENT_SESSION', payload: session.id });
-    dispatch({ type: 'SET_MESSAGES', payload: [] });
-    dispatch({ type: 'SET_CARDS', payload: [] });
-    dispatch({ type: 'SET_SESSION_DRAWINGS', payload: [] });
-    dispatch({ type: 'SET_SESSION_TAGS', payload: [] });
-
-    return session.id;
   }, []);
 
   const loadSession = useCallback(async (sessionId: string) => {
@@ -272,6 +386,61 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_SESSION_TAGS', payload: tags });
     dispatch({ type: 'SET_LOADING', payload: false });
   }, []);
+
+  const createNewSession = useCallback(async (firstMessage: string): Promise<string | null> => {
+    // Remove tags from title to prevent them from appearing in session cards
+    const cleanMessage = firstMessage.replace(/\[@([A-Za-z0-9\s]+?)(?:-(\d+))?\]\s*/g, '').trim();
+    const title = cleanMessage.slice(0, 50) + (cleanMessage.length > 50 ? '...' : '');
+    console.log('createNewSession called:', { title });
+    
+    const session = await supabaseService.createChatSession(title);
+
+    if (!session) {
+      console.error('Failed to create session in Supabase');
+      return null;
+    }
+
+    console.log('Session created successfully:', session.id);
+    
+    dispatch({ type: 'ADD_SESSION', payload: session });
+    dispatch({ type: 'SET_CURRENT_SESSION', payload: session.id });
+    dispatch({ type: 'SET_MESSAGES', payload: [] });
+    dispatch({ type: 'SET_CARDS', payload: [] });
+    dispatch({ type: 'SET_SESSION_DRAWINGS', payload: [] });
+    dispatch({ type: 'SET_SESSION_TAGS', payload: [] });
+
+    return session.id;
+  }, []);
+
+  // Load sessions and restore last active session on mount
+  useEffect(() => {
+    const initializeSessions = async () => {
+      await refreshSessions();
+      
+      // Try to restore last active session
+      const savedSessionId = loadCurrentSessionId();
+      if (savedSessionId) {
+        console.log('Restoring last active session:', savedSessionId);
+        // Verify session still exists before loading
+        const sessions = await supabaseService.getChatSessions();
+        const sessionExists = sessions.some(s => s.id === savedSessionId);
+        
+        if (sessionExists) {
+          await loadSession(savedSessionId);
+        } else {
+          console.warn('Saved session no longer exists, clearing storage');
+          saveCurrentSessionId(null);
+        }
+      }
+    };
+    
+    initializeSessions();
+  }, [loadSession, refreshSessions]);
+
+  // Save currentSessionId to localStorage whenever it changes
+  useEffect(() => {
+    saveCurrentSessionId(state.currentSessionId);
+  }, [state.currentSessionId]);
 
   const addMessage = useCallback(async (message: ChatMessage, sessionId?: string) => {
     dispatch({ type: 'ADD_MESSAGE', payload: message });
@@ -303,7 +472,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_TYPING', payload: typing });
   }, []);
 
-  const processUIEvent = useCallback(async (event: UIEvent, sessionId?: string) => {
+  const processUIEvent = useCallback(async (event: UIEvent, sessionId?: string, onCardAdded?: (sidebar: 'left' | 'right', panel: string) => void) => {
     const targetSessionId = sessionId || state.currentSessionId;
     console.log('processUIEvent called:', { 
       eventType: event.type, 
@@ -313,6 +482,23 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     });
     
     if (event.type === 'ADD_CARD' && event.cardType && event.payload) {
+      // REGRA: Cards de portfolio-table são singleton no painel
+      // Podem aparecer múltiplas vezes inline, mas só uma vez no painel
+      const isPortfolioTableCard = event.cardType === 'portfolio-table-complete' || 
+                                    event.cardType === 'card_portfolio';
+      
+      if (isPortfolioTableCard) {
+        // Verificar se já existe um card de portfolio-table no activeCards
+        const existingPortfolioTable = state.activeCards.find(
+          c => c.type === 'portfolio-table-complete' || c.type === 'card_portfolio'
+        );
+        
+        if (existingPortfolioTable) {
+          console.log('Portfolio table card already exists, skipping duplicate:', existingPortfolioTable.id);
+          return; // Não adicionar duplicata
+        }
+      }
+      
       const card: BaseCard = {
         id: event.cardId,
         type: event.cardType,
@@ -324,6 +510,12 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
       console.log('Adding card to state:', card.id, card.type);
       dispatch({ type: 'ADD_CARD', payload: card });
+
+      // Notify which panel should be activated
+      if (onCardAdded) {
+        const targetPanel = getCardTargetPanel(event.cardType as CardType);
+        onCardAdded(targetPanel.sidebar, targetPanel.panel);
+      }
 
       if (targetSessionId) {
         console.log('Persisting card to session:', targetSessionId);
@@ -342,7 +534,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'HIDE_CARD', payload: event.cardId });
       await supabaseService.updateCardInSession(event.cardId, { status: 'hidden' });
     }
-  }, [state.currentSessionId]);
+  }, [state.currentSessionId, state.activeCards]);
 
   const archiveCard = useCallback(async (cardId: string) => {
     dispatch({ type: 'ARCHIVE_CARD', payload: cardId });
@@ -363,6 +555,70 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'HIDE_CARD', payload: cardId });
     supabaseService.updateCardInSession(cardId, { status: 'hidden' });
   }, []);
+
+  const transformCard = useCallback((cardId: string, newType: CardType, newPayload: Record<string, unknown>) => {
+    dispatch({ 
+      type: 'TRANSFORM_CARD', 
+      payload: { cardId, newType, newPayload } 
+    });
+    
+    // Persist transformation to Supabase
+    // Panel cards are the ones persisted, so we use the panel ID
+    const panelId = cardId.startsWith('panel-') ? cardId : `panel-${cardId}`;
+    supabaseService.updateCardInSession(panelId, { 
+      type: newType, 
+      payload: newPayload 
+    });
+  }, []);
+
+  const updateCardPayload = useCallback((cardId: string, updates: Record<string, unknown>) => {
+    dispatch({
+      type: 'UPDATE_CARD_PAYLOAD',
+      payload: { cardId, updates }
+    });
+  }, []);
+
+  const deleteCardWithTwin = useCallback(async (cardId: string) => {
+    console.log('[ChatContext] deleteCardWithTwin called:', cardId);
+    
+    try {
+      // Get the base ID (without 'panel-' prefix) for twin matching
+      const baseId = cardId.replace(/^panel-/, '');
+      const panelId = `panel-${baseId}`;
+      
+      // Find the panel card to get its Supabase ID (if it exists)
+      const panelCard = state.activeCards.find(c => c.id === panelId);
+      
+      // Mark card as permanently deleted (persisted in localStorage)
+      // This prevents the card from being recreated when the page is refreshed
+      markCardAsDeleted(baseId);
+      
+      // Delete from UI state first (removes both twins)
+      dispatch({ type: 'DELETE_CARD_WITH_TWIN', payload: cardId });
+      
+      // Delete from Supabase if the panel card exists
+      // Panel cards are the ones persisted to Supabase
+      if (panelCard) {
+        await supabaseService.deleteCardFromSession(panelCard.id);
+      }
+      
+      console.log('[ChatContext] Card twins deleted permanently:', { baseId, panelId });
+    } catch (error) {
+      console.error('[ChatContext] Error deleting card twins:', error);
+    }
+  }, [state.activeCards]);
+
+  const getCardById = useCallback((cardId: string): BaseCard | undefined => {
+    // Get the base ID for twin matching
+    const baseId = cardId.replace(/^panel-/, '');
+    
+    // Search in all card arrays
+    const allCards = [...state.activeCards, ...state.archivedCards, ...state.favoriteCards];
+    
+    // First try exact match, then try base ID match
+    return allCards.find(card => card.id === cardId) || 
+           allCards.find(card => card.id.replace(/^panel-/, '') === baseId);
+  }, [state.activeCards, state.archivedCards, state.favoriteCards]);
 
   const resetChat = useCallback(() => {
     dispatch({ type: 'RESET_CHAT' });
@@ -460,6 +716,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       addMessage,
       setTyping,
       processUIEvent,
+      transformCard,
+      updateCardPayload,
+      deleteCardWithTwin,
+      getCardById,
       archiveCard,
       favoriteCard,
       unfavoriteCard,
@@ -481,6 +741,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       addMessage,
       setTyping,
       processUIEvent,
+      transformCard,
+      updateCardPayload,
+      deleteCardWithTwin,
+      getCardById,
       archiveCard,
       favoriteCard,
       unfavoriteCard,

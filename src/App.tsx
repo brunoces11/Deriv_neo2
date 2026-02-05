@@ -36,12 +36,13 @@ function MainLayout() {
       <MainArea
         isGraphMode={currentMode === 'graph'}
         isDashboardMode={currentMode === 'dashboard'}
+        isHubMode={currentMode === 'hub'}
       />
 
       <CardsSidebar
         isCollapsed={cardsSidebarCollapsed}
         width={cardsSidebarWidth}
-        isGraphMode={currentMode === 'graph' || currentMode === 'dashboard'}
+        isGraphMode={currentMode === 'graph' || currentMode === 'dashboard' || currentMode === 'hub'}
         onToggleCollapse={() => updateUserPoint({ cardsSidebarCollapsed: !cardsSidebarCollapsed })}
         onResize={(width) => updateUserPoint({ cardsSidebarWidth: width })}
         onResizeStart={() => setResizing(true)}

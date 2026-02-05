@@ -1,9 +1,33 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useCallback } from 'react';
 import { Bot, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
-import type { ChatMessage } from '../../types';
+import { useViewMode } from '../../store/ViewModeContext';
+import type { ChatMessage, BaseCard, CardType } from '../../types';
+
+// Placeholder rendering imports
+import { 
+  PLACEHOLDER_WITH_TITLE_REGEX, 
+  getRuleForMode, 
+  type ViewMode as PlaceholderViewMode,
+  type ModeConfig,
+  type RenderCardType,
+  type PanelTab,
+  VALID_PLACEHOLDERS
+} from '../../services/placeholderRules';
+
+// Card components for inline rendering
+import { BotCard } from '../cards/BotCard';
+import { PortfolioSnapshotCard } from '../cards/PortfolioSnapshotCard';
+import { PortfolioTableCardComplete } from '../cards/PortfolioTableCardComplete';
+import { CreateTradeCard } from '../cards/CreateTradeCard';
+import { TradeCard } from '../cards/TradeCard';
+import { ActionsCard } from '../cards/ActionsCard';
+import { ActionsCardCreator } from '../cards/ActionsCardCreator';
+import { BotCardCreator } from '../cards/BotCardCreator';
 
 // URL da foto do usuário (mesma usada no UserProfile)
 const USER_AVATAR_URL = "https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=200";
@@ -16,8 +40,9 @@ const AGENTS = [
   'RiskAnalysisAgent',
   'PortfolioManagerAgent',
   'TraderAgent',
+  'ActionCreatorAgent',
   'BotCreatorAgent',
-  'MarketAgent',
+  'MarketAnalysesAgent',
   'SupportAgent',
   'TrainerAgent',
 ];
@@ -39,6 +64,317 @@ const TAG_COLORS: Record<string, { bg: string; textLight: string; textDark: stri
   market: { bg: 'rgba(147, 51, 234, 0.25)', textLight: '#3b1a5c', textDark: '#d8b4fe', border: 'rgba(147, 51, 234, 0.4)' },
   default: { bg: 'rgba(113, 113, 122, 0.25)', textLight: '#3d3d3d', textDark: '#d4d4d8', border: 'rgba(113, 113, 122, 0.4)' },
 };
+
+// ============================================================================
+// Card Components Map for Inline Rendering
+// ============================================================================
+
+const cardComponents: Record<RenderCardType, React.ComponentType<{ card: BaseCard; defaultExpanded?: boolean }>> = {
+  'bot-card': BotCard,
+  'portfolio-snapshot': PortfolioSnapshotCard,
+  'portfolio-sidebar': PortfolioSnapshotCard, // Fallback to snapshot
+  'portfolio-table-complete': PortfolioTableCardComplete,
+  'create-trade-card': CreateTradeCard,
+  'trade-card': TradeCard,
+  'actions-card': ActionsCard,
+  'actions-creator': ActionsCardCreator,
+  'bot-creator': BotCardCreator,
+};
+
+// ============================================================================
+// Placeholder Parsing Types and Functions
+// ============================================================================
+
+type MessagePart = 
+  | { type: 'text'; content: string }
+  | { type: 'card'; placeholder: string; config: ModeConfig; cardId: string; title?: string };
+
+/**
+ * Parse message content and extract placeholders for inline card rendering
+ * Uses deterministic cardId based on message content and placeholder position
+ * Now supports optional title extraction from format: [[PLACEHOLDER]]:"Title"
+ */
+function parseMessageWithPlaceholders(
+  content: string, 
+  mode: PlaceholderViewMode,
+  messageId: string
+): MessagePart[] {
+  const parts: MessagePart[] = [];
+  let lastIndex = 0;
+  let placeholderIndex = 0;
+  
+  // Reset regex state
+  PLACEHOLDER_WITH_TITLE_REGEX.lastIndex = 0;
+  let match;
+  
+  while ((match = PLACEHOLDER_WITH_TITLE_REGEX.exec(content)) !== null) {
+    // Text before the placeholder
+    if (match.index > lastIndex) {
+      parts.push({ type: 'text', content: content.slice(lastIndex, match.index) });
+    }
+    
+    // Placeholder → Card config
+    const placeholder = `[[${match[1]}]]`;
+    const title = match[2] || undefined; // Group 2 is the title between quotes
+    const config = getRuleForMode(placeholder, mode);
+    
+    if (config && VALID_PLACEHOLDERS.includes(placeholder)) {
+      // Use deterministic cardId based on messageId and placeholder position
+      // This ensures the same placeholder in the same message always gets the same ID
+      parts.push({ 
+        type: 'card', 
+        placeholder, 
+        config,
+        cardId: `${messageId}-placeholder-${placeholderIndex}`,
+        title
+      });
+      placeholderIndex++;
+    } else {
+      // Unknown placeholder, keep as text
+      parts.push({ type: 'text', content: match[0] });
+    }
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  // Remaining text after last placeholder
+  if (lastIndex < content.length) {
+    parts.push({ type: 'text', content: content.slice(lastIndex) });
+  }
+  
+  return parts.length > 0 ? parts : [{ type: 'text', content }];
+}
+
+/**
+ * Create a mock BaseCard for inline rendering
+ * @param cardType - The type of card to create
+ * @param cardId - Unique identifier for the card
+ * @param title - Optional dynamic title from LLM
+ */
+function createMockCard(cardType: RenderCardType, cardId: string, title?: string): BaseCard {
+  return {
+    id: cardId,
+    type: cardType as any, // Type coercion needed due to CardType mismatch
+    status: 'active',
+    isFavorite: false,
+    createdAt: new Date(),
+    payload: getDefaultPayloadForCard(cardType, title),
+  };
+}
+
+/**
+ * Get default payload for each card type (for inline rendering)
+ * @param cardType - The type of card to create
+ * @param title - Optional dynamic title from LLM
+ */
+function getDefaultPayloadForCard(cardType: RenderCardType, title?: string): Record<string, unknown> {
+  const defaultPortfolioAssets = [
+    { symbol: 'BTC', name: 'Bitcoin', allocation: 45, value: '$20,353.50', invested: '$18,000.00', change: '+$2,353.50', changePercent: '+13.07%' },
+    { symbol: 'ETH', name: 'Ethereum', allocation: 30, value: '$13,569.00', invested: '$12,500.00', change: '+$1,069.00', changePercent: '+8.55%' },
+    { symbol: 'SOL', name: 'Solana', allocation: 15, value: '$6,784.50', invested: '$7,200.00', change: '-$415.50', changePercent: '-5.77%' },
+    { symbol: 'Other', name: 'Others', allocation: 10, value: '$4,523.00', invested: '$4,500.00', change: '+$23.00', changePercent: '+0.51%' },
+  ];
+
+  // Base payload with optional title
+  const basePayload = title ? { title } : {};
+
+  switch (cardType) {
+    case 'trade-card':
+      return {
+        ...basePayload,
+        tradeId: `TRD-${Math.floor(Math.random() * 10000)}`,
+        asset: 'BTC/USD',
+        assetName: 'Bitcoin',
+        direction: 'higher',
+        stake: '$100.00',
+        payout: '$195.00',
+        barrier: '42,500.00',
+        expiryDate: '28 Jan 2026, 23:59:59',
+        status: 'open',
+      };
+    case 'create-trade-card':
+      return {
+        ...basePayload,
+        asset: 'BTC/USD',
+        assetName: 'Bitcoin',
+        tradeType: 'higher-lower',
+        duration: {
+          mode: 'duration',
+          unit: 'days',
+          value: 1,
+          range: { min: 1, max: 365 },
+          expiryDate: '28 Jan 2026, 23:59:59 GMT +0',
+        },
+        barrier: { value: 42500.00, spotPrice: 42350.75 },
+        stake: { mode: 'stake', value: 100, currency: 'USD' },
+        payout: {
+          higher: { amount: '$195.00', percentage: '95%' },
+          lower: { amount: '$195.00', percentage: '95%' },
+        },
+      };
+    case 'bot-card':
+    case 'bot-creator':
+      return {
+        ...basePayload,
+        botId: `BOT-${Math.floor(Math.random() * 1000)}`,
+        botName: 'DCA Bitcoin Weekly',
+        name: 'DCA Bitcoin Weekly',
+        strategy: 'Dollar Cost Averaging',
+        status: 'active',
+        performance: '+12.5%',
+        trigger: { type: 'Weekly', value: 'Monday' },
+        action: { type: 'Buy', asset: 'BTC' },
+        target: { type: 'Amount', value: '$100' },
+      };
+    case 'actions-card':
+    case 'actions-creator':
+      return {
+        ...basePayload,
+        actionId: `ACT-${Math.floor(Math.random() * 1000)}`,
+        actionName: 'Price Alert BTC',
+        name: 'Price Alert BTC',
+        description: 'Alert when BTC reaches target',
+        status: 'active',
+        trigger: { type: 'price', value: '$50,000' },
+        action: { type: 'Alert', asset: 'BTC' },
+        schedule: { frequency: 'once', time: '09:00' },
+      };
+    case 'portfolio-snapshot':
+    case 'portfolio-sidebar':
+      return {
+        ...basePayload,
+        totalValue: '$45,230.00',
+        change24h: '+$1,250.00',
+        changePercent: '+2.84%',
+        assets: [
+          { symbol: 'BTC', allocation: 45, value: '$20,353.50' },
+          { symbol: 'ETH', allocation: 30, value: '$13,569.00' },
+          { symbol: 'SOL', allocation: 15, value: '$6,784.50' },
+          { symbol: 'Other', allocation: 10, value: '$4,523.00' },
+        ],
+      };
+    case 'portfolio-table-complete':
+      return {
+        ...basePayload,
+        totalValue: '$45,230.00',
+        change24h: '+$1,250.00',
+        changePercent: '+2.84%',
+        assets: defaultPortfolioAssets,
+      };
+    default:
+      return basePayload;
+  }
+}
+
+// ============================================================================
+// InlineCard Component
+// ============================================================================
+
+interface InlineCardProps {
+  config: ModeConfig;
+  cardId: string;
+  title?: string;
+  onAddToPanel: (
+    cardId: string, 
+    cardType: RenderCardType, 
+    panelTab: PanelTab,
+    payload: Record<string, unknown>
+  ) => void;
+}
+
+function InlineCard({ config, cardId, title, onAddToPanel }: InlineCardProps) {
+  const { inline, panel } = config;
+  const { getCardById, deleteCardWithTwin } = useChat();
+  // Track if we've already added to panel for this specific card instance
+  const hasAddedToPanelRef = useRef(false);
+  
+  // Check if this card was permanently deleted
+  const wasDeleted = isCardDeleted(cardId);
+  
+  // Try to get the card from centralized state (panel card)
+  // Panel cards use 'panel-' prefix, so we look for that
+  const panelCardId = `panel-${cardId}`;
+  const existingCard = getCardById(panelCardId);
+  
+  // Get card component - may be null for unknown types
+  const CardComponent = cardComponents[inline.cardType];
+  
+  // If we have an existing card, use its type (might have been transformed)
+  const actualCardType = existingCard ? existingCard.type : inline.cardType;
+  const ActualCardComponent = cardComponents[actualCardType as RenderCardType] || CardComponent;
+  
+  const isExpanded = inline.visualState === 'expanded';
+  
+  // Use existing card data if available, otherwise create mock with title
+  // Safe access - only create if we have a valid card type
+  const card: BaseCard | null = CardComponent 
+    ? (existingCard || createMockCard(inline.cardType, cardId, title))
+    : null;
+  
+  // Add card to panel on mount (only once per card instance)
+  // IMPORTANT: This hook MUST be called unconditionally (before any returns)
+  useEffect(() => {
+    // Only add to panel once per card instance
+    if (hasAddedToPanelRef.current) {
+      return;
+    }
+    
+    // Skip if no valid card component
+    if (!CardComponent) {
+      return;
+    }
+    
+    // Skip if card was permanently deleted
+    if (wasDeleted) {
+      return;
+    }
+    
+    if (panel && panel.panel) {
+      hasAddedToPanelRef.current = true;
+      // Include title in payload when adding to panel
+      const payload = existingCard?.payload || getDefaultPayloadForCard(panel.cardType, title);
+      onAddToPanel(cardId, panel.cardType, panel.panel, payload as Record<string, unknown>);
+    }
+  }, [cardId, panel, onAddToPanel, existingCard, CardComponent, wasDeleted, title]);
+  
+  // === GUARD CHECKS - All hooks must be ABOVE this line ===
+  
+  // If card was permanently deleted, don't render anything
+  if (wasDeleted) {
+    return null;
+  }
+  
+  if (!CardComponent) {
+    console.warn(`[InlineCard] Unknown card type: ${inline.cardType}`);
+    return null;
+  }
+  
+  // Se já foi adicionado ao painel mas não existe mais, foi deletado
+  // Não renderiza nada - o placeholder desaparece permanentemente
+  if (hasAddedToPanelRef.current && !existingCard) {
+    return null;
+  }
+  
+  // Safety check - card should exist at this point
+  if (!card) {
+    return null;
+  }
+  
+  // Create a card object that includes the deleteCardWithTwin function
+  // This allows inline cards to trigger deletion of both twins
+  const cardWithTwinDelete: BaseCard = {
+    ...card,
+    // Override the id to use the inline cardId for proper twin matching
+    id: cardId,
+  };
+  
+  // margin-bottom 22px to push the next markdown text element
+  return (
+    <div className="my-4 max-w-full" style={{ marginBottom: '22px' }}>
+      <ActualCardComponent card={cardWithTwinDelete} defaultExpanded={isExpanded} />
+    </div>
+  );
+}
 
 // Mapeia nomes de tags para tipos de drawing
 function getDrawingTypeFromTagName(tagName: string): 'trendline' | 'horizontal' | 'rectangle' | 'note' | null {
@@ -132,10 +468,70 @@ interface ChatMessagesProps {
   displayMode?: 'center' | 'sidebar';
 }
 
+// Track which cards have been added to panel to avoid duplicates
+const addedToPanelSet = new Set<string>();
+
+// Import deleted cards tracking from centralized service
+import { isCardDeleted } from '../../services/deletedCardsStorage';
+
 export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
-  const { messages, isTyping } = useChat();
+  const { messages, isTyping, processUIEvent, currentSessionId } = useChat();
+  const { currentMode, notifyPanelActivation } = useViewMode();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isSidebar = displayMode === 'sidebar';
+
+  // Callback to add card to panel (called by InlineCard)
+  const addCardToPanel = useCallback(async (
+    cardId: string, 
+    cardType: RenderCardType, 
+    panelTab: PanelTab,
+    payload: Record<string, unknown>
+  ) => {
+    // REGRA ESPECIAL: Portfolio table cards são singleton no painel
+    // Podem aparecer múltiplas vezes inline, mas só uma vez no painel
+    const isSingletonCard = cardType === 'portfolio-table-complete';
+    
+    // Para singleton cards, usar o tipo como chave (garante única instância)
+    // Para outros cards, usar cardId (permite múltiplas instâncias diferentes)
+    const uniqueKey = isSingletonCard 
+      ? `${currentSessionId}-singleton-${cardType}`
+      : `${currentSessionId}-${cardId}`;
+    
+    // Skip if already added to panel
+    if (addedToPanelSet.has(uniqueKey)) {
+      return;
+    }
+    
+    // Mark as added
+    addedToPanelSet.add(uniqueKey);
+    
+    // Para singleton cards, usar um ID fixo baseado no tipo
+    const panelCardId = isSingletonCard 
+      ? `panel-singleton-${cardType}`
+      : `panel-${cardId}`;
+    
+    // Add to panel via processUIEvent with notification callback
+    await processUIEvent({
+      type: 'ADD_CARD',
+      cardType: cardType as CardType,
+      cardId: panelCardId,
+      payload: {
+        ...payload,
+        visualState: 'compacted',
+        panelTab,
+      },
+    }, undefined, (sidebar, panel) => {
+      // Notify to expand and activate the panel where the card was added
+      notifyPanelActivation(sidebar, panel);
+    });
+  }, [processUIEvent, currentSessionId, notifyPanelActivation]);
+
+  // Clear tracked cards when session changes
+  useEffect(() => {
+    // When session changes, we could clear the set, but keeping it prevents
+    // re-adding cards when switching back to a session
+    // For now, we keep the set persistent
+  }, [currentSessionId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -144,7 +540,13 @@ export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
   return (
     <div className={`space-y-4 ${isSidebar ? 'py-3' : 'py-6 space-y-6'}`}>
       {messages.map((message) => (
-        <MessageBubble key={message.id} message={message} isSidebar={isSidebar} />
+        <MessageBubble 
+          key={message.id} 
+          message={message} 
+          isSidebar={isSidebar}
+          currentMode={currentMode as PlaceholderViewMode}
+          onAddCardToPanel={addCardToPanel}
+        />
       ))}
       {isTyping && <TypingIndicator isSidebar={isSidebar} />}
       <div ref={messagesEndRef} />
@@ -155,11 +557,26 @@ export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
 interface MessageBubbleProps {
   message: ChatMessage;
   isSidebar?: boolean;
+  currentMode: PlaceholderViewMode;
+  onAddCardToPanel: (
+    cardId: string, 
+    cardType: RenderCardType, 
+    panelTab: PanelTab,
+    payload: Record<string, unknown>
+  ) => void;
 }
 
-function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
+function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPanel }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const { theme } = useTheme();
+  
+  // Parse message for placeholders (only for AI messages)
+  const messageParts = !isUser 
+    ? parseMessageWithPlaceholders(message.content, currentMode, message.id)
+    : null;
+  
+  // Check if message has inline cards
+  const hasInlineCards = messageParts?.some(part => part.type === 'card') ?? false;
 
   return (
     <div className="animate-slide-up opacity-0">
@@ -216,39 +633,207 @@ function MessageBubble({ message, isSidebar = false }: MessageBubbleProps) {
               {isUser ? (
                 // Para mensagens do usuário, renderiza tags como badges (line-height aumentado para tags)
                 <p className="mb-0 leading-[1.77]">{parseMessageWithTags(message.content, theme)}</p>
+              ) : hasInlineCards && messageParts ? (
+                // Para mensagens da IA com placeholders, renderiza texto + cards inline
+                <div className="space-y-2">
+                  {messageParts.map((part, index) => {
+                    if (part.type === 'text') {
+                      // Render text parts with ReactMarkdown
+                      const trimmedContent = part.content.trim();
+                      if (!trimmedContent) return null;
+                      return (
+                        <ReactMarkdown
+                          key={`text-${index}`}
+                          remarkPlugins={[remarkGfm, remarkBreaks]}
+                          components={{
+                            p: ({ children }) => <p className="mb-2 last:mb-0 whitespace-pre-wrap">{children}</p>,
+                            br: () => <br />,
+                            ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
+                            ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
+                            li: ({ children }) => <li className="mb-0.5">{children}</li>,
+                            code: ({ inline, children }) => {
+                              if (inline) {
+                                return (
+                                  <code className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                                    theme === 'dark' ? 'bg-zinc-700 text-zinc-200' : 'bg-gray-200 text-gray-800'
+                                  }`}>{children}</code>
+                                );
+                              }
+                              return (
+                                <code className={`block p-3 rounded overflow-x-auto text-xs font-mono mb-2 ${
+                                  theme === 'dark' ? 'bg-zinc-900 text-zinc-200' : 'bg-gray-100 text-gray-800'
+                                }`}>{children}</code>
+                              );
+                            },
+                            pre: ({ children }) => <pre className="mb-2">{children}</pre>,
+                            strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                            em: ({ children }) => <em className="italic">{children}</em>,
+                            del: ({ children }) => <del className="line-through">{children}</del>,
+                            // Headings - enhanced hierarchy with better spacing
+                            h1: ({ children }) => <h1 className="text-2xl font-bold mb-2 mt-10 first:mt-0">{children}</h1>,
+                            h2: ({ children }) => <h2 className="text-xl font-bold mb-2 mt-8 first:mt-0">{children}</h2>,
+                            h3: ({ children }) => <h3 className="text-lg font-bold mb-1.5 mt-6 first:mt-0">{children}</h3>,
+                            h4: ({ children }) => <h4 className="text-sm font-semibold mb-1 mt-5 first:mt-0">{children}</h4>,
+                            h5: ({ children }) => <h5 className="text-sm font-semibold mb-1 mt-4 first:mt-0">{children}</h5>,
+                            h6: ({ children }) => <h6 className="text-xs font-semibold mb-1 mt-3 first:mt-0">{children}</h6>,
+                            a: ({ href, children }) => (
+                              <a href={href} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600 underline transition-colors">{children}</a>
+                            ),
+                            // Blockquotes
+                            blockquote: ({ children }) => (
+                              <blockquote className={`border-l-4 pl-3 py-1 italic my-2 ${
+                                theme === 'dark' 
+                                  ? 'border-zinc-600 text-zinc-400 bg-zinc-800/30' 
+                                  : 'border-gray-300 text-gray-600 bg-gray-100/50'
+                              }`}>{children}</blockquote>
+                            ),
+                            // Linhas horizontais
+                            hr: () => (
+                              <hr className={`my-3 border-t ${
+                                theme === 'dark' ? 'border-zinc-700' : 'border-gray-300'
+                              }`} />
+                            ),
+                          }}
+                        >
+                          {trimmedContent}
+                        </ReactMarkdown>
+                      );
+                    } else {
+                      // Render inline card
+                      return (
+                        <InlineCard 
+                          key={`card-${index}-${part.cardId}`} 
+                          config={part.config} 
+                          cardId={part.cardId}
+                          title={part.title}
+                          onAddToPanel={onAddCardToPanel}
+                        />
+                      );
+                    }
+                  })}
+                </div>
               ) : (
-                // Para mensagens da IA, usa ReactMarkdown
+                // Para mensagens da IA sem placeholders, usa ReactMarkdown com suporte completo
                 <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkBreaks]}
                   components={{
-                    p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                    ul: ({ children }) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
-                    ol: ({ children }) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
-                    li: ({ children }) => <li className="mb-1">{children}</li>,
-                    code: ({ children }) => (
-                      <code className={`px-1 py-0.5 rounded text-xs ${
-                        theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
-                      }`}>{children}</code>
-                    ),
-                    pre: ({ children }) => (
-                      <pre className={`p-2 rounded overflow-x-auto text-xs mb-2 ${
-                        theme === 'dark' ? 'bg-zinc-900' : 'bg-gray-100'
-                      }`}>{children}</pre>
-                    ),
+                    // Parágrafos
+                    p: ({ children }) => <p className="mb-2 last:mb-0 whitespace-pre-wrap">{children}</p>,
+                    
+                    // Quebras de linha
+                    br: () => <br />,
+                    
+                    // Listas
+                    ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
+                    ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
+                    li: ({ children }) => <li className="mb-0.5">{children}</li>,
+                    
+                    // Código inline e blocos
+                    code: ({ inline, children }) => {
+                      if (inline) {
+                        return (
+                          <code className={`px-1.5 py-0.5 rounded text-xs font-mono ${
+                            theme === 'dark' ? 'bg-zinc-700 text-zinc-200' : 'bg-gray-200 text-gray-800'
+                          }`}>{children}</code>
+                        );
+                      }
+                      return (
+                        <code className={`block p-3 rounded overflow-x-auto text-xs font-mono mb-2 ${
+                          theme === 'dark' ? 'bg-zinc-900 text-zinc-200' : 'bg-gray-100 text-gray-800'
+                        }`}>{children}</code>
+                      );
+                    },
+                    pre: ({ children }) => <pre className="mb-2">{children}</pre>,
+                    
+                    // Formatação de texto
                     strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
                     em: ({ children }) => <em className="italic">{children}</em>,
-                    h1: ({ children }) => <h1 className="text-lg font-bold mb-2">{children}</h1>,
-                    h2: ({ children }) => <h2 className="text-base font-bold mb-2">{children}</h2>,
-                    h3: ({ children }) => <h3 className="text-sm font-bold mb-1">{children}</h3>,
+                    del: ({ children }) => <del className="line-through">{children}</del>,
+                    
+                    // Headings - enhanced hierarchy with better spacing
+                    h1: ({ children }) => <h1 className="text-2xl font-bold mb-2 mt-10 first:mt-0">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-xl font-bold mb-2 mt-8 first:mt-0">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-lg font-bold mb-1.5 mt-6 first:mt-0">{children}</h3>,
+                    h4: ({ children }) => <h4 className="text-sm font-semibold mb-1 mt-5 first:mt-0">{children}</h4>,
+                    h5: ({ children }) => <h5 className="text-sm font-semibold mb-1 mt-4 first:mt-0">{children}</h5>,
+                    h6: ({ children }) => <h6 className="text-xs font-semibold mb-1 mt-3 first:mt-0">{children}</h6>,
+                    
+                    // Links
                     a: ({ href, children }) => (
-                      <a href={href} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:underline">
+                      <a 
+                        href={href} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="text-red-500 hover:text-red-600 underline transition-colors"
+                      >
                         {children}
                       </a>
                     ),
+                    
+                    // Imagens
+                    img: ({ src, alt }) => (
+                      <img 
+                        src={src} 
+                        alt={alt || ''} 
+                        className="max-w-full h-auto rounded-lg my-2"
+                        loading="lazy"
+                      />
+                    ),
+                    
+                    // Blockquotes
                     blockquote: ({ children }) => (
-                      <blockquote className={`border-l-2 pl-3 italic mb-2 ${
-                        theme === 'dark' ? 'border-zinc-600 text-zinc-400' : 'border-gray-300 text-gray-600'
+                      <blockquote className={`border-l-4 pl-3 py-1 italic my-2 ${
+                        theme === 'dark' 
+                          ? 'border-zinc-600 text-zinc-400 bg-zinc-800/30' 
+                          : 'border-gray-300 text-gray-600 bg-gray-100/50'
                       }`}>{children}</blockquote>
                     ),
+                    
+                    // Linhas horizontais
+                    hr: () => (
+                      <hr className={`my-3 border-t ${
+                        theme === 'dark' ? 'border-zinc-700' : 'border-gray-300'
+                      }`} />
+                    ),
+                    
+                    // Tabelas (GFM)
+                    table: ({ children }) => (
+                      <div className="overflow-x-auto my-2">
+                        <table className={`min-w-full border-collapse text-xs ${
+                          theme === 'dark' ? 'border-zinc-700' : 'border-gray-300'
+                        }`}>{children}</table>
+                      </div>
+                    ),
+                    thead: ({ children }) => (
+                      <thead className={theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-100'}>{children}</thead>
+                    ),
+                    tbody: ({ children }) => <tbody>{children}</tbody>,
+                    tr: ({ children }) => (
+                      <tr className={`border-b ${
+                        theme === 'dark' ? 'border-zinc-700' : 'border-gray-300'
+                      }`}>{children}</tr>
+                    ),
+                    th: ({ children }) => (
+                      <th className="px-3 py-2 text-left font-semibold">{children}</th>
+                    ),
+                    td: ({ children }) => (
+                      <td className="px-3 py-2">{children}</td>
+                    ),
+                    
+                    // Checkboxes (GFM)
+                    input: ({ type, checked }) => {
+                      if (type === 'checkbox') {
+                        return (
+                          <input 
+                            type="checkbox" 
+                            checked={checked} 
+                            disabled 
+                            className="mr-2 align-middle"
+                          />
+                        );
+                      }
+                      return null;
+                    },
                   }}
                 >
                   {message.content}

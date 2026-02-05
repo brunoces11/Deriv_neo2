@@ -1,11 +1,14 @@
-import { useState } from 'react';
-import { TrendingUp, TrendingDown, Clock, Target, DollarSign, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
+import { TrendingUp, TrendingDown, Clock, Target, DollarSign, XCircle, ChevronDown, ChevronUp, MoreVertical, Star, Pencil, Trash2, Calendar } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { useTheme } from '../../store/ThemeContext';
+import { useChat } from '../../store/ChatContext';
 import type { BaseCard, TradeCardPayload } from '../../types';
 
 interface TradeCardProps {
   card: BaseCard;
+  defaultExpanded?: boolean;
 }
 
 /**
@@ -16,13 +19,78 @@ interface TradeCardProps {
  * Displays key trade info: asset, direction, stake, payout, barrier, expiry, status.
  * Can be collapsed to show minimal info or expanded to show full details.
  */
-export function TradeCard({ card }: TradeCardProps) {
+export function TradeCard({ card, defaultExpanded = false }: TradeCardProps) {
   const { theme } = useTheme();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const { favoriteCard, unfavoriteCard, deleteCardWithTwin } = useChat();
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Calculate dropdown position based on button location
+  const updateDropdownPosition = useCallback(() => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      const dropdownWidth = 160;
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.right - dropdownWidth,
+      });
+    }
+  }, []);
+
+  // Update position when dropdown opens
+  useEffect(() => {
+    if (isDropdownOpen) {
+      updateDropdownPosition();
+    }
+  }, [isDropdownOpen, updateDropdownPosition]);
+
+  // Update position on scroll/resize
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+    const handlePositionUpdate = () => updateDropdownPosition();
+    window.addEventListener('scroll', handlePositionUpdate, true);
+    window.addEventListener('resize', handlePositionUpdate);
+    return () => {
+      window.removeEventListener('scroll', handlePositionUpdate, true);
+      window.removeEventListener('resize', handlePositionUpdate);
+    };
+  }, [isDropdownOpen, updateDropdownPosition]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (!buttonRef.current?.contains(target) && !dropdownRef.current?.contains(target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isDropdownOpen]);
+
+  // Close dropdown on Escape key
+  useEffect(() => {
+    if (!isDropdownOpen) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsDropdownOpen(false);
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [isDropdownOpen]);
+  
+  // Guard against invalid card - MUST be after all hooks
+  if (!card || !card.id) {
+    return null;
+  }
+  
   const payload = card.payload as unknown as TradeCardPayload;
 
   const tradeId = payload?.tradeId || 'TRD-000';
-  const asset = payload?.asset || 'BTC/USD';
+  const asset = payload?.title || payload?.asset || 'BTC/USD';
   const direction = payload?.direction || 'higher';
   const stake = payload?.stake || '$100.00';
   const payout = payload?.payout || '$195.00';
@@ -35,6 +103,7 @@ export function TradeCard({ card }: TradeCardProps) {
 
   const isHigher = direction === 'higher' || direction === 'rise';
   const DirectionIcon = isHigher ? TrendingUp : TrendingDown;
+  // Keep direction colors for the badge only, icon uses neutral gray
   const directionColor = isHigher ? '#00d0a0' : '#ff444f';
   const directionLabel = direction.charAt(0).toUpperCase() + direction.slice(1);
 
@@ -55,18 +124,107 @@ export function TradeCard({ card }: TradeCardProps) {
     setIsExpanded(!isExpanded);
   };
 
+  const handleFavorite = () => {
+    if (card.isFavorite) {
+      unfavoriteCard(card.id);
+    } else {
+      favoriteCard(card.id);
+    }
+    setIsDropdownOpen(false);
+  };
+
+  const handleEdit = () => {
+    console.log('[TradeCard] Edit trade:', { tradeId });
+    setIsDropdownOpen(false);
+  };
+
+  const handleDelete = async () => {
+    console.log('[TradeCard] Delete trade (deleting twins):', { tradeId, cardId: card.id });
+    setIsDropdownOpen(false);
+    // Call delete after closing dropdown to avoid state updates on unmounted component
+    await deleteCardWithTwin(card.id);
+  };
+
+  const handleSchedule = () => {
+    console.log('[TradeCard] Schedule trade:', { tradeId });
+    setIsDropdownOpen(false);
+  };
+
+  // Dropdown content rendered via Portal
+  const dropdownContent = isDropdownOpen ? createPortal(
+    <div 
+      ref={dropdownRef}
+      className={`fixed w-40 rounded-lg shadow-xl border z-[99999] ${
+        theme === 'dark'
+          ? 'bg-zinc-800 border-zinc-700'
+          : 'bg-white border-gray-200'
+      }`}
+      style={{
+        top: dropdownPosition.top,
+        left: dropdownPosition.left,
+      }}
+    >
+      <button
+        onClick={handleFavorite}
+        className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-t-lg ${
+          theme === 'dark'
+            ? 'text-zinc-300 hover:bg-zinc-700'
+            : 'text-gray-700 hover:bg-gray-100'
+        }`}
+      >
+        <Star className={`w-4 h-4 ${card.isFavorite ? 'text-amber-400 fill-amber-400' : ''}`} />
+        {card.isFavorite ? 'Unfavorite' : 'Add to Favorites'}
+      </button>
+      <button
+        onClick={handleEdit}
+        className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+          theme === 'dark'
+            ? 'text-zinc-300 hover:bg-zinc-700'
+            : 'text-gray-700 hover:bg-gray-100'
+        }`}
+      >
+        <Pencil className="w-4 h-4" />
+        Edit
+      </button>
+      <button
+        onClick={handleDelete}
+        className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+          theme === 'dark'
+            ? 'text-zinc-300 hover:bg-zinc-700'
+            : 'text-gray-700 hover:bg-gray-100'
+        }`}
+      >
+        <Trash2 className="w-4 h-4" />
+        Delete
+      </button>
+      <button
+        onClick={handleSchedule}
+        className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors rounded-b-lg ${
+          theme === 'dark'
+            ? 'text-zinc-300 hover:bg-zinc-700'
+            : 'text-gray-700 hover:bg-gray-100'
+        }`}
+      >
+        <Calendar className="w-4 h-4" />
+        Schedule
+      </button>
+    </div>,
+    document.body
+  ) : null;
+
   // Compact view (collapsed)
   if (!isExpanded) {
     return (
-      <CardWrapper card={card} accentColor={isHigher ? 'green' : 'red'}>
+      <CardWrapper card={card} accentColor={isHigher ? 'green' : 'red'} hasOpenDropdown={isDropdownOpen}>
         <div className="flex items-center gap-3">
-          {/* Icon with status indicator */}
+          {/* Icon with status indicator - neutral gray */}
           <div className="relative flex-shrink-0">
             <div 
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: `${directionColor}20` }}
+              className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                theme === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200/70'
+              }`}
             >
-              <DirectionIcon className="w-5 h-5" style={{ color: directionColor }} />
+              <DirectionIcon className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             </div>
             {/* Status dot */}
             <div 
@@ -91,28 +249,55 @@ export function TradeCard({ card }: TradeCardProps) {
               </span>
             </div>
 
-            {/* Line 2: Stake → Payout + Status */}
+            {/* Line 2: Stake → Payout */}
             <div className="flex items-center gap-2 mt-0.5">
               <span className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
                 {stake} → <span className="text-[#00d0a0] font-medium">{payout}</span>
               </span>
-              <span className={`text-xs font-medium ${currentStatus.color}`}>
-                {currentStatus.label}
-              </span>
             </div>
           </div>
 
-          {/* Expand Button */}
-          <button
-            onClick={toggleExpand}
-            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 ${
-              theme === 'dark'
-                ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
-                : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
-            }`}
-          >
-            <ChevronDown className="w-4 h-4" />
-          </button>
+          {/* Action Buttons: Status Tag, Dropdown, Expand */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {/* Status Tag */}
+            <span className={`text-xs font-medium px-2 py-1 rounded ${currentStatus.bgColor} ${currentStatus.color}`}>
+              {currentStatus.label}
+            </span>
+
+            {/* Dropdown Menu (3 dots) */}
+            <div className="relative">
+              <button
+                ref={buttonRef}
+                onClick={() => {
+                  if (!isDropdownOpen) updateDropdownPosition();
+                  setIsDropdownOpen(!isDropdownOpen);
+                }}
+                title="More options"
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                }`}
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+
+              {/* Dropdown Content - Rendered via Portal */}
+              {dropdownContent}
+            </div>
+
+            {/* Expand Button */}
+            <button
+              onClick={toggleExpand}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                theme === 'dark'
+                  ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
+                  : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+              }`}
+            >
+              <ChevronDown className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </CardWrapper>
     );
@@ -120,16 +305,17 @@ export function TradeCard({ card }: TradeCardProps) {
 
   // Expanded view
   return (
-    <CardWrapper card={card} accentColor={isHigher ? 'green' : 'red'}>
+    <CardWrapper card={card} accentColor={isHigher ? 'green' : 'red'} hasOpenDropdown={isDropdownOpen}>
       <div className="space-y-3">
         {/* Header: Asset + Direction + Status + Collapse Button */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div 
-              className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ backgroundColor: `${directionColor}20` }}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                theme === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200/70'
+              }`}
             >
-              <DirectionIcon className="w-4 h-4" style={{ color: directionColor }} />
+              <DirectionIcon className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -148,12 +334,35 @@ export function TradeCard({ card }: TradeCardProps) {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <div className={`flex items-center gap-1 px-2 py-1 rounded-full ${currentStatus.bgColor}`}>
               <span className={`text-xs font-medium ${currentStatus.color}`}>
                 {currentStatus.label}
               </span>
             </div>
+
+            {/* Dropdown Menu (3 dots) */}
+            <div className="relative">
+              <button
+                ref={buttonRef}
+                onClick={() => {
+                  if (!isDropdownOpen) updateDropdownPosition();
+                  setIsDropdownOpen(!isDropdownOpen);
+                }}
+                title="More options"
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-zinc-700 hover:bg-zinc-600 text-zinc-300'
+                    : 'bg-gray-200 hover:bg-gray-300 text-gray-600'
+                }`}
+              >
+                <MoreVertical className="w-4 h-4" />
+              </button>
+
+              {/* Dropdown Content - Rendered via Portal */}
+              {dropdownContent}
+            </div>
+
             <button
               onClick={toggleExpand}
               className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${

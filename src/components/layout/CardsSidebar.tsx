@@ -1,10 +1,14 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { Zap, ChevronLeft, ChevronRight, Play, Bot } from 'lucide-react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { Zap, ChevronLeft, ChevronRight, Play, Bot, LayoutGrid, BotMessageSquare } from 'lucide-react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
-import { ExecutionCard } from './ExecutionCard';
+import { useViewMode } from '../../store/ViewModeContext';
+import { useDrawingTools } from '../../store/DrawingToolsContext';
+import { ExecutionCard, getCardPanelTab } from './ExecutionCard';
 import { ChatMessages } from '../chat/ChatMessages';
 import { ChatInput_NEO } from '../chat/ChatInput_NEO';
+import { WelcomeMessageCompact } from '../chat/WelcomeMessageCompact';
+import type { CardType } from '../../types';
 
 type RightSidebarTab = 'cards' | 'actions' | 'bots';
 
@@ -72,8 +76,10 @@ export function CardsSidebar({
   onResizeStart,
   onResizeEnd,
 }: CardsSidebarProps) {
-  const { activeCards } = useChat();
+  const { activeCards, messages } = useChat();
   const { theme } = useTheme();
+  const { updateDraftInput, clearDraftInput, panelNotification, clearPanelNotification } = useViewMode();
+  const { clearChatTags } = useDrawingTools();
   const [localWidth, setLocalWidth] = useState(propWidth);
   const [isResizing, setIsResizing] = useState(false);
   const [cardsHeight, setCardsHeight] = useState(200); // Default height in pixels for graph mode
@@ -81,6 +87,9 @@ export function CardsSidebar({
   const sidebarRef = useRef<HTMLElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const finalWidthRef = useRef(propWidth);
+  
+  // Check if chat has messages
+  const hasMessages = messages.length > 0;
   
   // Right sidebar state (tabs + section heights)
   const [rightSidebarState, setRightSidebarState] = useState<RightSidebarState>(loadRightSidebarState);
@@ -96,6 +105,73 @@ export function CardsSidebar({
   }, []);
 
   const setActiveTab = (tab: RightSidebarTab) => updateRightSidebarState({ activeTab: tab });
+
+  // React to panel notification - expand sidebar and switch to correct tab
+  useEffect(() => {
+    if (panelNotification && panelNotification.sidebar === 'right') {
+      const targetTab = panelNotification.panel as RightSidebarTab;
+      if (targetTab === 'cards' || targetTab === 'actions' || targetTab === 'bots') {
+        // Expand sidebar if collapsed
+        if (isCollapsed) {
+          onToggleCollapse();
+        }
+        // Switch to the target tab
+        updateRightSidebarState({ activeTab: targetTab });
+        // Clear the notification
+        clearPanelNotification();
+      }
+    }
+  }, [panelNotification, isCollapsed, onToggleCollapse, clearPanelNotification, updateRightSidebarState]);
+
+  // Helper: verifica se é QUALQUER tipo de card de portfolio (singleton - não pode duplicar no painel)
+  // Inclui TODOS os tipos possíveis: snapshot, table-complete, e variantes legacy
+  const isAnyPortfolioCard = (cardType: CardType) => 
+    cardType === 'portfolio-snapshot' ||
+    cardType === 'portfolio-table-complete' ||
+    cardType === 'portfolio-sidebar' ||
+    cardType === 'card_portfolio' ||
+    cardType === 'card_portfolio_exemple_compacto' ||
+    cardType === 'card_portfolio_sidebar';
+
+  // Filter cards by panel type, com deduplicação de TODOS os tipos de portfolio
+  const cardsForCardsPanel = useMemo(() => {
+    const filtered = activeCards.filter(card => getCardPanelTab(card.type as CardType) === 'cards');
+    
+    // Deduplicar cards de portfolio: manter apenas o primeiro de qualquer tipo
+    let hasPortfolioCard = false;
+    return filtered.filter(card => {
+      if (isAnyPortfolioCard(card.type as CardType)) {
+        if (hasPortfolioCard) {
+          return false; // Já existe um portfolio card, não mostrar duplicata
+        }
+        hasPortfolioCard = true;
+      }
+      return true;
+    });
+  }, [activeCards]);
+  
+  const cardsForActionsPanel = useMemo(() => 
+    activeCards.filter(card => getCardPanelTab(card.type as CardType) === 'actions'),
+    [activeCards]
+  );
+  
+  const cardsForBotsPanel = useMemo(() => 
+    activeCards.filter(card => getCardPanelTab(card.type as CardType) === 'bots'),
+    [activeCards]
+  );
+
+  // Handler para icebreaker buttons
+  const handleIcebreaker = useCallback((text: string) => {
+    // 1. Limpar completamente o draft input (texto, agentes, produtos, tags)
+    clearDraftInput();
+    clearChatTags();
+    
+    // 2. Usar setTimeout para garantir que o clear seja processado primeiro
+    setTimeout(() => {
+      // 3. Inserir o novo texto
+      updateDraftInput({ plainText: text });
+    }, 50);
+  }, [clearDraftInput, clearChatTags, updateDraftInput]);
 
   // Sincronizar com prop width quando não está em resize
   useEffect(() => {
@@ -326,6 +402,11 @@ export function CardsSidebar({
           >
             <Zap className="w-3.5 h-3.5" />
             <span>Cards</span>
+            {cardsForCardsPanel.length > 0 && (
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+              }`}>{cardsForCardsPanel.length}</span>
+            )}
             {activeTab === 'cards' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
             )}
@@ -340,6 +421,11 @@ export function CardsSidebar({
           >
             <Play className="w-3.5 h-3.5" />
             <span>Actions</span>
+            {cardsForActionsPanel.length > 0 && (
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+              }`}>{cardsForActionsPanel.length}</span>
+            )}
             {activeTab === 'actions' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
             )}
@@ -354,6 +440,11 @@ export function CardsSidebar({
           >
             <Bot className="w-3.5 h-3.5" />
             <span>Bots</span>
+            {cardsForBotsPanel.length > 0 && (
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+              }`}>{cardsForBotsPanel.length}</span>
+            )}
             {activeTab === 'bots' && (
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-red-500" />
             )}
@@ -371,32 +462,72 @@ export function CardsSidebar({
             style={{ height: cardsHeight, minHeight: MIN_CARDS_HEIGHT }}
           >
             {activeTab === 'cards' && (
-              activeCards.length === 0 ? (
-                <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-                  <Zap className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
-                  <p className="text-xs">No cards</p>
+              cardsForCardsPanel.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                  <LayoutGrid className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                  <p className={`text-sm text-center leading-relaxed max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                    Cards são módulos visuais interativos que organizam informações solicitadas pelo usuário.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {activeCards.map(card => (
+                  {cardsForCardsPanel.map(card => (
                     <ExecutionCard key={card.id} card={card} />
                   ))}
                 </div>
               )
             )}
             {activeTab === 'actions' && (
-              <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-                <Play className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
-                <p className="text-xs">No actions</p>
-                <p className="text-xs mt-1">Pending actions will appear here</p>
-              </div>
+              cardsForActionsPanel.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                  <Zap className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
+                    Actions são automações inteligentes que executam tarefas ou trades automaticamente com base em regras do usuário.
+                  </p>
+                  <button 
+                    onClick={() => handleIcebreaker('I want to create an Action')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
+                      theme === 'dark' 
+                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
+                    }`}
+                  >
+                    Criar Action
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {cardsForActionsPanel.map(card => (
+                    <ExecutionCard key={card.id} card={card} />
+                  ))}
+                </div>
+              )
             )}
             {activeTab === 'bots' && (
-              <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-                <Bot className={`w-6 h-6 mx-auto mb-1 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} />
-                <p className="text-xs">No bots</p>
-                <p className="text-xs mt-1">Your trading bots will appear here</p>
-              </div>
+              cardsForBotsPanel.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                  <BotMessageSquare className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
+                    Bots são agentes de trading autônomos que executam estratégias de investimento definidas pelo usuário.
+                  </p>
+                  <button 
+                    onClick={() => handleIcebreaker('I want to create a trading Bot')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
+                      theme === 'dark' 
+                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
+                    }`}
+                  >
+                    Criar Bot
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {cardsForBotsPanel.map(card => (
+                    <ExecutionCard key={card.id} card={card} />
+                  ))}
+                </div>
+              )
             )}
           </div>
 
@@ -417,8 +548,22 @@ export function CardsSidebar({
           </div>
 
           {/* Chat Messages Section */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar px-3">
-            <ChatMessages displayMode="sidebar" />
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className={`px-3 py-2 flex items-center gap-2 border-b flex-shrink-0 ${
+              theme === 'dark' ? 'border-zinc-800/50 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'
+            }`}>
+              <BotMessageSquare className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
+              <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Chats</span>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              {!hasMessages ? (
+                <WelcomeMessageCompact />
+              ) : (
+                <div className="px-3">
+                  <ChatMessages displayMode="sidebar" />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Chat Input Section */}
@@ -439,22 +584,25 @@ export function CardsSidebar({
             <div className={`px-3 py-2 flex items-center gap-2 border-b ${
               theme === 'dark' ? 'border-zinc-800/50 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'
             }`}>
-              <Zap className="w-4 h-4 text-red-500" />
+              <Zap className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
               <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Cards</span>
-              {activeCards.length > 0 && (
+              {cardsForCardsPanel.length > 0 && (
                 <span className={`text-xs px-1.5 py-0.5 rounded-full ${
                   theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
-                }`}>{activeCards.length}</span>
+                }`}>{cardsForCardsPanel.length}</span>
               )}
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-              {activeCards.length === 0 ? (
-                <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-                  <p className="text-xs">No cards yet</p>
+              {cardsForCardsPanel.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                  <LayoutGrid className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                  <p className={`text-sm text-center leading-relaxed max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                    Cards são módulos visuais interativos que organizam informações solicitadas pelo usuário.
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {activeCards.map(card => (
+                  {cardsForCardsPanel.map(card => (
                     <ExecutionCard key={card.id} card={card} />
                   ))}
                 </div>
@@ -486,13 +634,39 @@ export function CardsSidebar({
             <div className={`px-3 py-2 flex items-center gap-2 border-b ${
               theme === 'dark' ? 'border-zinc-800/50 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'
             }`}>
-              <Play className="w-4 h-4 text-red-500" />
+              <Play className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
               <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Actions</span>
+              {cardsForActionsPanel.length > 0 && (
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                  theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+                }`}>{cardsForActionsPanel.length}</span>
+              )}
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-              <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-                <p className="text-xs">No actions yet</p>
-              </div>
+              {cardsForActionsPanel.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                  <Zap className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
+                    Actions são automações inteligentes que executam tarefas ou trades automaticamente com base em regras do usuário.
+                  </p>
+                  <button 
+                    onClick={() => handleIcebreaker('I want to create an Action')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
+                      theme === 'dark' 
+                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
+                    }`}
+                  >
+                    Criar Action
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {cardsForActionsPanel.map(card => (
+                    <ExecutionCard key={card.id} card={card} />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -520,13 +694,39 @@ export function CardsSidebar({
             <div className={`px-3 py-2 flex items-center gap-2 border-b ${
               theme === 'dark' ? 'border-zinc-800/50 bg-zinc-900/50' : 'border-gray-200 bg-gray-50'
             }`}>
-              <Bot className="w-4 h-4 text-red-500" />
+              <Bot className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
               <span className={`text-sm font-medium ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>Bots</span>
+              {cardsForBotsPanel.length > 0 && (
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                  theme === 'dark' ? 'bg-zinc-800 text-zinc-400' : 'bg-gray-200 text-gray-600'
+                }`}>{cardsForBotsPanel.length}</span>
+              )}
             </div>
             <div className="flex-1 overflow-y-auto custom-scrollbar p-3">
-              <div className={`text-center py-4 transition-colors ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>
-                <p className="text-xs">No bots yet</p>
-              </div>
+              {cardsForBotsPanel.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full py-8 px-4">
+                  <BotMessageSquare className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
+                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
+                    Bots são agentes de trading autônomos que executam estratégias de investimento definidas pelo usuário.
+                  </p>
+                  <button 
+                    onClick={() => handleIcebreaker('I want to create a trading Bot')}
+                    className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
+                      theme === 'dark' 
+                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
+                    }`}
+                  >
+                    Criar Bot
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {cardsForBotsPanel.map(card => (
+                    <ExecutionCard key={card.id} card={card} />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

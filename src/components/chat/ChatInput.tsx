@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Send, Loader2, X } from 'lucide-react';
 import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
+import { useViewMode } from '../../store/ViewModeContext';
 import { useDrawingTools, DRAWING_COLORS } from '../../store/DrawingToolsContext';
 import { callLangflow } from '../../services/langflowApi';
 import { simulateLangFlowResponse } from '../../services/mockSimulation';
@@ -25,6 +26,7 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
     addTagToSession,
   } = useChat();
   const { theme } = useTheme();
+  const { notifyPanelActivation, btcPrice } = useViewMode();
   const { chatTags, removeTagFromChat, clearChatTags, selectDrawing, selectedDrawingId, drawings } = useDrawingTools();
 
   const isSidebar = displayMode === 'sidebar';
@@ -83,10 +85,15 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
       // Pass sessionId explicitly to ensure message is saved to correct session
       await addMessage(userMessage, sessionId);
 
+      // Add BTC price tag to message before sending to Langflow
+      const messageWithBtcPrice = btcPrice 
+        ? `${userMessage.content} [[PRICE_BTC_NOW:${btcPrice.toFixed(2)}]]`
+        : userMessage.content;
+
       // Try Langflow API first, fallback to mock simulation
       let response;
       try {
-        response = await callLangflow(userMessage.content, sessionId);
+        response = await callLangflow(messageWithBtcPrice, sessionId);
         console.log('[ChatInput] Langflow response received');
       } catch (langflowError) {
         console.warn('[ChatInput] Langflow failed, using mock simulation:', langflowError);
@@ -105,8 +112,10 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
 
       for (let i = 0; i < response.ui_events.length; i++) {
         await new Promise(resolve => setTimeout(resolve, 300 * (i + 1)));
-        // Pass sessionId explicitly
-        await processUIEvent(response.ui_events[i], sessionId);
+        // Pass sessionId explicitly with panel notification callback
+        await processUIEvent(response.ui_events[i], sessionId, (sidebar, panel) => {
+          notifyPanelActivation(sidebar, panel);
+        });
       }
     } catch (err) {
       console.error('Error in handleSubmit:', err);

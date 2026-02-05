@@ -1,25 +1,25 @@
 import { useState } from 'react';
-import { Bot, Rocket, Settings, Trash2 } from 'lucide-react';
+import { Zap, Rocket, Settings, Trash2 } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { CardMenuActions } from './CardMenuActions';
 import { useTheme } from '../../store/ThemeContext';
 import { useChat } from '../../store/ChatContext';
 import { transformCard as transformCardRule } from '../../services/placeholderRules';
-import type { BaseCard, BotCreatorPayload, CardType } from '../../types';
+import type { BaseCard, ActionsCreatorPayload, CardType } from '../../types';
 
-interface BotCardCreatorProps {
+interface ActionsCardCreatorProps {
   card: BaseCard;
   defaultExpanded?: boolean;
 }
 
 /**
- * BotCardCreator Component
+ * ActionsCardCreator Component
  * 
- * Visual flowchart/mind-map representation of a bot configuration.
- * Shows trigger, action, target, and condition boxes connected by lines.
- * Used when AI has mapped user intentions and is ready to deploy a new bot.
+ * Visual flowchart/mind-map representation of an action configuration.
+ * Shows trigger, action, schedule, and condition boxes connected by lines.
+ * Used when AI has mapped user intentions and is ready to deploy a new action.
  */
-export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorProps) {
+export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCardCreatorProps) {
   const { theme } = useTheme();
   const { transformCard, deleteCardWithTwin } = useChat();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
@@ -29,22 +29,22 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
   if (!card || !card.id) {
     return null;
   }
-  const payload = card.payload as unknown as BotCreatorPayload;
+  const payload = card.payload as unknown as ActionsCreatorPayload;
 
-  const botName = payload?.title || payload?.botName || 'New Bot Strategy';
-  const trigger = payload?.trigger || { type: 'Weekly', value: 'Monday' };
-  const action = payload?.action || { type: 'Buy', asset: 'BTC' };
-  const target = payload?.target || { type: 'Amount', value: '$100' };
+  const actionName = payload?.title || payload?.actionName || 'New Action';
+  const trigger = payload?.trigger || { type: 'schedule', value: 'Daily' };
+  const action = payload?.action || { type: 'Alert', asset: 'BTC' };
+  const schedule = payload?.schedule || { frequency: 'daily', time: '09:00' };
   const condition = payload?.condition;
 
   const handleDeploy = () => {
-    console.log('[BotCardCreator] Deploy bot:', { botName, trigger, action, target, condition });
-    const result = transformCardRule('bot-creator', 'onDeployBot', {
-      name: botName,
-      strategy: `${trigger.type} ${action.type} ${action.asset}`,
+    console.log('[ActionsCardCreator] Deploy action:', { actionName, trigger, action, schedule, condition });
+    const result = transformCardRule('actions-creator', 'onDeployAction', {
+      name: actionName,
+      description: `${trigger.type} → ${action.type}${action.asset ? ` ${action.asset}` : ''}`,
       trigger,
       action,
-      target,
+      schedule,
       condition,
     });
     if (result) {
@@ -53,16 +53,11 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
   };
 
   const handleEditConfig = () => {
-    console.log('[BotCardCreator] Edit config:', { botName });
+    console.log('[ActionsCardCreator] Edit config:', { actionName });
   };
 
   const handleDiscard = async () => {
-    console.log('[BotCardCreator] Discard bot creation (deleting twins):', { botName, cardId: card.id });
-    await deleteCardWithTwin(card.id);
-  };
-
-  const handleDelete = async () => {
-    console.log('[BotCardCreator] Delete from menu (deleting twins):', { botName, cardId: card.id });
+    console.log('[ActionsCardCreator] Discard action (deleting twins):', { actionName, cardId: card.id });
     await deleteCardWithTwin(card.id);
   };
 
@@ -83,20 +78,20 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
   );
 
   return (
-    <CardWrapper card={card} accentColor="cyan" hasOpenDropdown={isMenuDropdownOpen}>
+    <CardWrapper card={card} accentColor="amber" hasOpenDropdown={isMenuDropdownOpen}>
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${theme === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200/70'}`}>
-              <Bot className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
+              <Zap className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             </div>
             <div>
               <span className="text-[10px] font-medium text-amber-500 uppercase tracking-wider block">
-                New Bot Waiting Approval
+                New Action Waiting Approval
               </span>
               <h3 className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                "{botName}"
+                "{actionName}"
               </h3>
             </div>
           </div>
@@ -104,7 +99,6 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
             card={card} 
             isExpanded={isExpanded} 
             onToggleExpand={() => setIsExpanded(!isExpanded)}
-            onDelete={handleDelete}
             onDropdownChange={setIsMenuDropdownOpen}
           />
         </div>
@@ -127,7 +121,7 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
             }}
           />
 
-          {/* Top Row: Trigger → Action → Target - All neutral gray */}
+          {/* Top Row: Trigger → Action → Schedule - All neutral gray */}
           <div className="relative flex items-center justify-center gap-2 mb-4">
             {/* Trigger Box */}
             <FlowBox 
@@ -145,7 +139,7 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
             {/* Action Box */}
             <FlowBox 
               label="Action" 
-              value={`${action.type} ${action.asset}`}
+              value={action.asset ? `${action.type} ${action.asset}` : action.type}
               colorClass={theme === 'dark' 
                 ? 'bg-zinc-700/50 border-zinc-600 text-zinc-300' 
                 : 'bg-gray-100 border-gray-300 text-gray-700'
@@ -155,10 +149,10 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
             {/* Arrow */}
             <div className={`w-6 h-0.5 ${theme === 'dark' ? 'bg-zinc-600' : 'bg-gray-300'}`} />
 
-            {/* Target Box */}
+            {/* Schedule Box */}
             <FlowBox 
-              label="Target" 
-              value={target.value}
+              label="Schedule" 
+              value={schedule.time ? `${schedule.frequency} @ ${schedule.time}` : schedule.frequency}
               colorClass={theme === 'dark' 
                 ? 'bg-zinc-700/50 border-zinc-600 text-zinc-300' 
                 : 'bg-gray-100 border-gray-300 text-gray-700'
@@ -190,8 +184,8 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
           {/* Flow summary text */}
           <div className={`text-center mt-4 text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
             {condition 
-              ? `When ${trigger.type.toLowerCase()}, if ${condition.type.toLowerCase()} ${condition.operator} ${condition.value}, then ${action.type.toLowerCase()} ${action.asset} (${target.value})`
-              : `When ${trigger.type.toLowerCase()}, ${action.type.toLowerCase()} ${action.asset} (${target.value})`
+              ? `${schedule.frequency} at ${schedule.time || 'scheduled time'}, if ${condition.type.toLowerCase()} ${condition.operator} ${condition.value}, then ${action.type.toLowerCase()}${action.asset ? ` ${action.asset}` : ''}`
+              : `${schedule.frequency} at ${schedule.time || 'scheduled time'}, ${action.type.toLowerCase()}${action.asset ? ` ${action.asset}` : ''}`
             }
           </div>
         </div>
@@ -229,7 +223,7 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
             }`}
           >
             <Rocket className="w-4 h-4" />
-            Deploy Bot
+            Deploy Action
           </button>
         </div>
         </>

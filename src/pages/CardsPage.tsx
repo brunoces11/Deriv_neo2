@@ -7,6 +7,7 @@ import { PortfolioSidebarCard } from '../components/cards/PortfolioSidebarCard';
 import { CreateTradeCard } from '../components/cards/CreateTradeCard';
 import { TradeCard } from '../components/cards/TradeCard';
 import { ActionsCard } from '../components/cards/ActionsCard';
+import { ActionsCardCreator } from '../components/cards/ActionsCardCreator';
 import { BotCardCreator } from '../components/cards/BotCardCreator';
 import { UserProfile } from '../components/layout/UserProfile';
 import derivNeoDark from '../assets/deriv_neo_dark_mode.svg';
@@ -15,7 +16,7 @@ import type { BaseCard } from '../types';
 
 const mockBotCard: BaseCard = {
   id: 'demo-bot-1',
-  type: 'bot-card',
+  type: 'card_bot',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -31,7 +32,7 @@ const mockBotCard: BaseCard = {
 
 const mockPortfolioCard: BaseCard = {
   id: 'demo-portfolio-1',
-  type: 'portfolio-snapshot',
+  type: 'card_portfolio_exemple_compacto',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -50,7 +51,7 @@ const mockPortfolioCard: BaseCard = {
 
 const mockPortfolioTableCard: BaseCard = {
   id: 'demo-portfolio-table-1',
-  type: 'portfolio-table-complete',
+  type: 'card_portfolio',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -69,7 +70,7 @@ const mockPortfolioTableCard: BaseCard = {
 
 const mockTradeCard: BaseCard = {
   id: 'demo-trade-1',
-  type: 'trade-card',
+  type: 'card_trade',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -90,7 +91,7 @@ const mockTradeCard: BaseCard = {
 
 const mockCreateTradeCard: BaseCard = {
   id: 'demo-create-trade-1',
-  type: 'create-trade-card',
+  type: 'card_trade_creator',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -123,7 +124,7 @@ const mockCreateTradeCard: BaseCard = {
 
 const mockActionsCard: BaseCard = {
   id: 'demo-actions-1',
-  type: 'actions-card',
+  type: 'card_actions',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -138,7 +139,7 @@ const mockActionsCard: BaseCard = {
 
 const mockBotCreator: BaseCard = {
   id: 'demo-bot-creator-1',
-  type: 'bot-creator',
+  type: 'card_bot_creator',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -148,6 +149,21 @@ const mockBotCreator: BaseCard = {
     action: { type: 'Buy', asset: 'BTC' },
     target: { type: 'Amount', value: '$100' },
     condition: { type: 'Price', operator: '<', value: '50000' },
+  },
+};
+
+const mockActionsCreator: BaseCard = {
+  id: 'demo-actions-creator-1',
+  type: 'card_actions_creator',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {
+    actionName: 'Daily BTC Alert',
+    trigger: { type: 'schedule', value: 'Daily' },
+    action: { type: 'Alert', asset: 'BTC' },
+    schedule: { frequency: 'daily', time: '09:00' },
+    condition: { type: 'Price', operator: '>', value: '100000' },
   },
 };
 
@@ -177,22 +193,6 @@ const cardsInfo: CardInfo[] = [
       'Cor de destaque: red',
     ],
     component: <PortfolioSnapshotCard card={mockPortfolioCard} />,
-  },
-  {
-    name: 'Portfolio Sidebar Card',
-    type: 'portfolio-sidebar',
-    icon: Wallet,
-    description: 'Versão ultra compacta do portfólio otimizada para sidebar com botões mínimos.',
-    hasLogic: true,
-    logicDetails: [
-      'Layout ultra compacto para caber no sidebar',
-      'Tabela sem coluna Invested para economizar espaço',
-      'Botões ultra compactos: apenas seta + cor',
-      'Texto reduzido (10px) para máxima densidade',
-      'Header compacto com valor total e variação',
-      'Footer minimalista com 24h change',
-    ],
-    component: <PortfolioSidebarCard card={mockPortfolioTableCard} />,
   },
   {
     name: 'Portfolio Snapshot Table (Complete)',
@@ -254,6 +254,25 @@ const cardsInfo: CardInfo[] = [
     component: <ActionsCard card={mockActionsCard} />,
   },
   {
+    name: 'Actions Card Creator',
+    type: 'actions-creator',
+    icon: Workflow,
+    description: 'Card visual com diagrama/flowchart mostrando a configuração de uma nova action antes do deploy.',
+    hasLogic: true,
+    logicDetails: [
+      'Header com ícone de raio e nome da action',
+      'Área de flowchart com boxes conectados por linhas',
+      'Trigger box (amber): tipo e valor do gatilho',
+      'Action box (verde): tipo de ação e ativo',
+      'Schedule box (cyan): frequência e horário',
+      'Condition box (laranja): condição opcional',
+      'Resumo textual do fluxo da action',
+      'Botões: Deploy Action (verde), Edit Config, Cancel',
+      'Grid pattern de fundo para efeito visual',
+    ],
+    component: <ActionsCardCreator card={mockActionsCreator} />,
+  },
+  {
     name: 'Bot Card Creator',
     type: 'bot-creator',
     icon: Workflow,
@@ -287,6 +306,22 @@ const cardsInfo: CardInfo[] = [
       'Botões em tom cinza/neutro com hover state',
     ],
     component: <BotCard card={mockBotCard} />,
+  },
+  {
+    name: 'Portfolio Sidebar Card',
+    type: 'portfolio-sidebar',
+    icon: Wallet,
+    description: 'Versão ultra compacta do portfólio otimizada para sidebar com botões mínimos.',
+    hasLogic: true,
+    logicDetails: [
+      'Layout ultra compacto para caber no sidebar',
+      'Tabela sem coluna Invested para economizar espaço',
+      'Botões ultra compactos: apenas seta + cor',
+      'Texto reduzido (10px) para máxima densidade',
+      'Header compacto com valor total e variação',
+      'Footer minimalista com 24h change',
+    ],
+    component: <PortfolioSidebarCard card={mockPortfolioTableCard} />,
   },
 ];
 
@@ -353,9 +388,7 @@ function CardSection({ cardInfo, displayIndex }: { cardInfo: CardInfo; displayIn
           }`}>
             Preview do Card (Expanded)
           </h4>
-          <div className="pointer-events-none">
-            {cardInfo.component}
-          </div>
+          {cardInfo.component}
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-6 p-6">
@@ -365,9 +398,7 @@ function CardSection({ cardInfo, displayIndex }: { cardInfo: CardInfo; displayIn
             }`}>
               Preview do Card
             </h4>
-            <div className="pointer-events-none">
-              {cardInfo.component}
-            </div>
+            {cardInfo.component}
           </div>
 
           <div>

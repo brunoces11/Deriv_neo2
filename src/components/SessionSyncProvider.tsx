@@ -32,14 +32,17 @@ export function SessionSyncProvider({ children }: SessionSyncProviderProps) {
       if (currentSessionId) {
         // Load drawings for the new session (may be empty array)
         setDrawingsFromSession(sessionDrawings);
-        setTagsFromSession(sessionTags);
+        // CRITICAL FIX: Do NOT load session tags as active chat tags
+        // Session tags are historical snapshots, not active tags ready to send
+        // Only clear chat tags when switching sessions
+        clearChatTags();
       } else {
         // No session selected (new chat) - clear all drawings
         clearAllDrawings();
         clearChatTags();
       }
     }
-  }, [currentSessionId, sessionDrawings, sessionTags, isLoading, setDrawingsFromSession, setTagsFromSession, clearAllDrawings, clearChatTags]);
+  }, [currentSessionId, sessionDrawings, sessionTags, isLoading, setDrawingsFromSession, clearAllDrawings, clearChatTags]);
 
   return <>{children}</>;
 }

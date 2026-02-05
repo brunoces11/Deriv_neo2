@@ -45,8 +45,15 @@ const AGENTS: AgentPreference[] = [
     preferences: '',
   },
   {
+    id: 'action',
+    name: 'Action Creator Agent',
+    icon: <Sparkles className="w-5 h-5" />,
+    description: 'Configure automated actions, price alerts, scheduled tasks and notification preferences. Define triggers and conditions for your custom actions.',
+    preferences: '',
+  },
+  {
     id: 'market',
-    name: 'Market Analysis Agent',
+    name: 'Market Analyses Agent',
     icon: <BarChart3 className="w-5 h-5" />,
     description: 'Choose preferred technical indicators, analysis timeframes, signal sensitivity and news sources. Get notified about relevant market events.',
     preferences: '',

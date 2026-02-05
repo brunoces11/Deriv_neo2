@@ -1,121 +1,117 @@
-import { Star, Archive, Zap, Bot, Wallet, Table, TrendingUp, LineChart, Workflow, FileText } from 'lucide-react';
-import type { BaseCard } from '../../types';
-import { useChat } from '../../store/ChatContext';
-import { useTheme } from '../../store/ThemeContext';
+import type { BaseCard, CardType } from '../../types';
+
+// Import all card components
+import { TradeCard } from '../cards/TradeCard';
+import { CreateTradeCard } from '../cards/CreateTradeCard';
+import { BotCard } from '../cards/BotCard';
+import { BotCardCreator } from '../cards/BotCardCreator';
+import { ActionsCard } from '../cards/ActionsCard';
+import { ActionsCardCreator } from '../cards/ActionsCardCreator';
+import { PortfolioSnapshotCard } from '../cards/PortfolioSnapshotCard';
+import { PortfolioTableCardComplete } from '../cards/PortfolioTableCardComplete';
+import { PortfolioSidebarCard } from '../cards/PortfolioSidebarCard';
 
 interface ExecutionCardProps {
   card: BaseCard;
+  defaultExpanded?: boolean;
 }
 
-const cardIcons = {
-  'bot-card': Bot,
-  'portfolio-snapshot': Wallet,
-  'portfolio-sidebar': Wallet,
-  'portfolio-table-complete': Table,
-  'create-trade-card': LineChart,
-  'trade-card': TrendingUp,
-  'actions-card': Zap,
-  'bot-creator': Workflow,
-};
+/**
+ * ExecutionCard Component
+ * 
+ * Renders the actual card component based on card type.
+ * Cards in the panel are rendered in compacted mode (defaultExpanded=false) by default,
+ * but this can be overridden via the defaultExpanded prop.
+ * This ensures the same card component is used both inline and in the panel.
+ */
+export function ExecutionCard({ card, defaultExpanded = false }: ExecutionCardProps) {
+  // Render the actual card component based on type
+  return renderCardByType(card, defaultExpanded);
+}
 
-const cardLabels = {
-  'bot-card': 'Bot',
-  'portfolio-snapshot': 'Portfolio',
-  'portfolio-sidebar': 'Portfolio',
-  'portfolio-table-complete': 'Portfolio',
-  'create-trade-card': 'Create Trade',
-  'trade-card': 'Trade',
-  'actions-card': 'Action',
-  'bot-creator': 'Bot Creator',
-};
+/**
+ * Renders the appropriate card component based on card type
+ * @param card - The card data
+ * @param defaultExpanded - Whether the card should start expanded (false for panel, true for inline)
+ */
+export function renderCardByType(card: BaseCard, defaultExpanded: boolean): JSX.Element | null {
+  const cardType = card.type as CardType;
 
-export function ExecutionCard({ card }: ExecutionCardProps) {
-  const { favoriteCard, unfavoriteCard, archiveCard } = useChat();
-  const { theme } = useTheme();
-  const Icon = cardIcons[card.type] || FileText;
-  const label = cardLabels[card.type] || 'Unknown';
+  switch (cardType) {
+    // Trade cards
+    case 'trade-card':
+    case 'card_trade':
+      return <TradeCard card={card} defaultExpanded={defaultExpanded} />;
+    
+    case 'create-trade-card':
+    case 'card_trade_creator':
+      return <CreateTradeCard card={card} defaultExpanded={defaultExpanded} />;
 
-  const getTitle = () => {
-    const payload = card.payload as Record<string, unknown>;
-    if (card.type === 'trade-card') {
-      return `${(payload.direction as string)?.toUpperCase() || 'Trade'} ${payload.asset || ''}`;
-    }
-    if (card.type === 'bot-card') {
-      return (payload.name as string) || 'Bot';
-    }
-    if (card.type === 'portfolio-snapshot' || card.type === 'portfolio-sidebar' || card.type === 'portfolio-table-complete') {
-      return 'Portfolio';
-    }
-    if (card.type === 'create-trade-card') {
-      return `Create ${payload.asset || 'Trade'}`;
-    }
-    if (card.type === 'actions-card') {
-      return (payload.name as string) || 'Action';
-    }
-    if (card.type === 'bot-creator') {
-      return (payload.botName as string) || 'New Bot';
-    }
-    return label;
-  };
+    // Bot cards
+    case 'bot-card':
+    case 'card_bot':
+      return <BotCard card={card} defaultExpanded={defaultExpanded} />;
+    
+    case 'bot-creator':
+    case 'card_bot_creator':
+      return <BotCardCreator card={card} defaultExpanded={defaultExpanded} />;
 
-  const handleFavorite = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (card.isFavorite) {
-      unfavoriteCard(card.id);
-    } else {
-      favoriteCard(card.id);
-    }
-  };
+    // Action cards
+    case 'actions-card':
+    case 'card_actions':
+      return <ActionsCard card={card} defaultExpanded={defaultExpanded} />;
+    
+    case 'actions-creator':
+    case 'card_actions_creator':
+      return <ActionsCardCreator card={card} defaultExpanded={defaultExpanded} />;
 
-  const handleArchive = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    archiveCard(card.id);
-  };
+    // Portfolio cards
+    case 'portfolio-snapshot':
+    case 'card_portfolio_exemple_compacto':
+      return <PortfolioSnapshotCard card={card} defaultExpanded={defaultExpanded} />;
+    
+    case 'portfolio-table-complete':
+    case 'card_portfolio':
+      return <PortfolioTableCardComplete card={card} defaultExpanded={defaultExpanded} />;
+    
+    case 'portfolio-sidebar':
+    case 'card_portfolio_sidebar':
+      return <PortfolioSidebarCard card={card} />;
 
-  return (
-    <div className={`group relative px-3 py-2 rounded-lg border transition-all cursor-pointer ${
-      theme === 'dark'
-        ? 'bg-zinc-900/50 border-zinc-800/50 hover:border-zinc-700/50'
-        : 'bg-white border-gray-200 hover:border-gray-300'
-    }`}>
-      <div className="flex items-center gap-2">
-        <div className={`w-6 h-6 rounded-md flex items-center justify-center ${
-          theme === 'dark'
-            ? 'bg-red-500/10 text-red-500'
-            : 'bg-red-50 text-red-500'
-        }`}>
-          <Icon className="w-3.5 h-3.5" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className={`text-sm truncate transition-colors ${
-            theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
-          }`}>{getTitle()}</p>
-          <p className={`text-xs truncate transition-colors ${
-            theme === 'dark' ? 'text-zinc-600' : 'text-gray-500'
-          }`}>{label}</p>
-        </div>
-      </div>
+    default:
+      console.warn(`[ExecutionCard] Unknown card type: ${cardType}`);
+      return null;
+  }
+}
 
-      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-        <button
-          onClick={handleFavorite}
-          className={`p-1 rounded transition-colors ${
-            theme === 'dark' ? 'hover:bg-zinc-700' : 'hover:bg-gray-100'
-          } ${card.isFavorite ? 'text-brand-green' : theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}
-        >
-          <Star className={`w-3.5 h-3.5 ${card.isFavorite ? 'fill-current' : ''}`} />
-        </button>
-        <button
-          onClick={handleArchive}
-          className={`p-1 rounded transition-colors ${
-            theme === 'dark'
-              ? 'hover:bg-zinc-700 text-zinc-500 hover:text-amber-400'
-              : 'hover:bg-gray-100 text-gray-500 hover:text-amber-500'
-          }`}
-        >
-          <Archive className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </div>
-  );
+/**
+ * Helper to determine which panel tab a card belongs to
+ * 'positions' = left sidebar only (trade cards)
+ * 'cards' = right sidebar cards panel
+ * 'actions' = right sidebar actions panel
+ * 'bots' = right sidebar bots panel
+ */
+export type PanelTab = 'cards' | 'actions' | 'bots' | 'positions';
+
+export function getCardPanelTab(cardType: CardType): PanelTab {
+  // Trade cards go to 'positions' panel (left sidebar only)
+  if (cardType === 'create-trade-card' || cardType === 'trade-card' ||
+      cardType === 'card_trade' || cardType === 'card_trade_creator') {
+    return 'positions';
+  }
+  
+  // Bot cards go to 'bots' panel
+  if (cardType === 'bot-card' || cardType === 'bot-creator' || 
+      cardType === 'card_bot' || cardType === 'card_bot_creator') {
+    return 'bots';
+  }
+  
+  // Action cards go to 'actions' panel
+  if (cardType === 'actions-card' || cardType === 'actions-creator' ||
+      cardType === 'card_actions' || cardType === 'card_actions_creator') {
+    return 'actions';
+  }
+  
+  // Everything else goes to 'cards' panel (portfolio, etc.)
+  return 'cards';
 }

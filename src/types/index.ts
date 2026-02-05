@@ -1,4 +1,24 @@
-export type CardType = 'card_portfolio_exemple_compacto' | 'card_portfolio_sidebar' | 'card_portfolio' | 'card_trade_creator' | 'card_trade' | 'card_actions_creator' | 'card_actions' | 'card_bot_creator' | 'card_bot';
+export type CardType = 
+  // Legacy names (for backward compatibility)
+  | 'card_portfolio_exemple_compacto' 
+  | 'card_portfolio_sidebar' 
+  | 'card_portfolio' 
+  | 'card_trade_creator' 
+  | 'card_trade' 
+  | 'card_actions_creator' 
+  | 'card_actions' 
+  | 'card_bot_creator' 
+  | 'card_bot'
+  // New kebab-case names (used by placeholder system)
+  | 'portfolio-table-complete'
+  | 'portfolio-sidebar'
+  | 'portfolio-snapshot'
+  | 'create-trade-card'
+  | 'trade-card'
+  | 'actions-card'
+  | 'actions-creator'
+  | 'bot-creator'
+  | 'bot-card';
 
 export type CardStatus = 'active' | 'archived' | 'hidden';
 
@@ -14,6 +34,7 @@ export interface BaseCard {
 
 
 export interface CreateTradeCardPayload {
+  title?: string; // Dynamic title from LLM
   asset: string;
   assetName: string;
   tradeType: 'higher-lower' | 'rise-fall' | 'touch-no-touch';
@@ -40,6 +61,7 @@ export interface CreateTradeCardPayload {
 }
 
 export interface TradeCardPayload {
+  title?: string; // Dynamic title from LLM
   tradeId: string;
   asset: string;
   assetName: string;
@@ -55,6 +77,7 @@ export interface TradeCardPayload {
 }
 
 export interface BotPayload {
+  title?: string; // Dynamic title from LLM
   botId: string;
   name: string;
   strategy: string;
@@ -63,6 +86,7 @@ export interface BotPayload {
 }
 
 export interface PortfolioSnapshotPayload {
+  title?: string; // Dynamic title from LLM
   totalValue: string;
   change24h: string;
   changePercent: string;
@@ -74,6 +98,7 @@ export interface PortfolioSnapshotPayload {
 }
 
 export interface PortfolioTablePayload {
+  title?: string; // Dynamic title from LLM
   totalValue: string;
   change24h: string;
   changePercent: string;
@@ -91,14 +116,35 @@ export interface PortfolioTablePayload {
 
 
 export interface ActionsCardPayload {
+  title?: string; // Dynamic title from LLM
   actionId: string;
   name: string;
   description: string;
   status: 'active' | 'inactive' | 'error';
   lastExecution?: string;
+  trigger?: {
+    type: 'schedule' | 'price' | 'event';
+    value: string;
+  };
+  action?: {
+    type: string;
+    asset?: string;
+    amount?: string;
+  };
+  schedule?: {
+    frequency: 'once' | 'daily' | 'weekly' | 'monthly';
+    time?: string;
+    day?: string;
+  };
+  condition?: {
+    type: string;
+    operator: string;
+    value: string;
+  };
 }
 
 export interface ActionsCreatorPayload {
+  title?: string; // Dynamic title from LLM
   actionName: string;
   trigger: {
     type: 'schedule' | 'price' | 'event';
@@ -122,6 +168,7 @@ export interface ActionsCreatorPayload {
 }
 
 export interface BotCreatorPayload {
+  title?: string; // Dynamic title from LLM
   botName: string;
   trigger: {
     type: string;
@@ -143,11 +190,30 @@ export interface BotCreatorPayload {
 }
 
 export interface BotCardPayload {
+  title?: string; // Dynamic title from LLM
   botId: string;
   name: string;
   strategy: string;
   status: 'active' | 'paused' | 'stopped';
   performance?: string;
+  lastRun?: string;
+  trigger?: {
+    type: string;
+    value?: string;
+  };
+  action?: {
+    type: string;
+    asset: string;
+  };
+  target?: {
+    type: string;
+    value: string;
+  };
+  condition?: {
+    type: string;
+    operator: string;
+    value: string;
+  };
 }
 
 export type CardPayload =

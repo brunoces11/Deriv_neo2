@@ -60,7 +60,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   // Drawing state
   const { activeTool, addDrawing, updateDrawing, drawings, setActiveTool, selectDrawing, selectedDrawingId, removeDrawing, addTagToChat } = useDrawingTools();
   const { currentSessionId, addDrawingToSession, updateDrawingInSession } = useChat();
-  const { cardsSidebarWidth, cardsSidebarCollapsed, updateUserPoint } = useViewMode();
+  const { cardsSidebarWidth, cardsSidebarCollapsed, updateUserPoint, setBtcPrice } = useViewMode();
   
   // Get sidebar width from ViewMode context
   const sidebarWidth = cardsSidebarCollapsed ? 54 : cardsSidebarWidth;
@@ -206,6 +206,12 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     try {
       const data = await fetchKlinesWithVolume({ symbol, timeframe, limit: 500 });
       rawDataRef.current = data;
+
+      // Update BTC price in context (last candle close price)
+      if (data.length > 0 && symbol === 'BTC/USD') {
+        const lastPrice = data[data.length - 1].close;
+        setBtcPrice(lastPrice);
+      }
 
       if (!seriesRef.current) return;
 
