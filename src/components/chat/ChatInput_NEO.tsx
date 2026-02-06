@@ -631,14 +631,20 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
 
       await addMessage(userMessage, sessionId);
       
-      // Add BTC price tag to message before sending to Langflow
-      const messageWithBtcPrice = btcPrice 
-        ? `${userMessage.content} [[PRICE_BTC_NOW:${btcPrice.toFixed(2)}]]`
-        : userMessage.content;
+      // Add BTC price and auto mode tags to message before sending to Langflow
+      let messageWithMetadata = userMessage.content;
+      
+      // Add BTC price tag if available
+      if (btcPrice) {
+        messageWithMetadata += ` [[PRICE_BTC_NOW:${btcPrice.toFixed(2)}]]`;
+      }
+      
+      // Add auto mode tag (always present)
+      messageWithMetadata += autoMode ? ' [[AUTO_MODE_ON]]' : ' [[AUTO_MODE_OFF]]';
       
       let response;
       try {
-        response = await callLangflow(messageWithBtcPrice, sessionId);
+        response = await callLangflow(messageWithMetadata, sessionId);
       } catch (langflowError) {
         response = await simulateLangFlowResponse(userMessage.content);
       }
