@@ -458,6 +458,36 @@ function parseMessageWithTags(content: string, theme: 'light' | 'dark'): (string
   return parts.length > 0 ? parts : [content];
 }
 
+// Processa children do ReactMarkdown para substituir tags por badges
+function processChildrenWithTags(children: React.ReactNode, theme: 'light' | 'dark'): React.ReactNode {
+  if (typeof children === 'string') {
+    // Se é string pura, processar tags
+    const hasTags = TAG_REGEX.test(children);
+    TAG_REGEX.lastIndex = 0; // Reset após test
+
+    if (hasTags) {
+      return parseMessageWithTags(children, theme);
+    }
+    return children;
+  }
+
+  if (Array.isArray(children)) {
+    return children.map((child, index) => {
+      if (typeof child === 'string') {
+        const hasTags = TAG_REGEX.test(child);
+        TAG_REGEX.lastIndex = 0;
+
+        if (hasTags) {
+          return <span key={index}>{parseMessageWithTags(child, theme)}</span>;
+        }
+      }
+      return child;
+    });
+  }
+
+  return children;
+}
+
 interface ChatMessagesProps {
   displayMode?: 'center' | 'sidebar';
 }
@@ -646,11 +676,11 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                           key={`text-${index}`}
                           remarkPlugins={[remarkGfm, remarkBreaks]}
                           components={{
-                            p: ({ children }) => <p className="mb-2 last:mb-0 whitespace-pre-wrap">{children}</p>,
+                            p: ({ children }) => <p className="mb-2 last:mb-0 whitespace-pre-wrap leading-[1.77]">{processChildrenWithTags(children, theme)}</p>,
                             br: () => <br />,
                             ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
                             ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
-                            li: ({ children }) => <li className="mb-0.5">{children}</li>,
+                            li: ({ children }) => <li className="mb-0.5 leading-[1.77]">{processChildrenWithTags(children, theme)}</li>,
                             code: ({ inline, children }) => {
                               if (inline) {
                                 return (
@@ -666,26 +696,26 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                               );
                             },
                             pre: ({ children }) => <pre className="mb-2">{children}</pre>,
-                            strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                            em: ({ children }) => <em className="italic">{children}</em>,
-                            del: ({ children }) => <del className="line-through">{children}</del>,
+                            strong: ({ children }) => <strong className="font-semibold">{processChildrenWithTags(children, theme)}</strong>,
+                            em: ({ children }) => <em className="italic">{processChildrenWithTags(children, theme)}</em>,
+                            del: ({ children }) => <del className="line-through">{processChildrenWithTags(children, theme)}</del>,
                             // Headings - enhanced hierarchy with better spacing
-                            h1: ({ children }) => <h1 className="text-2xl font-bold mb-2 mt-10 first:mt-0">{children}</h1>,
-                            h2: ({ children }) => <h2 className="text-xl font-bold mb-2 mt-8 first:mt-0">{children}</h2>,
-                            h3: ({ children }) => <h3 className="text-lg font-bold mb-1.5 mt-6 first:mt-0">{children}</h3>,
-                            h4: ({ children }) => <h4 className="text-sm font-semibold mb-1 mt-5 first:mt-0">{children}</h4>,
-                            h5: ({ children }) => <h5 className="text-sm font-semibold mb-1 mt-4 first:mt-0">{children}</h5>,
-                            h6: ({ children }) => <h6 className="text-xs font-semibold mb-1 mt-3 first:mt-0">{children}</h6>,
+                            h1: ({ children }) => <h1 className="text-2xl font-bold mb-2 mt-10 first:mt-0">{processChildrenWithTags(children, theme)}</h1>,
+                            h2: ({ children }) => <h2 className="text-xl font-bold mb-2 mt-8 first:mt-0">{processChildrenWithTags(children, theme)}</h2>,
+                            h3: ({ children }) => <h3 className="text-lg font-bold mb-1.5 mt-6 first:mt-0">{processChildrenWithTags(children, theme)}</h3>,
+                            h4: ({ children }) => <h4 className="text-sm font-semibold mb-1 mt-5 first:mt-0">{processChildrenWithTags(children, theme)}</h4>,
+                            h5: ({ children }) => <h5 className="text-sm font-semibold mb-1 mt-4 first:mt-0">{processChildrenWithTags(children, theme)}</h5>,
+                            h6: ({ children }) => <h6 className="text-xs font-semibold mb-1 mt-3 first:mt-0">{processChildrenWithTags(children, theme)}</h6>,
                             a: ({ href, children }) => (
                               <a href={href} target="_blank" rel="noopener noreferrer" className="text-red-500 hover:text-red-600 underline transition-colors">{children}</a>
                             ),
                             // Blockquotes
                             blockquote: ({ children }) => (
-                              <blockquote className={`border-l-4 pl-3 py-1 italic my-2 ${
-                                theme === 'dark' 
-                                  ? 'border-zinc-600 text-zinc-400 bg-zinc-800/30' 
+                              <blockquote className={`border-l-4 pl-3 py-1 italic my-2 leading-[1.77] ${
+                                theme === 'dark'
+                                  ? 'border-zinc-600 text-zinc-400 bg-zinc-800/30'
                                   : 'border-gray-300 text-gray-600 bg-gray-100/50'
-                              }`}>{children}</blockquote>
+                              }`}>{processChildrenWithTags(children, theme)}</blockquote>
                             ),
                             // Linhas horizontais
                             hr: () => (
@@ -718,7 +748,7 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                   remarkPlugins={[remarkGfm, remarkBreaks]}
                   components={{
                     // Parágrafos
-                    p: ({ children }) => <p className="mb-2 last:mb-0 whitespace-pre-wrap">{children}</p>,
+                    p: ({ children }) => <p className="mb-2 last:mb-0 whitespace-pre-wrap leading-[1.77]">{processChildrenWithTags(children, theme)}</p>,
                     
                     // Quebras de linha
                     br: () => <br />,
@@ -726,7 +756,7 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                     // Listas
                     ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
                     ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
-                    li: ({ children }) => <li className="mb-0.5">{children}</li>,
+                    li: ({ children }) => <li className="mb-0.5 leading-[1.77]">{processChildrenWithTags(children, theme)}</li>,
                     
                     // Código inline e blocos
                     code: ({ inline, children }) => {
@@ -746,17 +776,17 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                     pre: ({ children }) => <pre className="mb-2">{children}</pre>,
                     
                     // Formatação de texto
-                    strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
-                    em: ({ children }) => <em className="italic">{children}</em>,
-                    del: ({ children }) => <del className="line-through">{children}</del>,
-                    
+                    strong: ({ children }) => <strong className="font-semibold">{processChildrenWithTags(children, theme)}</strong>,
+                    em: ({ children }) => <em className="italic">{processChildrenWithTags(children, theme)}</em>,
+                    del: ({ children }) => <del className="line-through">{processChildrenWithTags(children, theme)}</del>,
+
                     // Headings - enhanced hierarchy with better spacing
-                    h1: ({ children }) => <h1 className="text-2xl font-bold mb-2 mt-10 first:mt-0">{children}</h1>,
-                    h2: ({ children }) => <h2 className="text-xl font-bold mb-2 mt-8 first:mt-0">{children}</h2>,
-                    h3: ({ children }) => <h3 className="text-lg font-bold mb-1.5 mt-6 first:mt-0">{children}</h3>,
-                    h4: ({ children }) => <h4 className="text-sm font-semibold mb-1 mt-5 first:mt-0">{children}</h4>,
-                    h5: ({ children }) => <h5 className="text-sm font-semibold mb-1 mt-4 first:mt-0">{children}</h5>,
-                    h6: ({ children }) => <h6 className="text-xs font-semibold mb-1 mt-3 first:mt-0">{children}</h6>,
+                    h1: ({ children }) => <h1 className="text-2xl font-bold mb-2 mt-10 first:mt-0">{processChildrenWithTags(children, theme)}</h1>,
+                    h2: ({ children }) => <h2 className="text-xl font-bold mb-2 mt-8 first:mt-0">{processChildrenWithTags(children, theme)}</h2>,
+                    h3: ({ children }) => <h3 className="text-lg font-bold mb-1.5 mt-6 first:mt-0">{processChildrenWithTags(children, theme)}</h3>,
+                    h4: ({ children }) => <h4 className="text-sm font-semibold mb-1 mt-5 first:mt-0">{processChildrenWithTags(children, theme)}</h4>,
+                    h5: ({ children }) => <h5 className="text-sm font-semibold mb-1 mt-4 first:mt-0">{processChildrenWithTags(children, theme)}</h5>,
+                    h6: ({ children }) => <h6 className="text-xs font-semibold mb-1 mt-3 first:mt-0">{processChildrenWithTags(children, theme)}</h6>,
                     
                     // Links
                     a: ({ href, children }) => (
@@ -782,11 +812,11 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                     
                     // Blockquotes
                     blockquote: ({ children }) => (
-                      <blockquote className={`border-l-4 pl-3 py-1 italic my-2 ${
-                        theme === 'dark' 
-                          ? 'border-zinc-600 text-zinc-400 bg-zinc-800/30' 
+                      <blockquote className={`border-l-4 pl-3 py-1 italic my-2 leading-[1.77] ${
+                        theme === 'dark'
+                          ? 'border-zinc-600 text-zinc-400 bg-zinc-800/30'
                           : 'border-gray-300 text-gray-600 bg-gray-100/50'
-                      }`}>{children}</blockquote>
+                      }`}>{processChildrenWithTags(children, theme)}</blockquote>
                     ),
                     
                     // Linhas horizontais
@@ -814,10 +844,10 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                       }`}>{children}</tr>
                     ),
                     th: ({ children }) => (
-                      <th className="px-3 py-2 text-left font-semibold">{children}</th>
+                      <th className="px-3 py-2 text-left font-semibold leading-[1.77]">{processChildrenWithTags(children, theme)}</th>
                     ),
                     td: ({ children }) => (
-                      <td className="px-3 py-2">{children}</td>
+                      <td className="px-3 py-2 leading-[1.77]">{processChildrenWithTags(children, theme)}</td>
                     ),
                     
                     // Checkboxes (GFM)
