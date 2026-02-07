@@ -6,6 +6,7 @@ import { BotCreationLoader } from './BotCreationLoader';
 import { useTheme } from '../../store/ThemeContext';
 import { useChat } from '../../store/ChatContext';
 import { transformCard as transformCardRule } from '../../services/placeholderRules';
+import { supabase } from '../../services/supabase';
 import type { BaseCard, BotCreatorPayload, CardType } from '../../types';
 
 interface BotCardCreatorProps {
@@ -24,29 +25,35 @@ interface BotCardCreatorProps {
  */
 export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorProps) {
   const { theme } = useTheme();
-  const { transformCard, deleteCardWithTwin } = useChat();
+  const { transformCard, deleteCardWithTwin, updateCardPayload } = useChat();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isMenuDropdownOpen, setIsMenuDropdownOpen] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
 
-  // Check if this card has already shown the loader (using card creation time)
+  // Check if this card has already shown the loader (persisted in database)
   useEffect(() => {
-    const loaderKey = `bot-loader-shown-${card.id}`;
-    const alreadyShown = sessionStorage.getItem(loaderKey);
-    
+    const alreadyShown = card.payload?.loaderShown === true;
+
     if (alreadyShown) {
-      // Already shown loader for this card, skip it
       setShowLoader(false);
     } else {
-      // First time showing this card, show loader
       setShowLoader(true);
     }
-  }, [card.id]);
+  }, [card.id, card.payload]);
 
-  const handleLoaderComplete = () => {
-    // Mark loader as shown for this card
-    const loaderKey = `bot-loader-shown-${card.id}`;
-    sessionStorage.setItem(loaderKey, 'true');
+  const handleLoaderComplete = async () => {
+    // Mark loader as shown in database
+    const updatedPayload = { ...card.payload, loaderShown: true };
+
+    // Update local state
+    updateCardPayload(card.id, updatedPayload);
+
+    // Persist to database
+    await supabase
+      .from('chat_executions')
+      .update({ payload: updatedPayload })
+      .eq('id', card.id);
+
     setShowLoader(false);
   };
 

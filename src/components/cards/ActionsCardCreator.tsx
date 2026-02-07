@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Zap, Rocket, Settings, Trash2 } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { CardMenuActions } from './CardMenuActions';
+import { BotCreationLoader } from './BotCreationLoader';
 import { useTheme } from '../../store/ThemeContext';
 import { useChat } from '../../store/ChatContext';
 import { transformCard as transformCardRule } from '../../services/placeholderRules';
+import { supabase } from '../../services/supabase';
 import type { BaseCard, ActionsCreatorPayload, CardType } from '../../types';
 
 interface ActionsCardCreatorProps {
@@ -21,9 +23,37 @@ interface ActionsCardCreatorProps {
  */
 export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCardCreatorProps) {
   const { theme } = useTheme();
-  const { transformCard, deleteCardWithTwin } = useChat();
+  const { transformCard, deleteCardWithTwin, updateCardPayload } = useChat();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isMenuDropdownOpen, setIsMenuDropdownOpen] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
+
+  // Check if this card has already shown the loader (persisted in database)
+  useEffect(() => {
+    const alreadyShown = card.payload?.loaderShown === true;
+
+    if (alreadyShown) {
+      setShowLoader(false);
+    } else {
+      setShowLoader(true);
+    }
+  }, [card.id, card.payload]);
+
+  const handleLoaderComplete = async () => {
+    // Mark loader as shown in database
+    const updatedPayload = { ...card.payload, loaderShown: true };
+
+    // Update local state
+    updateCardPayload(card.id, updatedPayload);
+
+    // Persist to database
+    await supabase
+      .from('chat_executions')
+      .update({ payload: updatedPayload })
+      .eq('id', card.id);
+
+    setShowLoader(false);
+  };
   
   // Guard against invalid card - MUST be after all hooks
   if (!card || !card.id) {
@@ -88,22 +118,27 @@ export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCard
             </div>
             <div>
               <span className="text-[10px] font-medium text-amber-500 uppercase tracking-wider block">
-                New Action Waiting Approval
+                {showLoader ? 'Creating Action...' : 'New Action Waiting Approval'}
               </span>
               <h3 className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 "{actionName}"
               </h3>
             </div>
           </div>
-          <CardMenuActions 
-            card={card} 
-            isExpanded={isExpanded} 
-            onToggleExpand={() => setIsExpanded(!isExpanded)}
-            onDropdownChange={setIsMenuDropdownOpen}
-          />
+          {!showLoader && (
+            <CardMenuActions
+              card={card}
+              isExpanded={isExpanded}
+              onToggleExpand={() => setIsExpanded(!isExpanded)}
+              onDropdownChange={setIsMenuDropdownOpen}
+            />
+          )}
         </div>
 
-        {isExpanded && (
+        {/* Show loader on first render, then show content */}
+        {showLoader ? (
+          <BotCreationLoader onComplete={handleLoaderComplete} />
+        ) : isExpanded ? (
           <>
 
         {/* Flowchart Area */}
@@ -227,7 +262,7 @@ export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCard
           </button>
         </div>
         </>
-        )}
+        ) : null}
       </div>
     </CardWrapper>
   );
