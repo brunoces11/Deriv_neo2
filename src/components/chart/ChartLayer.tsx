@@ -59,7 +59,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
 
   // Drawing state
   const { activeTool, addDrawing, updateDrawing, drawings, setActiveTool, selectDrawing, selectedDrawingId, removeDrawing, addTagToChat } = useDrawingTools();
-  const { currentSessionId, addDrawingToSession, updateDrawingInSession } = useChat();
+  const { currentSessionId, addDrawingToSession, updateDrawingInSession, removeDrawingFromSession } = useChat();
   const { cardsSidebarWidth, cardsSidebarCollapsed, updateUserPoint, setBtcPrice } = useViewMode();
   
   // Get sidebar width from ViewMode context
@@ -174,7 +174,8 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
   const handleDeleteDrawing = useCallback(() => {
     if (!selectedDrawingId) return;
     removeDrawing(selectedDrawingId);
-  }, [selectedDrawingId, removeDrawing]);
+    removeDrawingFromSession(selectedDrawingId);
+  }, [selectedDrawingId, removeDrawing, removeDrawingFromSession]);
 
   const calculateBollingerBands = useCallback((data: { time: Time; close: number }[], period = 20, stdDev = 2) => {
     const upper: LineData[] = [];
@@ -634,6 +635,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
       window.removeEventListener('resize', handleResize);
       chart.timeScale().unsubscribeVisibleLogicalRangeChange(updateMenuPosition);
       setChartReady(false);
+      primitivesRef.current.clear();
       if (chartRef.current) {
         chartRef.current.remove();
         chartRef.current = null;
@@ -801,7 +803,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
         primitivesRef.current.set(drawing.id, primitive);
       }
     }
-  }, [drawings, selectedDrawingId]);
+  }, [drawings, selectedDrawingId, chartReady]);
 
   // Clear all primitives when drawings are cleared
   useEffect(() => {
@@ -855,16 +857,16 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
           setPreviewPrimitive(null);
         }
       } else if (e.key === 'Delete' || e.key === 'Backspace') {
-        // Delete selected drawing
         if (selectedDrawingIdRef.current) {
           removeDrawing(selectedDrawingIdRef.current);
+          removeDrawingFromSession(selectedDrawingIdRef.current);
         }
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [previewPrimitive, setActiveTool, removeDrawing]);
+  }, [previewPrimitive, setActiveTool, removeDrawing, removeDrawingFromSession]);
 
   if (!isVisible) return null;
 

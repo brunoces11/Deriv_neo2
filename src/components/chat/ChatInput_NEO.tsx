@@ -614,7 +614,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
         
         if (drawings.length > 0) {
           for (const drawing of drawings) {
-            await addDrawingToSession(drawing);
+            await addDrawingToSession(drawing, sessionId);
           }
         }
       }

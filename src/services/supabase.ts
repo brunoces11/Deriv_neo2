@@ -60,6 +60,7 @@ export async function addSessionDrawing(
   const { data, error } = await supabase
     .from('chat_drawings')
     .insert({
+      id: drawing.id,
       session_id: sessionId,
       type: drawing.type,
       points: drawing.points,

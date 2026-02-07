@@ -103,7 +103,7 @@ export function DrawingToolsProvider({ children }: { children: ReactNode }) {
   const addDrawing = useCallback((drawing: Omit<Drawing, 'id' | 'createdAt'>): Drawing => {
     const newDrawing: Drawing = {
       ...drawing,
-      id: `drawing-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
+      id: crypto.randomUUID(),
       createdAt: Date.now(),
     };
     setDrawings(current => [...current, newDrawing]);

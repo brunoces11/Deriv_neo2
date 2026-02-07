@@ -340,7 +340,7 @@ interface ChatContextValue extends ChatState {
   deleteSession: (sessionId: string) => Promise<void>;
   refreshSessions: () => Promise<void>;
   // Drawing persistence
-  addDrawingToSession: (drawing: Drawing) => Promise<boolean>;
+  addDrawingToSession: (drawing: Drawing, sessionIdOverride?: string) => Promise<boolean>;
   updateDrawingInSession: (drawingId: string, text: string) => Promise<boolean>;
   removeDrawingFromSession: (drawingId: string) => Promise<boolean>;
   // Tag persistence
@@ -686,18 +686,19 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Drawing persistence functions
-  const addDrawingToSession = useCallback(async (drawing: Drawing): Promise<boolean> => {
-    console.log('addDrawingToSession called:', { 
-      drawingId: drawing.id, 
-      currentSessionId: state.currentSessionId 
+  const addDrawingToSession = useCallback(async (drawing: Drawing, sessionIdOverride?: string): Promise<boolean> => {
+    const targetSessionId = sessionIdOverride || state.currentSessionId;
+    console.log('addDrawingToSession called:', {
+      drawingId: drawing.id,
+      targetSessionId
     });
-    
-    if (!state.currentSessionId) {
+
+    if (!targetSessionId) {
       console.warn('No current session ID for drawing persistence');
       return false;
     }
-    
-    const success = await supabaseService.addSessionDrawing(state.currentSessionId, drawing);
+
+    const success = await supabaseService.addSessionDrawing(targetSessionId, drawing);
     if (success) {
       dispatch({ type: 'ADD_SESSION_DRAWING', payload: drawing });
       console.log('Drawing added to session state');
