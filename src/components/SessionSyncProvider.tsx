@@ -6,43 +6,44 @@ interface SessionSyncProviderProps {
   children: ReactNode;
 }
 
-/**
- * Component that synchronizes session data (drawings, tags) between
- * ChatContext (Supabase persistence) and DrawingToolsContext (local state)
- */
 export function SessionSyncProvider({ children }: SessionSyncProviderProps) {
-  const { currentSessionId, sessionDrawings, sessionTags, isLoading } = useChat();
-  const { setDrawingsFromSession, setTagsFromSession, clearAllDrawings, clearChatTags } = useDrawingTools();
-  
-  // Track previous session to detect changes
-  const prevSessionIdRef = useRef<string | null>(null);
+  const { currentSessionId, sessionDrawings, isLoading } = useChat();
+  const { setDrawingsFromSession, clearAllDrawings, clearChatTags } = useDrawingTools();
 
-  // Sync drawings from session to DrawingToolsContext when session changes
+  const prevSessionIdRef = useRef<string | null>(null);
+  const prevLoadingRef = useRef(isLoading);
+
   useEffect(() => {
-    // Skip if still loading
-    if (isLoading) return;
-    
+    const wasLoading = prevLoadingRef.current;
+    const justFinishedLoading = wasLoading && !isLoading;
+    prevLoadingRef.current = isLoading;
+
     const sessionChanged = prevSessionIdRef.current !== currentSessionId;
-    
+
     if (sessionChanged) {
       prevSessionIdRef.current = currentSessionId;
-      
-      // Session changed - ALWAYS clear old drawings and load new ones
-      // This ensures each chat has its own isolated drawings (like Photoshop layers)
-      if (currentSessionId) {
-        // Load drawings for the new session (may be empty array)
-        setDrawingsFromSession(sessionDrawings);
-        // CRITICAL FIX: Do NOT load session tags as active chat tags
-        // Session tags are historical snapshots, not active tags ready to send
-        // Only clear chat tags when switching sessions
-        clearChatTags();
-      } else {
-        // No session selected (new chat) - clear all drawings
+
+      if (!currentSessionId) {
         clearAllDrawings();
         clearChatTags();
+        return;
       }
+
+      if (isLoading) {
+        clearAllDrawings();
+        clearChatTags();
+        return;
+      }
+
+      clearChatTags();
+      return;
     }
-  }, [currentSessionId, sessionDrawings, sessionTags, isLoading, setDrawingsFromSession, clearAllDrawings, clearChatTags]);
+
+    if (justFinishedLoading && currentSessionId) {
+      setDrawingsFromSession(sessionDrawings);
+      clearChatTags();
+    }
+  }, [currentSessionId, sessionDrawings, isLoading, setDrawingsFromSession, clearAllDrawings, clearChatTags]);
 
   return <>{children}</>;
 }
