@@ -703,6 +703,7 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
     const series = seriesRef.current;
     const currentIds = new Set(drawings.map(d => d.id));
     const existingIds = new Set(primitivesRef.current.keys());
+    let needsRepaint = false;
 
     // Remove primitives that no longer exist
     for (const id of existingIds) {
@@ -801,7 +802,17 @@ export function ChartLayer({ isVisible, theme }: ChartLayerProps) {
       if (primitive) {
         series.attachPrimitive(primitive);
         primitivesRef.current.set(drawing.id, primitive);
+        needsRepaint = true;
       }
+    }
+
+    if (needsRepaint) {
+      requestAnimationFrame(() => {
+        const ts = chartRef.current?.timeScale();
+        if (ts) {
+          ts.scrollToPosition(ts.scrollPosition(), false);
+        }
+      });
     }
   }, [drawings, selectedDrawingId, chartReady]);
 
