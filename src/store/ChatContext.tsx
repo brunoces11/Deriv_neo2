@@ -49,6 +49,8 @@ type ChatAction =
   | { type: 'UPDATE_SESSION'; payload: { id: string; updates: Partial<ChatSession> } }
   | { type: 'DELETE_SESSION'; payload: string }
   | { type: 'ADD_MESSAGE'; payload: ChatMessage }
+  | { type: 'UPDATE_MESSAGE_CONTENT'; payload: { messageId: string; content: string } }
+  | { type: 'UPDATE_MESSAGE_ID'; payload: { oldId: string; newId: string } }
   | { type: 'SET_MESSAGES'; payload: ChatMessage[] }
   | { type: 'SET_TYPING'; payload: boolean }
   | { type: 'SET_LOADING'; payload: boolean }
@@ -112,6 +114,26 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 
     case 'ADD_MESSAGE':
       return { ...state, messages: [...state.messages, action.payload] };
+
+    case 'UPDATE_MESSAGE_CONTENT': {
+      const { messageId, content } = action.payload;
+      return {
+        ...state,
+        messages: state.messages.map(msg =>
+          msg.id === messageId ? { ...msg, content } : msg
+        ),
+      };
+    }
+
+    case 'UPDATE_MESSAGE_ID': {
+      const { oldId, newId } = action.payload;
+      return {
+        ...state,
+        messages: state.messages.map(msg =>
+          msg.id === oldId ? { ...msg, id: newId } : msg
+        ),
+      };
+    }
 
     case 'SET_MESSAGES':
       return { ...state, messages: action.payload };
@@ -299,7 +321,8 @@ interface ChatContextValue extends ChatState {
   currentSessionId: string | null;
   sessionDrawings: Drawing[];
   sessionTags: ChatTagWithSnapshot[];
-  addMessage: (message: ChatMessage, sessionId?: string) => Promise<void>;
+  addMessage: (message: ChatMessage, sessionId?: string) => Promise<string | null>;
+  updateMessageContent: (messageId: string, content: string) => void;
   setTyping: (typing: boolean) => void;
   processUIEvent: (event: UIEvent, sessionId?: string, onCardAdded?: (sidebar: 'left' | 'right', panel: string) => void) => Promise<void>;
   transformCard: (cardId: string, newType: CardType, newPayload: Record<string, unknown>) => void;
@@ -442,7 +465,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     saveCurrentSessionId(state.currentSessionId);
   }, [state.currentSessionId]);
 
-  const addMessage = useCallback(async (message: ChatMessage, sessionId?: string) => {
+  const addMessage = useCallback(async (message: ChatMessage, sessionId?: string): Promise<string | null> => {
     dispatch({ type: 'ADD_MESSAGE', payload: message });
 
     const targetSessionId = sessionId || state.currentSessionId;
@@ -454,19 +477,37 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     });
     
     if (targetSessionId) {
-      const success = await supabaseService.addMessageToSession(targetSessionId, {
+      const supabaseId = await supabaseService.addMessageToSession(targetSessionId, {
         role: message.role,
         content: message.content,
       });
-      if (!success) {
+      if (!supabaseId) {
         console.error('Failed to persist message to session:', targetSessionId);
+        return null;
       } else {
-        console.log('Message persisted successfully to session:', targetSessionId);
+        console.log('Message persisted successfully to session:', targetSessionId, 'supabaseId:', supabaseId);
+        // Update the local message ID to match the Supabase UUID
+        // This ensures updateMessageContent can find and update it in the DB
+        dispatch({ type: 'UPDATE_MESSAGE_ID', payload: { oldId: message.id, newId: supabaseId } });
+        return supabaseId;
       }
     } else {
       console.warn('No session ID available for message persistence');
+      return null;
     }
   }, [state.currentSessionId]);
+
+  const updateMessageContent = useCallback(async (messageId: string, content: string) => {
+    // Update local state immediately for responsive UI
+    dispatch({ type: 'UPDATE_MESSAGE_CONTENT', payload: { messageId, content } });
+    
+    // Persist to Supabase in background (don't await to avoid blocking UI)
+    if (content) {
+      supabaseService.updateMessageContent(messageId, content).catch(err => {
+        console.error('Failed to persist message update:', err);
+      });
+    }
+  }, []);
 
   const setTyping = useCallback((typing: boolean) => {
     dispatch({ type: 'SET_TYPING', payload: typing });
@@ -714,6 +755,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     () => ({
       ...state,
       addMessage,
+      updateMessageContent,
       setTyping,
       processUIEvent,
       transformCard,
@@ -739,6 +781,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [
       state,
       addMessage,
+      updateMessageContent,
       setTyping,
       processUIEvent,
       transformCard,

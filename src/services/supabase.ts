@@ -317,7 +317,7 @@ export async function deleteChatSession(sessionId: string): Promise<boolean> {
 export async function addMessageToSession(
   sessionId: string,
   message: Omit<ChatMessage, 'id' | 'timestamp'>
-): Promise<boolean> {
+): Promise<string | null> {
   console.log('addMessageToSession called:', { sessionId, role: message.role, contentLength: message.content.length });
   
   const { data, error } = await supabase
@@ -327,11 +327,12 @@ export async function addMessageToSession(
       role: message.role,
       content: message.content,
     })
-    .select();
+    .select('id')
+    .single();
 
   if (error) {
     console.error('Error adding message:', error);
-    return false;
+    return null;
   }
 
   console.log('Message inserted successfully:', data);
@@ -341,7 +342,7 @@ export async function addMessageToSession(
     .update({ updated_at: new Date().toISOString() })
     .eq('id', sessionId);
 
-  return true;
+  return data?.id || null;
 }
 
 export async function getSessionMessages(sessionId: string): Promise<ChatMessage[]> {
@@ -364,6 +365,35 @@ export async function getSessionMessages(sessionId: string): Promise<ChatMessage
   }));
 }
 
+export async function updateMessageContent(
+  messageId: string,
+  content: string
+): Promise<boolean> {
+  // Check if messageId looks like a UUID (has dashes in UUID format)
+  // Frontend generates IDs like "msg-1770436991660" which are not UUIDs
+  // Supabase generates proper UUIDs
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(messageId);
+  
+  if (!isUUID) {
+    // Skip update for non-UUID IDs (frontend-generated temporary IDs)
+    // These messages will be persisted with their final content when created
+    console.warn('[Supabase] Skipping update for non-UUID message ID:', messageId);
+    return true;
+  }
+
+  const { error } = await supabase
+    .from('chat_messages')
+    .update({ content })
+    .eq('id', messageId);
+
+  if (error) {
+    console.error('Error updating message content:', error);
+    return false;
+  }
+
+  return true;
+}
+
 // ============================================
 // Chat Executions
 // ============================================
@@ -376,31 +406,61 @@ export async function addExecutionToSession(
 ): Promise<boolean> {
   console.log('addExecutionToSession called:', { sessionId, cardId: card.id, cardType: card.type });
   
-  const { data, error } = await supabase
-    .from(EXECUTIONS_TABLE)
-    .insert({
-      session_id: sessionId,
-      frontend_id: card.id, // Store the frontend-generated ID for later deletion
-      type: card.type,
-      status: card.status,
-      is_favorite: card.isFavorite,
-      payload: card.payload,
-    })
-    .select();
+  // Try to insert with frontend_id, but handle gracefully if column doesn't exist
+  try {
+    const { data, error } = await supabase
+      .from(EXECUTIONS_TABLE)
+      .insert({
+        session_id: sessionId,
+        frontend_id: card.id, // Store the frontend-generated ID for later deletion
+        type: card.type,
+        status: card.status,
+        is_favorite: card.isFavorite,
+        payload: card.payload,
+      })
+      .select();
 
-  if (error) {
-    console.error('Error adding execution:', error);
+    if (error) {
+      // Check if error is due to missing frontend_id column
+      if (error.code === 'PGRST204' || error.message?.includes('frontend_id')) {
+        console.warn('[Supabase] frontend_id column not found, falling back to insert without it');
+        
+        // Fallback: insert without frontend_id
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from(EXECUTIONS_TABLE)
+          .insert({
+            session_id: sessionId,
+            type: card.type,
+            status: card.status,
+            is_favorite: card.isFavorite,
+            payload: card.payload,
+          })
+          .select();
+
+        if (fallbackError) {
+          console.error('Error adding execution (fallback):', fallbackError);
+          return false;
+        }
+
+        console.log('Execution inserted successfully (fallback):', fallbackData);
+      } else {
+        console.error('Error adding execution:', error);
+        return false;
+      }
+    } else {
+      console.log('Execution inserted successfully:', data);
+    }
+
+    await supabase
+      .from('chat_sessions')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', sessionId);
+
+    return true;
+  } catch (err) {
+    console.error('Unexpected error in addExecutionToSession:', err);
     return false;
   }
-
-  console.log('Execution inserted successfully:', data);
-
-  await supabase
-    .from('chat_sessions')
-    .update({ updated_at: new Date().toISOString() })
-    .eq('id', sessionId);
-
-  return true;
 }
 
 export async function getSessionExecutions(sessionId: string): Promise<BaseCard[]> {
@@ -421,6 +481,7 @@ export async function getSessionExecutions(sessionId: string): Promise<BaseCard[
 
   return (data || []).map(card => ({
     // Use frontend_id if available, otherwise fall back to Supabase UUID
+    // This handles both cases: with and without frontend_id column
     id: card.frontend_id || card.id,
     type: card.type,
     status: card.status,
@@ -449,18 +510,52 @@ export async function updateSessionExecution(
     updateData.payload = updates.payload;
   }
 
-  // Update by frontend_id (the ID generated by the frontend)
-  const { error } = await supabase
-    .from(EXECUTIONS_TABLE)
-    .update(updateData)
-    .eq('frontend_id', frontendId);
+  // Try to update by frontend_id first (if column exists)
+  try {
+    const { error, count } = await supabase
+      .from(EXECUTIONS_TABLE)
+      .update(updateData)
+      .eq('frontend_id', frontendId)
+      .select();
 
-  if (error) {
-    console.error('Error updating execution by frontend_id:', error);
+    if (error) {
+      // If frontend_id column doesn't exist, try by id
+      if (error.code === 'PGRST204' || error.message?.includes('frontend_id')) {
+        console.warn('[Supabase] frontend_id column not found, trying by id');
+        
+        const { error: fallbackError } = await supabase
+          .from(EXECUTIONS_TABLE)
+          .update(updateData)
+          .eq('id', frontendId);
+
+        if (fallbackError) {
+          console.error('Error updating execution (fallback):', fallbackError);
+          return false;
+        }
+      } else {
+        console.error('Error updating execution by frontend_id:', error);
+        return false;
+      }
+    }
+
+    // If no rows were updated by frontend_id, try by id as fallback
+    if (count === 0) {
+      const { error: fallbackError } = await supabase
+        .from(EXECUTIONS_TABLE)
+        .update(updateData)
+        .eq('id', frontendId);
+
+      if (fallbackError) {
+        console.error('Error updating execution by id (fallback):', fallbackError);
+        return false;
+      }
+    }
+
+    return true;
+  } catch (err) {
+    console.error('Unexpected error in updateSessionExecution:', err);
     return false;
   }
-
-  return true;
 }
 
 // Legacy aliases for backward compatibility
@@ -475,18 +570,59 @@ export const updateCardInSession = updateSessionExecution;
 export async function deleteCardFromSession(frontendId: string): Promise<boolean> {
   console.log('deleteCardFromSession called:', { frontendId });
   
-  // Delete by frontend_id (the ID generated by the frontend)
-  const { error, count } = await supabase
-    .from(EXECUTIONS_TABLE)
-    .delete()
-    .eq('frontend_id', frontendId)
-    .select();
+  try {
+    // Try to delete by frontend_id first (if column exists)
+    const { error, count } = await supabase
+      .from(EXECUTIONS_TABLE)
+      .delete()
+      .eq('frontend_id', frontendId)
+      .select();
 
-  if (error) {
-    console.error('Error deleting card by frontend_id:', error);
+    if (error) {
+      // If frontend_id column doesn't exist, try by id
+      if (error.code === 'PGRST204' || error.message?.includes('frontend_id')) {
+        console.warn('[Supabase] frontend_id column not found, trying by id');
+        
+        const { error: fallbackError, count: fallbackCount } = await supabase
+          .from(EXECUTIONS_TABLE)
+          .delete()
+          .eq('id', frontendId)
+          .select();
+
+        if (fallbackError) {
+          console.error('Error deleting card by id (fallback):', fallbackError);
+          return false;
+        }
+
+        console.log('Card deleted successfully by id:', frontendId, 'count:', fallbackCount);
+        return true;
+      } else {
+        console.error('Error deleting card by frontend_id:', error);
+        return false;
+      }
+    }
+
+    // If no rows were deleted by frontend_id, try by id as fallback
+    if (count === 0) {
+      const { error: fallbackError, count: fallbackCount } = await supabase
+        .from(EXECUTIONS_TABLE)
+        .delete()
+        .eq('id', frontendId)
+        .select();
+
+      if (fallbackError) {
+        console.error('Error deleting card by id (fallback):', fallbackError);
+        return false;
+      }
+
+      console.log('Card deleted successfully by id:', frontendId, 'count:', fallbackCount);
+      return true;
+    }
+
+    console.log('Card deleted successfully by frontend_id:', frontendId, 'count:', count);
+    return true;
+  } catch (err) {
+    console.error('Unexpected error in deleteCardFromSession:', err);
     return false;
   }
-
-  console.log('Card deleted successfully by frontend_id:', frontendId, 'count:', count);
-  return true;
 }
