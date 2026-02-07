@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bot, Rocket, Settings, Trash2 } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { CardMenuActions } from './CardMenuActions';
+import { BotCreationLoader } from './BotCreationLoader';
 import { useTheme } from '../../store/ThemeContext';
 import { useChat } from '../../store/ChatContext';
 import { transformCard as transformCardRule } from '../../services/placeholderRules';
@@ -18,17 +19,46 @@ interface BotCardCreatorProps {
  * Visual flowchart/mind-map representation of a bot configuration.
  * Shows trigger, action, target, and condition boxes connected by lines.
  * Used when AI has mapped user intentions and is ready to deploy a new bot.
+ * 
+ * Shows animated loader on first render, then displays the bot configuration.
  */
 export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorProps) {
   const { theme } = useTheme();
   const { transformCard, deleteCardWithTwin } = useChat();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isMenuDropdownOpen, setIsMenuDropdownOpen] = useState(false);
+  const [showLoader, setShowLoader] = useState(true);
+  const [hasShownLoader, setHasShownLoader] = useState(false);
   
   // Guard against invalid card - MUST be after all hooks
   if (!card || !card.id) {
     return null;
   }
+
+  // Check if this card has already shown the loader (using card creation time)
+  useEffect(() => {
+    const loaderKey = `bot-loader-shown-${card.id}`;
+    const alreadyShown = sessionStorage.getItem(loaderKey);
+    
+    if (alreadyShown) {
+      // Already shown loader for this card, skip it
+      setShowLoader(false);
+      setHasShownLoader(true);
+    } else {
+      // First time showing this card, show loader
+      setShowLoader(true);
+      setHasShownLoader(false);
+    }
+  }, [card.id]);
+
+  const handleLoaderComplete = () => {
+    // Mark loader as shown for this card
+    const loaderKey = `bot-loader-shown-${card.id}`;
+    sessionStorage.setItem(loaderKey, 'true');
+    setShowLoader(false);
+    setHasShownLoader(true);
+  };
+
   const payload = card.payload as unknown as BotCreatorPayload;
 
   const botName = payload?.title || payload?.botName || 'New Bot Strategy';
@@ -93,23 +123,28 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
             </div>
             <div>
               <span className="text-[10px] font-medium text-amber-500 uppercase tracking-wider block">
-                New Bot Waiting Approval
+                {showLoader ? 'Creating Bot...' : 'New Bot Waiting Approval'}
               </span>
               <h3 className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 "{botName}"
               </h3>
             </div>
           </div>
-          <CardMenuActions 
-            card={card} 
-            isExpanded={isExpanded} 
-            onToggleExpand={() => setIsExpanded(!isExpanded)}
-            onDelete={handleDelete}
-            onDropdownChange={setIsMenuDropdownOpen}
-          />
+          {!showLoader && (
+            <CardMenuActions 
+              card={card} 
+              isExpanded={isExpanded} 
+              onToggleExpand={() => setIsExpanded(!isExpanded)}
+              onDelete={handleDelete}
+              onDropdownChange={setIsMenuDropdownOpen}
+            />
+          )}
         </div>
 
-        {isExpanded && (
+        {/* Show loader on first render, then show content */}
+        {showLoader ? (
+          <BotCreationLoader onComplete={handleLoaderComplete} />
+        ) : isExpanded ? (
           <>
 
         {/* Flowchart Area */}
@@ -233,7 +268,7 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
           </button>
         </div>
         </>
-        )}
+        ) : null}
       </div>
     </CardWrapper>
   );

@@ -480,8 +480,16 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     }
   }, [state.currentSessionId]);
 
-  const updateMessageContent = useCallback((messageId: string, content: string) => {
+  const updateMessageContent = useCallback(async (messageId: string, content: string) => {
+    // Update local state immediately for responsive UI
     dispatch({ type: 'UPDATE_MESSAGE_CONTENT', payload: { messageId, content } });
+    
+    // Persist to Supabase in background (don't await to avoid blocking UI)
+    if (content) {
+      supabaseService.updateMessageContent(messageId, content).catch(err => {
+        console.error('Failed to persist message update:', err);
+      });
+    }
   }, []);
 
   const setTyping = useCallback((typing: boolean) => {

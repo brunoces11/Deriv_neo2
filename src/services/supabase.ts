@@ -364,6 +364,35 @@ export async function getSessionMessages(sessionId: string): Promise<ChatMessage
   }));
 }
 
+export async function updateMessageContent(
+  messageId: string,
+  content: string
+): Promise<boolean> {
+  // Check if messageId looks like a UUID (has dashes in UUID format)
+  // Frontend generates IDs like "msg-1770436991660" which are not UUIDs
+  // Supabase generates proper UUIDs
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(messageId);
+  
+  if (!isUUID) {
+    // Skip update for non-UUID IDs (frontend-generated temporary IDs)
+    // These messages will be persisted with their final content when created
+    console.warn('[Supabase] Skipping update for non-UUID message ID:', messageId);
+    return true;
+  }
+
+  const { error } = await supabase
+    .from('chat_messages')
+    .update({ content })
+    .eq('id', messageId);
+
+  if (error) {
+    console.error('Error updating message content:', error);
+    return false;
+  }
+
+  return true;
+}
+
 // ============================================
 // Chat Executions
 // ============================================
