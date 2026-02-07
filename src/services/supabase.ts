@@ -317,7 +317,7 @@ export async function deleteChatSession(sessionId: string): Promise<boolean> {
 export async function addMessageToSession(
   sessionId: string,
   message: Omit<ChatMessage, 'id' | 'timestamp'>
-): Promise<boolean> {
+): Promise<string | null> {
   console.log('addMessageToSession called:', { sessionId, role: message.role, contentLength: message.content.length });
   
   const { data, error } = await supabase
@@ -327,11 +327,12 @@ export async function addMessageToSession(
       role: message.role,
       content: message.content,
     })
-    .select();
+    .select('id')
+    .single();
 
   if (error) {
     console.error('Error adding message:', error);
-    return false;
+    return null;
   }
 
   console.log('Message inserted successfully:', data);
@@ -341,7 +342,7 @@ export async function addMessageToSession(
     .update({ updated_at: new Date().toISOString() })
     .eq('id', sessionId);
 
-  return true;
+  return data?.id || null;
 }
 
 export async function getSessionMessages(sessionId: string): Promise<ChatMessage[]> {

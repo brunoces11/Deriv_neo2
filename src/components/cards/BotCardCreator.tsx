@@ -28,12 +28,6 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isMenuDropdownOpen, setIsMenuDropdownOpen] = useState(false);
   const [showLoader, setShowLoader] = useState(true);
-  const [hasShownLoader, setHasShownLoader] = useState(false);
-  
-  // Guard against invalid card - MUST be after all hooks
-  if (!card || !card.id) {
-    return null;
-  }
 
   // Check if this card has already shown the loader (using card creation time)
   useEffect(() => {
@@ -43,11 +37,9 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
     if (alreadyShown) {
       // Already shown loader for this card, skip it
       setShowLoader(false);
-      setHasShownLoader(true);
     } else {
       // First time showing this card, show loader
       setShowLoader(true);
-      setHasShownLoader(false);
     }
   }, [card.id]);
 
@@ -56,8 +48,12 @@ export function BotCardCreator({ card, defaultExpanded = true }: BotCardCreatorP
     const loaderKey = `bot-loader-shown-${card.id}`;
     sessionStorage.setItem(loaderKey, 'true');
     setShowLoader(false);
-    setHasShownLoader(true);
   };
+
+  // Guard against invalid card - MUST be after all hooks
+  if (!card || !card.id) {
+    return null;
+  }
 
   const payload = card.payload as unknown as BotCreatorPayload;
 

@@ -50,6 +50,7 @@ type ChatAction =
   | { type: 'DELETE_SESSION'; payload: string }
   | { type: 'ADD_MESSAGE'; payload: ChatMessage }
   | { type: 'UPDATE_MESSAGE_CONTENT'; payload: { messageId: string; content: string } }
+  | { type: 'UPDATE_MESSAGE_ID'; payload: { oldId: string; newId: string } }
   | { type: 'SET_MESSAGES'; payload: ChatMessage[] }
   | { type: 'SET_TYPING'; payload: boolean }
   | { type: 'SET_LOADING'; payload: boolean }
@@ -120,6 +121,16 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
         ...state,
         messages: state.messages.map(msg =>
           msg.id === messageId ? { ...msg, content } : msg
+        ),
+      };
+    }
+
+    case 'UPDATE_MESSAGE_ID': {
+      const { oldId, newId } = action.payload;
+      return {
+        ...state,
+        messages: state.messages.map(msg =>
+          msg.id === oldId ? { ...msg, id: newId } : msg
         ),
       };
     }
@@ -310,7 +321,7 @@ interface ChatContextValue extends ChatState {
   currentSessionId: string | null;
   sessionDrawings: Drawing[];
   sessionTags: ChatTagWithSnapshot[];
-  addMessage: (message: ChatMessage, sessionId?: string) => Promise<void>;
+  addMessage: (message: ChatMessage, sessionId?: string) => Promise<string | null>;
   updateMessageContent: (messageId: string, content: string) => void;
   setTyping: (typing: boolean) => void;
   processUIEvent: (event: UIEvent, sessionId?: string, onCardAdded?: (sidebar: 'left' | 'right', panel: string) => void) => Promise<void>;
@@ -454,7 +465,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     saveCurrentSessionId(state.currentSessionId);
   }, [state.currentSessionId]);
 
-  const addMessage = useCallback(async (message: ChatMessage, sessionId?: string) => {
+  const addMessage = useCallback(async (message: ChatMessage, sessionId?: string): Promise<string | null> => {
     dispatch({ type: 'ADD_MESSAGE', payload: message });
 
     const targetSessionId = sessionId || state.currentSessionId;
@@ -466,17 +477,23 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     });
     
     if (targetSessionId) {
-      const success = await supabaseService.addMessageToSession(targetSessionId, {
+      const supabaseId = await supabaseService.addMessageToSession(targetSessionId, {
         role: message.role,
         content: message.content,
       });
-      if (!success) {
+      if (!supabaseId) {
         console.error('Failed to persist message to session:', targetSessionId);
+        return null;
       } else {
-        console.log('Message persisted successfully to session:', targetSessionId);
+        console.log('Message persisted successfully to session:', targetSessionId, 'supabaseId:', supabaseId);
+        // Update the local message ID to match the Supabase UUID
+        // This ensures updateMessageContent can find and update it in the DB
+        dispatch({ type: 'UPDATE_MESSAGE_ID', payload: { oldId: message.id, newId: supabaseId } });
+        return supabaseId;
       }
     } else {
       console.warn('No session ID available for message persistence');
+      return null;
     }
   }, [state.currentSessionId]);
 

@@ -654,12 +654,14 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
         timestamp: new Date(),
       };
       
-      await addMessage(assistantMessage, sessionId);
+      const assistantDbId = await addMessage(assistantMessage, sessionId);
+      // Use the Supabase UUID for subsequent updates so content persists correctly
+      const assistantMessageId = assistantDbId || assistantMessage.id;
       
       console.log('[ChatInput] 🚀 Starting streaming request...');
       console.log('[ChatInput] Message to send:', messageWithMetadata);
       console.log('[ChatInput] Session ID:', sessionId);
-      console.log('[ChatInput] Assistant message ID:', assistantMessage.id);
+      console.log('[ChatInput] Assistant message ID:', assistantMessageId);
       
       try {
         // Use streaming API
@@ -670,7 +672,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
           (chunk: string, isComplete: boolean) => {
             console.log('[ChatInput] 📦 Received chunk, isComplete:', isComplete, 'length:', chunk.length);
             // Update message content progressively
-            updateMessageContent(assistantMessage.id, chunk);
+            updateMessageContent(assistantMessageId, chunk);
             
             // When complete, process UI events (cards/placeholders)
             if (isComplete) {
@@ -684,7 +686,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
         console.error('[ChatInput] ❌ Streaming failed, falling back to mock:', streamError);
         // Fallback to mock simulation
         const response = await simulateLangFlowResponse(userMessage.content);
-        updateMessageContent(assistantMessage.id, response.chat_message);
+        updateMessageContent(assistantMessageId, response.chat_message);
         
         // Process UI events from mock
         for (let i = 0; i < response.ui_events.length; i++) {

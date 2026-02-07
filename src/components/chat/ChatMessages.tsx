@@ -284,7 +284,7 @@ interface InlineCardProps {
 
 function InlineCard({ config, cardId, title, onAddToPanel }: InlineCardProps) {
   const { inline, panel } = config;
-  const { getCardById, deleteCardWithTwin } = useChat();
+  const { getCardById } = useChat();
   // Track if we've already added to panel for this specific card instance
   const hasAddedToPanelRef = useRef(false);
   
@@ -305,14 +305,14 @@ function InlineCard({ config, cardId, title, onAddToPanel }: InlineCardProps) {
   
   const isExpanded = inline.visualState === 'expanded';
   
-  // Use existing card data if available, otherwise create mock with title
-  // Safe access - only create if we have a valid card type
+  // Always create the card data immediately for instant rendering
+  // Use existing card data if available (preserves user modifications), otherwise create mock
   const card: BaseCard | null = CardComponent 
     ? (existingCard || createMockCard(inline.cardType, cardId, title))
     : null;
   
   // Add card to panel on mount (only once per card instance)
-  // IMPORTANT: This hook MUST be called unconditionally (before any returns)
+  // This is a side-effect for the sidebar panel - does NOT block inline rendering
   useEffect(() => {
     // Only add to panel once per card instance
     if (hasAddedToPanelRef.current) {
@@ -346,12 +346,6 @@ function InlineCard({ config, cardId, title, onAddToPanel }: InlineCardProps) {
   
   if (!CardComponent) {
     console.warn(`[InlineCard] Unknown card type: ${inline.cardType}`);
-    return null;
-  }
-  
-  // Se já foi adicionado ao painel mas não existe mais, foi deletado
-  // Não renderiza nada - o placeholder desaparece permanentemente
-  if (hasAddedToPanelRef.current && !existingCard) {
     return null;
   }
   
@@ -475,7 +469,7 @@ const addedToPanelSet = new Set<string>();
 import { isCardDeleted } from '../../services/deletedCardsStorage';
 
 export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
-  const { messages, isTyping, processUIEvent, currentSessionId } = useChat();
+  const { messages, isTyping, processUIEvent, currentSessionId, getCardById } = useChat();
   const { currentMode, notifyPanelActivation } = useViewMode();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isSidebar = displayMode === 'sidebar';
@@ -497,18 +491,26 @@ export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
       ? `${currentSessionId}-singleton-${cardType}`
       : `${currentSessionId}-${cardId}`;
     
-    // Skip if already added to panel
+    // Skip if already tracked in memory
     if (addedToPanelSet.has(uniqueKey)) {
       return;
     }
-    
-    // Mark as added
-    addedToPanelSet.add(uniqueKey);
     
     // Para singleton cards, usar um ID fixo baseado no tipo
     const panelCardId = isSingletonCard 
       ? `panel-singleton-${cardType}`
       : `panel-${cardId}`;
+    
+    // Check if card already exists in state (loaded from Supabase by loadSession)
+    // If it does, just mark as tracked and skip - no need to re-add
+    const existingCard = getCardById(panelCardId);
+    if (existingCard) {
+      addedToPanelSet.add(uniqueKey);
+      return;
+    }
+    
+    // Mark as added
+    addedToPanelSet.add(uniqueKey);
     
     // Add to panel via processUIEvent with notification callback
     await processUIEvent({
@@ -524,13 +526,11 @@ export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
       // Notify to expand and activate the panel where the card was added
       notifyPanelActivation(sidebar, panel);
     });
-  }, [processUIEvent, currentSessionId, notifyPanelActivation]);
+  }, [processUIEvent, currentSessionId, notifyPanelActivation, getCardById]);
 
-  // Clear tracked cards when session changes
+  // Clear tracked cards when session changes so InlineCard can re-evaluate
   useEffect(() => {
-    // When session changes, we could clear the set, but keeping it prevents
-    // re-adding cards when switching back to a session
-    // For now, we keep the set persistent
+    addedToPanelSet.clear();
   }, [currentSessionId]);
 
   useEffect(() => {
