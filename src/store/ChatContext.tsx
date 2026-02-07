@@ -49,6 +49,7 @@ type ChatAction =
   | { type: 'UPDATE_SESSION'; payload: { id: string; updates: Partial<ChatSession> } }
   | { type: 'DELETE_SESSION'; payload: string }
   | { type: 'ADD_MESSAGE'; payload: ChatMessage }
+  | { type: 'UPDATE_MESSAGE_CONTENT'; payload: { messageId: string; content: string } }
   | { type: 'SET_MESSAGES'; payload: ChatMessage[] }
   | { type: 'SET_TYPING'; payload: boolean }
   | { type: 'SET_LOADING'; payload: boolean }
@@ -112,6 +113,16 @@ function chatReducer(state: ChatState, action: ChatAction): ChatState {
 
     case 'ADD_MESSAGE':
       return { ...state, messages: [...state.messages, action.payload] };
+
+    case 'UPDATE_MESSAGE_CONTENT': {
+      const { messageId, content } = action.payload;
+      return {
+        ...state,
+        messages: state.messages.map(msg =>
+          msg.id === messageId ? { ...msg, content } : msg
+        ),
+      };
+    }
 
     case 'SET_MESSAGES':
       return { ...state, messages: action.payload };
@@ -300,6 +311,7 @@ interface ChatContextValue extends ChatState {
   sessionDrawings: Drawing[];
   sessionTags: ChatTagWithSnapshot[];
   addMessage: (message: ChatMessage, sessionId?: string) => Promise<void>;
+  updateMessageContent: (messageId: string, content: string) => void;
   setTyping: (typing: boolean) => void;
   processUIEvent: (event: UIEvent, sessionId?: string, onCardAdded?: (sidebar: 'left' | 'right', panel: string) => void) => Promise<void>;
   transformCard: (cardId: string, newType: CardType, newPayload: Record<string, unknown>) => void;
@@ -467,6 +479,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       console.warn('No session ID available for message persistence');
     }
   }, [state.currentSessionId]);
+
+  const updateMessageContent = useCallback((messageId: string, content: string) => {
+    dispatch({ type: 'UPDATE_MESSAGE_CONTENT', payload: { messageId, content } });
+  }, []);
 
   const setTyping = useCallback((typing: boolean) => {
     dispatch({ type: 'SET_TYPING', payload: typing });
@@ -714,6 +730,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     () => ({
       ...state,
       addMessage,
+      updateMessageContent,
       setTyping,
       processUIEvent,
       transformCard,
@@ -739,6 +756,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     [
       state,
       addMessage,
+      updateMessageContent,
       setTyping,
       processUIEvent,
       transformCard,

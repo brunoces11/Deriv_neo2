@@ -4,7 +4,7 @@ import { useChat } from '../../store/ChatContext';
 import { useTheme } from '../../store/ThemeContext';
 import { useDrawingTools } from '../../store/DrawingToolsContext';
 import { useViewMode } from '../../store/ViewModeContext';
-import { callLangflow } from '../../services/langflowApi';
+import { callLangflowStreaming } from '../../services/langflowApi';
 import { simulateLangFlowResponse } from '../../services/mockSimulation';
 import type { ChatMessage } from '../../types';
 
@@ -156,6 +156,7 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
   
   const { 
     addMessage, 
+    updateMessageContent,
     setTyping, 
     isTyping, 
     processUIEvent, 
@@ -573,6 +574,9 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
   const handleSubmit = async () => {
     if (!plainText.trim() || isTyping) return;
 
+    console.log('[ChatInput] 🎯 handleSubmit called - STREAMING VERSION');
+    console.log('[ChatInput] Version check: callLangflowStreaming is', typeof callLangflowStreaming);
+
     // Construir conteúdo da mensagem com agentes no início (se houver)
     let messageContent = plainText.trim();
     if (selectedAgents.length > 0) {
@@ -642,28 +646,53 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
       // Add auto mode tag (always present)
       messageWithMetadata += autoMode ? ' [[AUTO_MODE_ON]]' : ' [[AUTO_MODE_OFF]]';
       
-      let response;
-      try {
-        response = await callLangflow(messageWithMetadata, sessionId);
-      } catch (langflowError) {
-        response = await simulateLangFlowResponse(userMessage.content);
-      }
-
+      // Create empty assistant message for streaming
       const assistantMessage: ChatMessage = {
         id: `msg-${Date.now()}`,
         role: 'assistant',
-        content: response.chat_message,
+        content: '',
         timestamp: new Date(),
       };
-
+      
       await addMessage(assistantMessage, sessionId);
-
-      for (let i = 0; i < response.ui_events.length; i++) {
-        await new Promise(resolve => setTimeout(resolve, 300 * (i + 1)));
-        await processUIEvent(response.ui_events[i], sessionId, (sidebar, panel) => {
-          // Notify to expand and activate the panel where the card was added
-          notifyPanelActivation(sidebar, panel);
-        });
+      
+      console.log('[ChatInput] 🚀 Starting streaming request...');
+      console.log('[ChatInput] Message to send:', messageWithMetadata);
+      console.log('[ChatInput] Session ID:', sessionId);
+      console.log('[ChatInput] Assistant message ID:', assistantMessage.id);
+      
+      try {
+        // Use streaming API
+        console.log('[ChatInput] ⚡ Calling callLangflowStreaming NOW...');
+        await callLangflowStreaming(
+          messageWithMetadata,
+          sessionId,
+          (chunk: string, isComplete: boolean) => {
+            console.log('[ChatInput] 📦 Received chunk, isComplete:', isComplete, 'length:', chunk.length);
+            // Update message content progressively
+            updateMessageContent(assistantMessage.id, chunk);
+            
+            // When complete, process UI events (cards/placeholders)
+            if (isComplete) {
+              console.log('[ChatInput] ✅ Stream complete, final content length:', chunk.length);
+              // Note: UI events (cards) are now handled by ChatMessages via placeholders
+              // No need to process them here separately
+            }
+          }
+        );
+      } catch (streamError) {
+        console.error('[ChatInput] ❌ Streaming failed, falling back to mock:', streamError);
+        // Fallback to mock simulation
+        const response = await simulateLangFlowResponse(userMessage.content);
+        updateMessageContent(assistantMessage.id, response.chat_message);
+        
+        // Process UI events from mock
+        for (let i = 0; i < response.ui_events.length; i++) {
+          await new Promise(resolve => setTimeout(resolve, 300 * (i + 1)));
+          await processUIEvent(response.ui_events[i], sessionId, (sidebar, panel) => {
+            notifyPanelActivation(sidebar, panel);
+          });
+        }
       }
     } catch (err) {
       console.error('Error in handleSubmit:', err);

@@ -165,7 +165,7 @@ function cardsToUIEvents(cardTypes: CardType[]): UIEvent[] {
 }
 
 /**
- * Call Langflow API with user message and session ID
+ * Call Langflow API with user message and session ID (NON-STREAMING - Legacy)
  */
 export async function callLangflow(
   message: string,
@@ -241,6 +241,139 @@ export async function callLangflow(
     };
   } catch (error) {
     console.error('[LangflowAPI] Request failed:', error);
+    throw error;
+  }
+}
+
+/**
+ * Call Langflow API with STREAMING support
+ * Processes chunks as they arrive and calls onChunk callback
+ */
+export async function callLangflowStreaming(
+  message: string,
+  sessionId: string,
+  onChunk: (chunk: string, isComplete: boolean) => void
+): Promise<void> {
+  if (!LANGFLOW_ENDPOINT) {
+    console.error('[LangflowAPI-STREAM] VITE_LANGFLOW_ENDPOINT not configured');
+    throw new Error('Langflow endpoint not configured');
+  }
+
+  console.log('[LangflowAPI-STREAM] 🚀 Starting streaming request');
+  console.log('[LangflowAPI-STREAM] Endpoint:', LANGFLOW_ENDPOINT);
+  console.log('[LangflowAPI-STREAM] Payload:', { input_value: message, session_id: sessionId });
+
+  try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'text/event-stream', // Request streaming
+    };
+    
+    // Add API key if available
+    if (LANGFLOW_API_KEY) {
+      headers['x-api-key'] = LANGFLOW_API_KEY;
+    }
+
+    const response = await fetch(LANGFLOW_ENDPOINT, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        input_value: message,
+        session_id: sessionId,
+        stream: true, // Enable streaming on Langflow side
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[LangflowAPI-STREAM] ❌ HTTP Error:', response.status, errorText);
+      throw new Error(`Langflow API error: ${response.status}`);
+    }
+
+    console.log('[LangflowAPI-STREAM] ✅ Response received, Content-Type:', response.headers.get('content-type'));
+
+    // Check if response is actually streaming
+    const contentType = response.headers.get('content-type');
+    if (!contentType?.includes('text/event-stream') && !contentType?.includes('application/x-ndjson')) {
+      console.warn('[LangflowAPI-STREAM] ⚠️ Response is not streaming, falling back to regular parsing');
+      const data = await response.json();
+      let rawText = '';
+      
+      if (data.outputs?.[0]?.outputs?.[0]?.results?.message?.text) {
+        rawText = data.outputs[0].outputs[0].results.message.text;
+      } else if (data.outputs?.[0]?.outputs?.[0]?.artifacts?.message) {
+        rawText = data.outputs[0].outputs[0].artifacts.message;
+      } else if (data.message && typeof data.message === 'string') {
+        rawText = data.message;
+      }
+      
+      onChunk(rawText, true);
+      return;
+    }
+
+    // Process streaming response
+    const reader = response.body?.getReader();
+    if (!reader) {
+      throw new Error('Response body is not readable');
+    }
+
+    const decoder = new TextDecoder();
+    let accumulatedText = '';
+    let chunkCount = 0;
+
+    console.log('[LangflowAPI-STREAM] 📡 Starting to read chunks...');
+
+    while (true) {
+      const { done, value } = await reader.read();
+      
+      if (done) {
+        console.log('[LangflowAPI-STREAM] ✅ Stream complete. Total chunks:', chunkCount);
+        onChunk(accumulatedText, true);
+        break;
+      }
+
+      chunkCount++;
+      const chunk = decoder.decode(value, { stream: true });
+      console.log(`[LangflowAPI-STREAM] 📦 Chunk ${chunkCount}:`, chunk.substring(0, 100) + '...');
+
+      // Parse SSE format (Server-Sent Events)
+      const lines = chunk.split('\n');
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          try {
+            const jsonData = JSON.parse(line.substring(6));
+            
+            // Extract text from different possible formats
+            let textChunk = '';
+            if (jsonData.chunk) {
+              textChunk = jsonData.chunk;
+            } else if (jsonData.message) {
+              textChunk = jsonData.message;
+            } else if (jsonData.text) {
+              textChunk = jsonData.text;
+            } else if (typeof jsonData === 'string') {
+              textChunk = jsonData;
+            }
+
+            if (textChunk) {
+              accumulatedText += textChunk;
+              console.log(`[LangflowAPI-STREAM] 💬 Text chunk: "${textChunk}"`);
+              onChunk(accumulatedText, false);
+            }
+          } catch (e) {
+            // Not JSON, might be plain text
+            const textChunk = line.substring(6);
+            if (textChunk) {
+              accumulatedText += textChunk;
+              console.log(`[LangflowAPI-STREAM] 💬 Plain text chunk: "${textChunk}"`);
+              onChunk(accumulatedText, false);
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('[LangflowAPI-STREAM] ❌ Streaming failed:', error);
     throw error;
   }
 }
