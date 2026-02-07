@@ -617,7 +617,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       type: 'UPDATE_CARD_PAYLOAD',
       payload: { cardId, updates }
     });
-  }, []);
+
+    // Persist to Supabase (same pattern as deleteCardWithTwin)
+    const baseId = cardId.replace(/^panel-/, '');
+    const panelId = `panel-${baseId}`;
+    const panelCard = state.activeCards.find(c => c.id === panelId);
+
+    if (panelCard) {
+      const mergedPayload = { ...panelCard.payload, ...updates };
+      supabaseService.updateCardInSession(panelId, { payload: mergedPayload });
+    }
+  }, [state.activeCards]);
 
   const deleteCardWithTwin = useCallback(async (cardId: string) => {
     console.log('[ChatContext] deleteCardWithTwin called:', cardId);

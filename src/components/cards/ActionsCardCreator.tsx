@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Zap, Rocket, Settings, Trash2 } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { CardMenuActions } from './CardMenuActions';
@@ -6,7 +6,6 @@ import { BotCreationLoader } from './BotCreationLoader';
 import { useTheme } from '../../store/ThemeContext';
 import { useChat } from '../../store/ChatContext';
 import { transformCard as transformCardRule } from '../../services/placeholderRules';
-import { supabase } from '../../services/supabase';
 import type { BaseCard, ActionsCreatorPayload, CardType } from '../../types';
 
 interface ActionsCardCreatorProps {
@@ -26,32 +25,10 @@ export function ActionsCardCreator({ card, defaultExpanded = true }: ActionsCard
   const { transformCard, deleteCardWithTwin, updateCardPayload } = useChat();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isMenuDropdownOpen, setIsMenuDropdownOpen] = useState(false);
-  const [showLoader, setShowLoader] = useState(true);
+  const [showLoader, setShowLoader] = useState(!card.payload?.loaderShown);
 
-  // Check if this card has already shown the loader (persisted in database)
-  useEffect(() => {
-    const alreadyShown = card.payload?.loaderShown === true;
-
-    if (alreadyShown) {
-      setShowLoader(false);
-    } else {
-      setShowLoader(true);
-    }
-  }, [card.id, card.payload]);
-
-  const handleLoaderComplete = async () => {
-    // Mark loader as shown in database
-    const updatedPayload = { ...card.payload, loaderShown: true };
-
-    // Update local state
-    updateCardPayload(card.id, updatedPayload);
-
-    // Persist to database
-    await supabase
-      .from('chat_executions')
-      .update({ payload: updatedPayload })
-      .eq('id', card.id);
-
+  const handleLoaderComplete = () => {
+    updateCardPayload(card.id, { loaderShown: true });
     setShowLoader(false);
   };
   
