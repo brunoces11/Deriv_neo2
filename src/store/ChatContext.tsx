@@ -326,7 +326,7 @@ interface ChatContextValue extends ChatState {
   setTyping: (typing: boolean) => void;
   processUIEvent: (event: UIEvent, sessionId?: string, onCardAdded?: (sidebar: 'left' | 'right', panel: string) => void) => Promise<void>;
   transformCard: (cardId: string, newType: CardType, newPayload: Record<string, unknown>) => void;
-  updateCardPayload: (cardId: string, updates: Record<string, unknown>) => void;
+  updateCardPayload: (cardId: string, updates: Record<string, unknown>) => Promise<void>;
   deleteCardWithTwin: (cardId: string) => Promise<void>;
   getCardById: (cardId: string) => BaseCard | undefined;
   archiveCard: (cardId: string) => Promise<void>;
@@ -612,7 +612,9 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const updateCardPayload = useCallback((cardId: string, updates: Record<string, unknown>) => {
+  const updateCardPayload = useCallback(async (cardId: string, updates: Record<string, unknown>) => {
+    console.log('[ChatContext] updateCardPayload called:', { cardId, updates });
+
     dispatch({
       type: 'UPDATE_CARD_PAYLOAD',
       payload: { cardId, updates }
@@ -625,7 +627,20 @@ export function ChatProvider({ children }: { children: ReactNode }) {
 
     if (panelCard) {
       const mergedPayload = { ...panelCard.payload, ...updates };
-      supabaseService.updateCardInSession(panelId, { payload: mergedPayload });
+      console.log('[ChatContext] Persisting card payload to Supabase:', { panelId, mergedPayload });
+
+      try {
+        const success = await supabaseService.updateCardInSession(panelId, { payload: mergedPayload });
+        if (success) {
+          console.log('[ChatContext] Card payload persisted successfully:', panelId);
+        } else {
+          console.error('[ChatContext] Failed to persist card payload:', panelId);
+        }
+      } catch (error) {
+        console.error('[ChatContext] Error persisting card payload:', error);
+      }
+    } else {
+      console.warn('[ChatContext] Panel card not found for payload update:', { cardId, panelId, activeCardsCount: state.activeCards.length });
     }
   }, [state.activeCards]);
 
