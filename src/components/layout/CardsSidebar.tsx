@@ -481,7 +481,7 @@ export function CardsSidebar({
               cardsForActionsPanel.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                   <Zap className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
-                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
+                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
                     Actions are smart automations that execute tasks or trades automatically based on user-defined rules.
                   </p>
                   <button
@@ -507,7 +507,7 @@ export function CardsSidebar({
               cardsForBotsPanel.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                   <BotMessageSquare className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
-                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
+                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
                     Bots are autonomous trading agents that execute investment strategies defined by the user.
                   </p>
                   <button
@@ -646,7 +646,7 @@ export function CardsSidebar({
               {cardsForActionsPanel.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                   <Zap className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
-                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
+                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
                     Actions are smart automations that execute tasks or trades automatically based on user-defined rules.
                   </p>
                   <button
@@ -706,7 +706,7 @@ export function CardsSidebar({
               {cardsForBotsPanel.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                   <BotMessageSquare className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
-                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
+                  <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
                     Bots are autonomous trading agents that execute investment strategies defined by the user.
                   </p>
                   <button
