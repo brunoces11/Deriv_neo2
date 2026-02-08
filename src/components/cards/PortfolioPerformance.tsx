@@ -287,71 +287,73 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
           </div>
         </div>
 
-        <div className={`p-4 rounded-xl ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'} space-y-3`}>
-          <div className="flex items-center gap-2 mb-1">
+        <div className={`p-4 rounded-xl ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'} space-y-4`}>
+          <div className="flex items-center gap-2">
             <PieChart className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             <h4 className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Performance by Product</h4>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             {data.productPerformance.map((product, index) => {
               const profitColor = product.profit > 30 ? 'text-green-500' : product.profit > 20 ? 'text-blue-500' : 'text-amber-500';
               const profitBg = product.profit > 30 ? 'bg-green-500' : product.profit > 20 ? 'bg-blue-500' : 'bg-amber-500';
               const profitBgLight = product.profit > 30 ? 'bg-green-500/10' : product.profit > 20 ? 'bg-blue-500/10' : 'bg-amber-500/10';
+              const maxValue = 100;
 
               return (
                 <div
                   key={index}
                   className={`relative overflow-hidden rounded-xl border ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-gray-200'}`}
                 >
-                  <div className="p-3 space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  <div className="p-3 space-y-3">
+                    <div className="text-center space-y-1">
+                      <span className={`text-xs font-semibold block ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                         {product.name}
                       </span>
-                      <div className={`px-2 py-0.5 rounded-full ${profitBgLight}`}>
-                        <span className={`text-xs font-bold ${profitColor}`}>
+                      <div className={`inline-flex px-2.5 py-1 rounded-lg ${profitBgLight}`}>
+                        <span className={`text-base font-bold ${profitColor}`}>
                           +{product.profit}%
                         </span>
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between text-[10px]">
-                        <span className={theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}>Profit Impact</span>
-                        <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{product.profit}%</span>
-                      </div>
-                      <div className={`h-1.5 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`}>
-                        <div className={`h-full ${profitBg} rounded-full transition-all`} style={{ width: `${product.profit}%` }} />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 pt-1">
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className={theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}>Risk</span>
-                          <span className={`font-semibold ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>{product.risk}%</span>
+                    <div className="h-32 flex items-end justify-between gap-2 px-1">
+                      <div className="flex-1 flex flex-col items-center gap-1.5">
+                        <div className={`w-full relative rounded-t overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`} style={{ height: '100px' }}>
+                          <div
+                            className={`w-full ${profitBg} absolute bottom-0 left-0 right-0 transition-all rounded-t`}
+                            style={{ height: `${(product.profit / maxValue) * 100}%` }}
+                          />
                         </div>
-                        <div className={`h-1 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`}>
-                          <div className="h-full bg-red-500/70 rounded-full" style={{ width: `${product.risk}%` }} />
-                        </div>
+                        <span className={`text-[9px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Profit</span>
+                        <span className={`text-[10px] font-bold ${profitColor}`}>{product.profit}%</span>
                       </div>
 
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between text-[10px]">
-                          <span className={theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}>Stability</span>
-                          <span className={`font-semibold ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>{product.consistency}%</span>
+                      <div className="flex-1 flex flex-col items-center gap-1.5">
+                        <div className={`w-full relative rounded-t overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`} style={{ height: '100px' }}>
+                          <div
+                            className="w-full bg-red-500/70 absolute bottom-0 left-0 right-0 transition-all rounded-t"
+                            style={{ height: `${(product.risk / maxValue) * 100}%` }}
+                          />
                         </div>
-                        <div className={`h-1 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`}>
-                          <div className="h-full bg-blue-500/70 rounded-full" style={{ width: `${product.consistency}%` }} />
+                        <span className={`text-[9px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Risk</span>
+                        <span className="text-[10px] font-bold text-red-500">{product.risk}%</span>
+                      </div>
+
+                      <div className="flex-1 flex flex-col items-center gap-1.5">
+                        <div className={`w-full relative rounded-t overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`} style={{ height: '100px' }}>
+                          <div
+                            className="w-full bg-blue-500/70 absolute bottom-0 left-0 right-0 transition-all rounded-t"
+                            style={{ height: `${(product.consistency / maxValue) * 100}%` }}
+                          />
                         </div>
+                        <span className={`text-[9px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Stability</span>
+                        <span className="text-[10px] font-bold text-blue-500">{product.consistency}%</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className={`absolute inset-0 pointer-events-none opacity-5 ${profitBg}`} style={{
-                    background: `linear-gradient(135deg, ${product.profit > 30 ? 'rgba(34, 197, 94, 0.1)' : product.profit > 20 ? 'rgba(59, 130, 246, 0.1)' : 'rgba(251, 146, 60, 0.1)'} 0%, transparent 100%)`
-                  }} />
+                  <div className={`absolute top-0 left-0 right-0 h-1 ${profitBg} opacity-30`} />
                 </div>
               );
             })}
