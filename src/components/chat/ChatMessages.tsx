@@ -502,35 +502,37 @@ export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
   const { messages, isTyping, processUIEvent, currentSessionId, getCardById } = useChat();
   const { currentMode, notifyPanelActivation } = useViewMode();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const previousSessionId = useRef<string | null>(null);
   const isSidebar = displayMode === 'sidebar';
 
   // Callback to add card to panel (called by InlineCard)
   const addCardToPanel = useCallback(async (
-    cardId: string, 
-    cardType: RenderCardType, 
+    cardId: string,
+    cardType: RenderCardType,
     panelTab: PanelTab,
     payload: Record<string, unknown>
   ) => {
     // REGRA ESPECIAL: Portfolio table cards são singleton no painel
     // Podem aparecer múltiplas vezes inline, mas só uma vez no painel
     const isSingletonCard = cardType === 'portfolio-table-complete';
-    
+
     // Para singleton cards, usar o tipo como chave (garante única instância)
     // Para outros cards, usar cardId (permite múltiplas instâncias diferentes)
-    const uniqueKey = isSingletonCard 
+    const uniqueKey = isSingletonCard
       ? `${currentSessionId}-singleton-${cardType}`
       : `${currentSessionId}-${cardId}`;
-    
+
     // Skip if already tracked in memory
     if (addedToPanelSet.has(uniqueKey)) {
       return;
     }
-    
+
     // Para singleton cards, usar um ID fixo baseado no tipo
-    const panelCardId = isSingletonCard 
+    const panelCardId = isSingletonCard
       ? `panel-singleton-${cardType}`
       : `panel-${cardId}`;
-    
+
     // Check if card already exists in state (loaded from Supabase by loadSession)
     // If it does, just mark as tracked and skip - no need to re-add
     const existingCard = getCardById(panelCardId);
@@ -538,10 +540,10 @@ export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
       addedToPanelSet.add(uniqueKey);
       return;
     }
-    
+
     // Mark as added
     addedToPanelSet.add(uniqueKey);
-    
+
     // Add to panel via processUIEvent with notification callback
     await processUIEvent({
       type: 'ADD_CARD',
@@ -563,19 +565,57 @@ export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
     addedToPanelSet.clear();
   }, [currentSessionId]);
 
+  // Scroll behavior: when session changes, scroll to last user message
+  // When new messages arrive in same session, scroll to end as normal
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+    const sessionChanged = previousSessionId.current !== null && previousSessionId.current !== currentSessionId;
+    previousSessionId.current = currentSessionId;
+
+    if (sessionChanged && messages.length > 0) {
+      // Find last user message
+      const lastUserMessageIndex = messages.map((m, i) => ({ msg: m, index: i }))
+        .reverse()
+        .find(({ msg }) => msg.role === 'user')?.index;
+
+      if (lastUserMessageIndex !== undefined) {
+        const lastUserMessage = messages[lastUserMessageIndex];
+        const messageElement = messageRefs.current.get(lastUserMessage.id);
+
+        if (messageElement) {
+          // Scroll to last user message with 15px offset from top
+          setTimeout(() => {
+            const elementTop = messageElement.getBoundingClientRect().top;
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const targetScroll = elementTop + scrollTop - 15;
+
+            window.scrollTo({ top: targetScroll, behavior: 'smooth' });
+          }, 100);
+        }
+      }
+    } else if (!sessionChanged) {
+      // Normal scroll to end for new messages in current session
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isTyping, currentSessionId]);
+
+  const setMessageRef = useCallback((messageId: string, element: HTMLDivElement | null) => {
+    if (element) {
+      messageRefs.current.set(messageId, element);
+    } else {
+      messageRefs.current.delete(messageId);
+    }
+  }, []);
 
   return (
     <div className={`space-y-4 ${isSidebar ? 'py-3' : 'py-6 space-y-6'}`}>
       {messages.map((message) => (
-        <MessageBubble 
-          key={message.id} 
-          message={message} 
+        <MessageBubble
+          key={message.id}
+          message={message}
           isSidebar={isSidebar}
           currentMode={currentMode as PlaceholderViewMode}
           onAddCardToPanel={addCardToPanel}
+          setRef={setMessageRef}
         />
       ))}
       {isTyping && <TypingIndicator isSidebar={isSidebar} />}
@@ -589,14 +629,15 @@ interface MessageBubbleProps {
   isSidebar?: boolean;
   currentMode: PlaceholderViewMode;
   onAddCardToPanel: (
-    cardId: string, 
-    cardType: RenderCardType, 
+    cardId: string,
+    cardType: RenderCardType,
     panelTab: PanelTab,
     payload: Record<string, unknown>
   ) => void;
+  setRef: (messageId: string, element: HTMLDivElement | null) => void;
 }
 
-function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPanel }: MessageBubbleProps) {
+function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPanel, setRef }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const { theme } = useTheme();
   
@@ -609,7 +650,10 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
   const hasInlineCards = messageParts?.some(part => part.type === 'card') ?? false;
 
   return (
-    <div className="animate-slide-up opacity-0">
+    <div
+      ref={(el) => setRef(message.id, el)}
+      className="animate-slide-up opacity-0"
+    >
       <div className={`flex ${isSidebar ? 'gap-2' : 'gap-4'} ${isUser ? 'flex-row-reverse' : ''}`}>
         {isUser ? (
           <div
