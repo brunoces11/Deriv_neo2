@@ -722,9 +722,11 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                           components={{
                             p: ({ children, node }) => {
                               const firstChild = node?.children?.[0];
-                              const hasStrongFirst = firstChild?.tagName === 'strong' || firstChild?.type === 'strong';
+                              const isMenuItem = (firstChild?.tagName === 'strong') &&
+                                firstChild?.children?.[0]?.value &&
+                                /^[\p{Emoji}]/u.test(firstChild.children[0].value);
                               return (
-                                <p className={`last:mb-0 whitespace-pre-wrap leading-[1.77] ${hasStrongFirst ? 'mb-1' : 'mb-2'}`}>
+                                <p className={`last:mb-0 whitespace-pre-wrap leading-[1.77] ${isMenuItem ? 'mb-1' : 'mb-2'}`}>
                                   {processChildrenWithTags(children, theme)}
                                 </p>
                               );
@@ -802,9 +804,11 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                     // Parágrafos
                     p: ({ children, node }) => {
                       const firstChild = node?.children?.[0];
-                      const hasStrongFirst = firstChild?.tagName === 'strong' || firstChild?.type === 'strong';
+                      const isMenuItem = (firstChild?.tagName === 'strong') &&
+                        firstChild?.children?.[0]?.value &&
+                        /^[\p{Emoji}]/u.test(firstChild.children[0].value);
                       return (
-                        <p className={`last:mb-0 whitespace-pre-wrap leading-[1.77] ${hasStrongFirst ? 'mb-1' : 'mb-2'}`}>
+                        <p className={`last:mb-0 whitespace-pre-wrap leading-[1.77] ${isMenuItem ? 'mb-1' : 'mb-2'}`}>
                           {processChildrenWithTags(children, theme)}
                         </p>
                       );
