@@ -720,9 +720,9 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                           key={`text-${index}`}
                           remarkPlugins={[remarkGfm, remarkBreaks]}
                           components={{
-                            p: ({ children }) => {
-                              const hasStrongFirst = Array.isArray(children) &&
-                                children.some(child => typeof child === 'object' && child && 'type' in child && child.type === 'strong');
+                            p: ({ children, node }) => {
+                              const firstChild = node?.children?.[0];
+                              const hasStrongFirst = firstChild?.tagName === 'strong' || firstChild?.type === 'strong';
                               return (
                                 <p className={`last:mb-0 whitespace-pre-wrap leading-[1.77] ${hasStrongFirst ? 'mb-1' : 'mb-2'}`}>
                                   {processChildrenWithTags(children, theme)}
@@ -800,9 +800,9 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                   remarkPlugins={[remarkGfm, remarkBreaks]}
                   components={{
                     // Parágrafos
-                    p: ({ children }) => {
-                      const hasStrongFirst = Array.isArray(children) &&
-                        children.some(child => typeof child === 'object' && child && 'type' in child && child.type === 'strong');
+                    p: ({ children, node }) => {
+                      const firstChild = node?.children?.[0];
+                      const hasStrongFirst = firstChild?.tagName === 'strong' || firstChild?.type === 'strong';
                       return (
                         <p className={`last:mb-0 whitespace-pre-wrap leading-[1.77] ${hasStrongFirst ? 'mb-1' : 'mb-2'}`}>
                           {processChildrenWithTags(children, theme)}
