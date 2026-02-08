@@ -465,8 +465,8 @@ export function CardsSidebar({
               cardsForCardsPanel.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                   <LayoutGrid className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
-                  <p className={`text-sm text-center leading-relaxed max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
-                    Cards são módulos visuais interativos que organizam informações solicitadas pelo usuário.
+                  <p className={`text-xs text-center leading-relaxed max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                    Cards are interactive visual modules that organize information requested by the user.
                   </p>
                 </div>
               ) : (
@@ -482,17 +482,17 @@ export function CardsSidebar({
                 <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                   <Zap className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
                   <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
-                    Actions são automações inteligentes que executam tarefas ou trades automaticamente com base em regras do usuário.
+                    Actions are smart automations that execute tasks or trades automatically based on user-defined rules.
                   </p>
-                  <button 
+                  <button
                     onClick={() => handleIcebreaker('I want to create an Action')}
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
-                      theme === 'dark' 
-                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                      theme === 'dark'
+                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
                     }`}
                   >
-                    Criar Action
+                    Create Action
                   </button>
                 </div>
               ) : (
@@ -508,17 +508,17 @@ export function CardsSidebar({
                 <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                   <BotMessageSquare className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
                   <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
-                    Bots são agentes de trading autônomos que executam estratégias de investimento definidas pelo usuário.
+                    Bots are autonomous trading agents that execute investment strategies defined by the user.
                   </p>
-                  <button 
+                  <button
                     onClick={() => handleIcebreaker('I want to create a trading Bot')}
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
-                      theme === 'dark' 
-                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                      theme === 'dark'
+                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
                     }`}
                   >
-                    Criar Bot
+                    Create Bot
                   </button>
                 </div>
               ) : (
@@ -596,8 +596,8 @@ export function CardsSidebar({
               {cardsForCardsPanel.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                   <LayoutGrid className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
-                  <p className={`text-sm text-center leading-relaxed max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
-                    Cards são módulos visuais interativos que organizam informações solicitadas pelo usuário.
+                  <p className={`text-xs text-center leading-relaxed max-w-[280px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-400'}`}>
+                    Cards are interactive visual modules that organize information requested by the user.
                   </p>
                 </div>
               ) : (
@@ -647,17 +647,17 @@ export function CardsSidebar({
                 <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                   <Zap className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
                   <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
-                    Actions são automações inteligentes que executam tarefas ou trades automaticamente com base em regras do usuário.
+                    Actions are smart automations that execute tasks or trades automatically based on user-defined rules.
                   </p>
-                  <button 
+                  <button
                     onClick={() => handleIcebreaker('I want to create an Action')}
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
-                      theme === 'dark' 
-                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                      theme === 'dark'
+                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
                     }`}
                   >
-                    Criar Action
+                    Create Action
                   </button>
                 </div>
               ) : (
@@ -707,17 +707,17 @@ export function CardsSidebar({
                 <div className="flex flex-col items-center justify-center h-full py-8 px-4">
                   <BotMessageSquare className={`w-12 h-12 mb-4 ${theme === 'dark' ? 'text-zinc-700' : 'text-gray-300'}`} strokeWidth={1.5} />
                   <p className={`text-xs text-center leading-relaxed mb-4 max-w-[280px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-300'}`}>
-                    Bots são agentes de trading autônomos que executam estratégias de investimento definidas pelo usuário.
+                    Bots are autonomous trading agents that execute investment strategies defined by the user.
                   </p>
-                  <button 
+                  <button
                     onClick={() => handleIcebreaker('I want to create a trading Bot')}
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-medium transition-colors ${
-                      theme === 'dark' 
-                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800' 
+                      theme === 'dark'
+                        ? 'bg-zinc-800/50 hover:bg-zinc-800 text-zinc-500 border border-zinc-800'
                         : 'bg-gray-100 hover:bg-gray-200 text-gray-400 border border-gray-200'
                     }`}
                   >
-                    Criar Bot
+                    Create Bot
                   </button>
                 </div>
               ) : (
