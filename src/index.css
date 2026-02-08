@@ -183,3 +183,8 @@
 * {
   -webkit-tap-highlight-color: transparent;
 }
+
+/* Quick options menu - compact spacing */
+.prose p:has(> strong:first-child) {
+  margin-bottom: 0.25rem !important;
+}

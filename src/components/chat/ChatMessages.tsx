@@ -720,7 +720,15 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                           key={`text-${index}`}
                           remarkPlugins={[remarkGfm, remarkBreaks]}
                           components={{
-                            p: ({ children }) => <p className="mb-2 last:mb-0 whitespace-pre-wrap leading-[1.77]">{processChildrenWithTags(children, theme)}</p>,
+                            p: ({ children }) => {
+                              const hasStrongFirst = Array.isArray(children) &&
+                                children.some(child => typeof child === 'object' && child && 'type' in child && child.type === 'strong');
+                              return (
+                                <p className={`last:mb-0 whitespace-pre-wrap leading-[1.77] ${hasStrongFirst ? 'mb-1' : 'mb-2'}`}>
+                                  {processChildrenWithTags(children, theme)}
+                                </p>
+                              );
+                            },
                             br: () => <br />,
                             ul: ({ children }) => <ul className="list-disc pl-4 mb-2 space-y-1">{children}</ul>,
                             ol: ({ children }) => <ol className="list-decimal pl-4 mb-2 space-y-1">{children}</ol>,
@@ -792,7 +800,15 @@ function MessageBubble({ message, isSidebar = false, currentMode, onAddCardToPan
                   remarkPlugins={[remarkGfm, remarkBreaks]}
                   components={{
                     // Parágrafos
-                    p: ({ children }) => <p className="mb-2 last:mb-0 whitespace-pre-wrap leading-[1.77]">{processChildrenWithTags(children, theme)}</p>,
+                    p: ({ children }) => {
+                      const hasStrongFirst = Array.isArray(children) &&
+                        children.some(child => typeof child === 'object' && child && 'type' in child && child.type === 'strong');
+                      return (
+                        <p className={`last:mb-0 whitespace-pre-wrap leading-[1.77] ${hasStrongFirst ? 'mb-1' : 'mb-2'}`}>
+                          {processChildrenWithTags(children, theme)}
+                        </p>
+                      );
+                    },
                     
                     // Quebras de linha
                     br: () => <br />,
