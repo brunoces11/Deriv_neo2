@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Activity, Target, Shield, Zap, Award, BarChart3, PieChart, LineChart } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Activity, Target, Shield, Award, BarChart3, PieChart, LineChart } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { CardMenuActions } from './CardMenuActions';
 import { useTheme } from '../../store/ThemeContext';
@@ -43,7 +43,11 @@ const mockData: PerformanceMetrics = {
   avgRiskPerTrade: 2.3,
   tradeCount: 87,
   recommendation: 'maintain',
-  capitalCurve: [10000, 10500, 11200, 10800, 11500, 12100, 11900, 12450],
+  capitalCurve: [
+    10000, 10100, 10300, 10250, 10400, 10600, 10550, 10700, 10850, 10800,
+    10950, 11100, 11050, 11200, 11350, 11300, 11450, 11600, 11550, 11700,
+    11850, 11800, 11950, 12100, 12050, 12200, 12150, 12300, 12250, 12450
+  ],
   productPerformance: [
     { name: 'Binaries', profit: 45, risk: 25, consistency: 85 },
     { name: 'Digitals', profit: 32, risk: 18, consistency: 78 },
@@ -79,60 +83,43 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
   if (!isExpanded) {
     return (
       <CardWrapper card={card} accentColor="blue" hasOpenDropdown={isMenuDropdownOpen}>
-        <div className="space-y-4">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${theme === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200/70'}`}>
-                <BarChart3 className={`w-5 h-5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
-              </div>
-              <div>
-                <span className="text-xs font-medium text-blue-500 uppercase tracking-wider block mb-1">
-                  Portfolio Performance
-                </span>
-                <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  ${data.totalPnL.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </h3>
-              </div>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3 flex-1">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${theme === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200/70'}`}>
+              <BarChart3 className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             </div>
-
-            <div className="flex items-center gap-2">
-              <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg ${isPositiveGrowth ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
-                {isPositiveGrowth ? (
-                  <TrendingUp className="w-4 h-4 text-green-500" />
-                ) : (
-                  <TrendingDown className="w-4 h-4 text-red-500" />
-                )}
-                <span className={`text-sm font-semibold ${isPositiveGrowth ? 'text-green-500' : 'text-red-500'}`}>
-                  {isPositiveGrowth ? '+' : ''}{data.capitalGrowth}%
-                </span>
-              </div>
-              <CardMenuActions
-                card={card}
-                isExpanded={isExpanded}
-                onToggleExpand={() => setIsExpanded(!isExpanded)}
-                onDropdownChange={setIsMenuDropdownOpen}
-              />
+            <div className="flex-1">
+              <h3 className={`text-xs font-medium uppercase tracking-wide leading-tight ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+                Portfolio<br />Performance
+              </h3>
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'}`}>
-              <div className={`text-xs mb-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Win Rate</div>
-              <div className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.winRate}%</div>
+          <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg ${isPositiveGrowth ? 'bg-green-500/10' : 'bg-red-500/10'}`}>
+              {isPositiveGrowth ? (
+                <TrendingUp className="w-3.5 h-3.5 text-green-500" />
+              ) : (
+                <TrendingDown className="w-3.5 h-3.5 text-red-500" />
+              )}
+              <span className={`text-sm font-semibold ${isPositiveGrowth ? 'text-green-500' : 'text-red-500'}`}>
+                {isPositiveGrowth ? '+' : ''}{data.capitalGrowth}%
+              </span>
             </div>
-            <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'}`}>
-              <div className={`text-xs mb-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Trades</div>
-              <div className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.tradeCount}</div>
-            </div>
-            <div className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'}`}>
-              <div className={`text-xs mb-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Drawdown</div>
-              <div className="text-lg font-bold text-red-500">{data.currentDrawdown}%</div>
-            </div>
-          </div>
 
-          <div className={`flex items-center gap-2 p-3 rounded-lg ${recommendation.bg}`}>
-            <RecommendationIcon className={`w-4 h-4 ${recommendation.color}`} />
-            <span className={`text-sm font-medium ${recommendation.color}`}>{recommendation.text}</span>
+            <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-100'}`}>
+              <Target className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
+              <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                {data.winRate}%
+              </span>
+            </div>
+
+            <CardMenuActions
+              card={card}
+              isExpanded={isExpanded}
+              onToggleExpand={() => setIsExpanded(!isExpanded)}
+              onDropdownChange={setIsMenuDropdownOpen}
+            />
           </div>
         </div>
       </CardWrapper>
@@ -267,7 +254,7 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
             <LineChart className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             <h4 className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Capital Curve</h4>
           </div>
-          <div className="h-32 flex items-end gap-1">
+          <div className="h-40 flex items-end gap-0.5">
             {data.capitalCurve.map((value, index) => {
               const maxValue = Math.max(...data.capitalCurve);
               const minValue = Math.min(...data.capitalCurve);
@@ -277,55 +264,97 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
               return (
                 <div
                   key={index}
-                  className={`flex-1 rounded-t transition-all ${isProfit ? 'bg-green-500/70' : 'bg-red-500/70'}`}
-                  style={{ height: `${height}%` }}
+                  className={`flex-1 rounded-t transition-all ${isProfit ? 'bg-green-500/80' : 'bg-red-500/80'}`}
+                  style={{ height: `${Math.max(height, 2)}%`, minHeight: '2px' }}
                   title={`$${value.toLocaleString()}`}
                 />
               );
             })}
           </div>
-          <div className="flex items-center justify-between text-xs">
-            <span className={theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}>Start: ${data.capitalCurve[0].toLocaleString()}</span>
-            <span className={theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}>Current: ${data.capitalCurve[data.capitalCurve.length - 1].toLocaleString()}</span>
+          <div className="flex items-center justify-between text-xs pt-2 border-t" style={{ borderColor: theme === 'dark' ? 'rgba(63, 63, 70, 0.5)' : 'rgba(229, 231, 235, 0.8)' }}>
+            <div className="flex flex-col">
+              <span className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Start</span>
+              <span className={theme === 'dark' ? 'text-zinc-500' : 'text-gray-600'}>${data.capitalCurve[0].toLocaleString()}</span>
+            </div>
+            <div className="flex flex-col text-center">
+              <span className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Period</span>
+              <span className={theme === 'dark' ? 'text-zinc-500' : 'text-gray-600'}>30 days</span>
+            </div>
+            <div className="flex flex-col text-right">
+              <span className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Current</span>
+              <span className={theme === 'dark' ? 'text-zinc-500' : 'text-gray-600'}>${data.capitalCurve[data.capitalCurve.length - 1].toLocaleString()}</span>
+            </div>
           </div>
         </div>
 
         <div className={`p-4 rounded-xl ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'} space-y-3`}>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-1">
             <PieChart className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             <h4 className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Performance by Product</h4>
           </div>
-          <div className="space-y-2">
-            {data.productPerformance.map((product, index) => (
-              <div key={index} className={`p-3 rounded-lg ${theme === 'dark' ? 'bg-zinc-900/50' : 'bg-white'}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{product.name}</span>
-                  <span className={`text-sm font-bold ${product.profit > 30 ? 'text-green-500' : product.profit > 20 ? 'text-blue-500' : 'text-amber-500'}`}>
-                    +{product.profit}%
-                  </span>
+
+          <div className="grid grid-cols-2 gap-3">
+            {data.productPerformance.map((product, index) => {
+              const profitColor = product.profit > 30 ? 'text-green-500' : product.profit > 20 ? 'text-blue-500' : 'text-amber-500';
+              const profitBg = product.profit > 30 ? 'bg-green-500' : product.profit > 20 ? 'bg-blue-500' : 'bg-amber-500';
+              const profitBgLight = product.profit > 30 ? 'bg-green-500/10' : product.profit > 20 ? 'bg-blue-500/10' : 'bg-amber-500/10';
+
+              return (
+                <div
+                  key={index}
+                  className={`relative overflow-hidden rounded-xl border ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-gray-200'}`}
+                >
+                  <div className="p-3 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                        {product.name}
+                      </span>
+                      <div className={`px-2 py-0.5 rounded-full ${profitBgLight}`}>
+                        <span className={`text-xs font-bold ${profitColor}`}>
+                          +{product.profit}%
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-[10px]">
+                        <span className={theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}>Profit Impact</span>
+                        <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{product.profit}%</span>
+                      </div>
+                      <div className={`h-1.5 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`}>
+                        <div className={`h-full ${profitBg} rounded-full transition-all`} style={{ width: `${product.profit}%` }} />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 pt-1">
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className={theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}>Risk</span>
+                          <span className={`font-semibold ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>{product.risk}%</span>
+                        </div>
+                        <div className={`h-1 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`}>
+                          <div className="h-full bg-red-500/70 rounded-full" style={{ width: `${product.risk}%` }} />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[10px]">
+                          <span className={theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}>Stability</span>
+                          <span className={`font-semibold ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>{product.consistency}%</span>
+                        </div>
+                        <div className={`h-1 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`}>
+                          <div className="h-full bg-blue-500/70 rounded-full" style={{ width: `${product.consistency}%` }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`absolute inset-0 pointer-events-none opacity-5 ${profitBg}`} style={{
+                    background: `linear-gradient(135deg, ${product.profit > 30 ? 'rgba(34, 197, 94, 0.1)' : product.profit > 20 ? 'rgba(59, 130, 246, 0.1)' : 'rgba(251, 146, 60, 0.1)'} 0%, transparent 100%)`
+                  }} />
                 </div>
-                <div className="grid grid-cols-3 gap-2 text-xs">
-                  <div>
-                    <div className={theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}>Profit</div>
-                    <div className={`h-1 rounded-full mt-1 ${theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'}`}>
-                      <div className="h-full bg-green-500 rounded-full" style={{ width: `${product.profit}%` }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className={theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}>Risk</div>
-                    <div className={`h-1 rounded-full mt-1 ${theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'}`}>
-                      <div className="h-full bg-red-500 rounded-full" style={{ width: `${product.risk}%` }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className={theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}>Consistency</div>
-                    <div className={`h-1 rounded-full mt-1 ${theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'}`}>
-                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${product.consistency}%` }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
