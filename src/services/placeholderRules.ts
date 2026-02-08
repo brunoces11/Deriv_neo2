@@ -14,10 +14,11 @@ export type PanelTab = 'cards' | 'actions' | 'bots' | 'positions';
 export type VisualState = 'expanded' | 'compacted';
 
 // Card type names used in the rendering system
-export type RenderCardType = 
+export type RenderCardType =
   | 'portfolio-table-complete'
   | 'portfolio-snapshot'
   | 'portfolio-sidebar'
+  | 'portfolio-performance'
   | 'create-trade-card'
   | 'trade-card'
   | 'bot-creator'
@@ -85,6 +86,16 @@ export const PLACEHOLDER_RULES: Record<string, PlaceholderRule> = {
     otherModes: {
       inline: { cardType: 'actions-creator', location: 'inline', visualState: 'expanded' },
       panel: { cardType: 'actions-creator', location: 'panel', panel: 'actions', visualState: 'compacted' }
+    }
+  },
+  '[[PORTFOLIO_PERFORMANCE]]': {
+    chatmode: {
+      inline: { cardType: 'portfolio-performance', location: 'inline', visualState: 'expanded' },
+      panel: { cardType: 'portfolio-performance', location: 'panel', panel: 'cards', visualState: 'compacted' }
+    },
+    otherModes: {
+      inline: { cardType: 'portfolio-performance', location: 'inline', visualState: 'compacted' },
+      panel: { cardType: 'portfolio-performance', location: 'panel', panel: 'cards', visualState: 'compacted' }
     }
   }
 };

@@ -1,9 +1,10 @@
 import { useTheme } from '../store/ThemeContext';
-import { ArrowLeft, Zap, Bot, Wallet, Table, CheckCircle, XCircle, TrendingUp, LineChart, Workflow } from 'lucide-react';
+import { ArrowLeft, Zap, Bot, Wallet, Table, CheckCircle, XCircle, TrendingUp, LineChart, Workflow, BarChart3 } from 'lucide-react';
 import { BotCard } from '../components/cards/BotCard';
 import { PortfolioSnapshotCard } from '../components/cards/PortfolioSnapshotCard';
 import { PortfolioTableCardComplete } from '../components/cards/PortfolioTableCardComplete';
 import { PortfolioSidebarCard } from '../components/cards/PortfolioSidebarCard';
+import { PortfolioPerformance } from '../components/cards/PortfolioPerformance';
 import { CreateTradeCard } from '../components/cards/CreateTradeCard';
 import { TradeCard } from '../components/cards/TradeCard';
 import { ActionsCard } from '../components/cards/ActionsCard';
@@ -167,6 +168,15 @@ const mockActionsCreator: BaseCard = {
   },
 };
 
+const mockPortfolioPerformance: BaseCard = {
+  id: 'demo-portfolio-performance-1',
+  type: 'card_portfolio_performance',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {},
+};
+
 interface CardInfo {
   name: string;
   type: string;
@@ -322,6 +332,25 @@ const cardsInfo: CardInfo[] = [
       'Footer minimalista com 24h change',
     ],
     component: <PortfolioSidebarCard card={mockPortfolioTableCard} />,
+  },
+  {
+    name: 'Portfolio Performance Report',
+    type: 'portfolio-performance',
+    icon: BarChart3,
+    description: 'Relatório profissional de performance com métricas consolidadas, gráficos e recomendação de ação.',
+    hasLogic: true,
+    logicDetails: [
+      'Modo compacted: métricas principais + recomendação',
+      'Modo expanded: relatório completo tipo folha de papel',
+      '7 blocos de análise: Performance, Qualidade, Risco, Eficiência, Por Produto, Sustentabilidade, Ação',
+      'Gráficos: curva de capital, barras de progresso, heatmap de produtos',
+      'Métricas: PnL, crescimento, win rate, expectativa, drawdown, payoff',
+      'Sistema de recomendação: maintain, optimize, reduce-risk, pause, scale',
+      'Mock data realista para demonstração',
+      'Trigger: [[PORTFOLIO_PERFORMANCE]]',
+    ],
+    component: <PortfolioPerformance card={mockPortfolioPerformance} />,
+    expanded: true,
   },
 ];
 

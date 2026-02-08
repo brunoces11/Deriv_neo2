@@ -23,6 +23,7 @@ import {
 import { BotCard } from '../cards/BotCard';
 import { PortfolioSnapshotCard } from '../cards/PortfolioSnapshotCard';
 import { PortfolioTableCardComplete } from '../cards/PortfolioTableCardComplete';
+import { PortfolioPerformance } from '../cards/PortfolioPerformance';
 import { CreateTradeCard } from '../cards/CreateTradeCard';
 import { TradeCard } from '../cards/TradeCard';
 import { ActionsCard } from '../cards/ActionsCard';
@@ -74,6 +75,7 @@ const cardComponents: Record<RenderCardType, React.ComponentType<{ card: BaseCar
   'portfolio-snapshot': PortfolioSnapshotCard,
   'portfolio-sidebar': PortfolioSnapshotCard, // Fallback to snapshot
   'portfolio-table-complete': PortfolioTableCardComplete,
+  'portfolio-performance': PortfolioPerformance,
   'create-trade-card': CreateTradeCard,
   'trade-card': TradeCard,
   'actions-card': ActionsCard,
@@ -260,6 +262,10 @@ function getDefaultPayloadForCard(cardType: RenderCardType, title?: string): Rec
         change24h: '+$1,250.00',
         changePercent: '+2.84%',
         assets: defaultPortfolioAssets,
+      };
+    case 'portfolio-performance':
+      return {
+        ...basePayload,
       };
     default:
       return basePayload;

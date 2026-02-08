@@ -3,6 +3,7 @@ import { BotCard } from './BotCard';
 import { PortfolioSnapshotCard } from './PortfolioSnapshotCard';
 import { PortfolioSidebarCard } from './PortfolioSidebarCard';
 import { PortfolioTableCardComplete } from './PortfolioTableCardComplete';
+import { PortfolioPerformance } from './PortfolioPerformance';
 import { CreateTradeCard } from './CreateTradeCard';
 import { TradeCard } from './TradeCard';
 import { ActionsCard } from './ActionsCard';
@@ -15,6 +16,7 @@ const cardComponents = {
   'portfolio-snapshot': PortfolioSnapshotCard,
   'portfolio-sidebar': PortfolioSidebarCard,
   'portfolio-table-complete': PortfolioTableCardComplete,
+  'portfolio-performance': PortfolioPerformance,
   'create-trade-card': CreateTradeCard,
   'trade-card': TradeCard,
   'actions-card': ActionsCard,
