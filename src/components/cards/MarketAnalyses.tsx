@@ -7,6 +7,61 @@ interface MarketAnalysesProps {
   card: BaseCard;
 }
 
+const CircularGauge = ({ value, theme }: { value: number; theme: string }) => {
+  const size = 160;
+  const strokeWidth = 20;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const progress = (value / 100) * circumference;
+
+  const getColor = (val: number) => {
+    if (val >= 70) return '#10b981';
+    if (val >= 40) return '#f59e0b';
+    return '#ef4444';
+  };
+
+  const color = getColor(value);
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg
+        width={size}
+        height={size}
+        style={{ transform: 'rotate(-90deg)' }}
+      >
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={theme === 'dark' ? '#27272a' : '#e5e7eb'}
+          strokeWidth={strokeWidth}
+          fill="none"
+        />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference - progress}
+          strokeLinecap="round"
+          style={{ transition: 'stroke-dashoffset 1s ease' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className={`text-4xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+          {value}
+        </span>
+        <span className={`text-xs font-medium mt-1 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
+          TEMPERATURE
+        </span>
+      </div>
+    </div>
+  );
+};
+
 export function MarketAnalyses({ card }: MarketAnalysesProps) {
   const { theme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -15,6 +70,7 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
     timestamp: '2026-02-09 14:30:00 UTC',
     scope: 'Global Crypto Markets',
     status: 'trending',
+    marketTemperature: 75,
     regime: {
       current: 'Uptrend',
       volatility: 68,
@@ -210,58 +266,63 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
             ? 'bg-zinc-800/30 border-zinc-800'
             : 'bg-gray-50 border-gray-200'
         }`}>
-          <h4 className={`text-sm font-semibold mb-3 flex items-center gap-2 ${
+          <h4 className={`text-sm font-semibold mb-4 flex items-center gap-2 ${
             theme === 'dark' ? 'text-white' : 'text-gray-900'
           }`}>
             <div className="w-1.5 h-1.5 rounded-full bg-brand-green"></div>
             Market Regime & Condition
           </h4>
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <div className={`text-xs mb-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-                Current Regime
-              </div>
-              <div className="flex items-center gap-1">
-                <TrendingUp className="w-4 h-4 text-green-500" />
-                <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  {mockData.regime.current}
-                </span>
-              </div>
+          <div className="flex items-center gap-6">
+            <div className="flex-shrink-0">
+              <CircularGauge value={mockData.marketTemperature} theme={theme} />
             </div>
-            <div>
-              <div className={`text-xs mb-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-                Volatility
-              </div>
-              <div className="flex items-center gap-2">
-                <div className={`flex-1 h-2 rounded-full overflow-hidden ${
-                  theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
-                }`}>
-                  <div
-                    className="h-full bg-amber-500 rounded-full transition-all"
-                    style={{ width: `${mockData.regime.volatility}%` }}
-                  />
+            <div className="flex-1 space-y-4">
+              <div>
+                <div className={`text-xs mb-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+                  Current Regime
                 </div>
-                <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  {mockData.regime.volatility}
-                </span>
-              </div>
-            </div>
-            <div>
-              <div className={`text-xs mb-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-                Liquidity
-              </div>
-              <div className="flex items-center gap-2">
-                <div className={`flex-1 h-2 rounded-full overflow-hidden ${
-                  theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
-                }`}>
-                  <div
-                    className="h-full bg-cyan-500 rounded-full transition-all"
-                    style={{ width: `${mockData.regime.liquidity}%` }}
-                  />
+                <div className="flex items-center gap-1">
+                  <TrendingUp className="w-4 h-4 text-green-500" />
+                  <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                    {mockData.regime.current}
+                  </span>
                 </div>
-                <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  {mockData.regime.liquidity}
-                </span>
+              </div>
+              <div>
+                <div className={`text-xs mb-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+                  Volatility
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`flex-1 h-2 rounded-full overflow-hidden ${
+                    theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
+                  }`}>
+                    <div
+                      className="h-full bg-amber-500 rounded-full transition-all"
+                      style={{ width: `${mockData.regime.volatility}%` }}
+                    />
+                  </div>
+                  <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                    {mockData.regime.volatility}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div className={`text-xs mb-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+                  Liquidity
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className={`flex-1 h-2 rounded-full overflow-hidden ${
+                    theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
+                  }`}>
+                    <div
+                      className="h-full bg-cyan-500 rounded-full transition-all"
+                      style={{ width: `${mockData.regime.liquidity}%` }}
+                    />
+                  </div>
+                  <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                    {mockData.regime.liquidity}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
