@@ -294,7 +294,9 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
                     theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
                   }`}>
                     <div
-                      className="h-full bg-amber-500 rounded-full transition-all"
+                      className={`h-full rounded-full transition-all ${
+                        theme === 'dark' ? 'bg-zinc-500' : 'bg-gray-400'
+                      }`}
                       style={{ width: `${mockData.regime.volatility}%` }}
                     />
                   </div>
@@ -312,7 +314,9 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
                     theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
                   }`}>
                     <div
-                      className="h-full bg-cyan-500 rounded-full transition-all"
+                      className={`h-full rounded-full transition-all ${
+                        theme === 'dark' ? 'bg-zinc-500' : 'bg-gray-400'
+                      }`}
                       style={{ width: `${mockData.regime.liquidity}%` }}
                     />
                   </div>
@@ -321,68 +325,53 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
                   </span>
                 </div>
               </div>
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+                    Buy vs Sell Pressure
+                  </span>
+                  <span className={`text-xs font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                    {mockData.sentiment.buyPressure}% / {mockData.sentiment.sellPressure}%
+                  </span>
+                </div>
+                <div className={`h-2 rounded-full overflow-hidden flex ${
+                  theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
+                }`}>
+                  <div
+                    className={`rounded-l-full ${theme === 'dark' ? 'bg-zinc-500' : 'bg-gray-400'}`}
+                    style={{ width: `${mockData.sentiment.buyPressure}%` }}
+                  />
+                  <div
+                    className={`rounded-r-full ${theme === 'dark' ? 'bg-zinc-600' : 'bg-gray-500'}`}
+                    style={{ width: `${mockData.sentiment.sellPressure}%` }}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                  <div className={`text-xs mb-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+                    Risk Appetite
+                  </div>
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    mockData.sentiment.riskAppetite === 'high'
+                      ? 'bg-green-500/10 text-green-500'
+                      : 'bg-amber-500/10 text-amber-500'
+                  }`}>
+                    {mockData.sentiment.riskAppetite.toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <div className={`text-xs mb-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+                    Recent Change
+                  </div>
+                  <span className={`text-xs ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                    {mockData.sentiment.recentChange}
+                  </span>
+                </div>
+              </div>
             </div>
             <div className="flex-shrink-0">
               <CircularGauge value={mockData.marketTemperature} theme={theme} />
-            </div>
-          </div>
-        </div>
-
-        <div className={`p-4 rounded-xl border ${
-          theme === 'dark'
-            ? 'bg-zinc-800/30 border-zinc-800'
-            : 'bg-gray-50 border-gray-200'
-        }`}>
-          <h4 className={`text-sm font-semibold mb-3 flex items-center gap-2 ${
-            theme === 'dark' ? 'text-white' : 'text-gray-900'
-          }`}>
-            <div className="w-1.5 h-1.5 rounded-full bg-brand-green"></div>
-            Sentiment & Flow
-          </h4>
-          <div className="space-y-3">
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-                  Buy vs Sell Pressure
-                </span>
-                <span className={`text-xs font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  {mockData.sentiment.buyPressure}% / {mockData.sentiment.sellPressure}%
-                </span>
-              </div>
-              <div className={`h-2 rounded-full overflow-hidden flex ${
-                theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
-              }`}>
-                <div
-                  className="bg-green-500"
-                  style={{ width: `${mockData.sentiment.buyPressure}%` }}
-                />
-                <div
-                  className="bg-red-500"
-                  style={{ width: `${mockData.sentiment.sellPressure}%` }}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <div className={`text-xs mb-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-                  Risk Appetite
-                </div>
-                <span className={`text-xs px-2 py-1 rounded ${
-                  mockData.sentiment.riskAppetite === 'high'
-                    ? 'bg-green-500/10 text-green-500'
-                    : 'bg-amber-500/10 text-amber-500'
-                }`}>
-                  {mockData.sentiment.riskAppetite.toUpperCase()}
-                </span>
-              </div>
-              <div>
-                <div className={`text-xs mb-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-                  Recent Change
-                </div>
-                <span className={`text-xs ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  {mockData.sentiment.recentChange}
-                </span>
-              </div>
             </div>
           </div>
         </div>
