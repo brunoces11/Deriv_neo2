@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Activity, Target, Shield, Award, BarChart3, PieChart, LineChart } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle2, Target, Shield, Award, BarChart3, PieChart, LineChart } from 'lucide-react';
 import { CardWrapper } from './CardWrapper';
 import { CardMenuActions } from './CardMenuActions';
 import { useTheme } from '../../store/ThemeContext';
@@ -51,7 +51,6 @@ const mockData: PerformanceMetrics = {
     { name: 'Binaries', profit: 45, risk: 25, consistency: 85 },
     { name: 'Digitals', profit: 32, risk: 18, consistency: 78 },
     { name: 'CFDs', profit: 18, risk: 42, consistency: 65 },
-    { name: 'Synthetics', profit: 28, risk: 22, consistency: 72 },
   ],
 };
 
@@ -151,46 +150,82 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
           />
         </div>
 
-        <div className={`grid grid-cols-4 gap-3 p-3 rounded-xl ${theme === 'dark' ? 'bg-gradient-to-br from-zinc-800/80 to-zinc-800/40' : 'bg-gradient-to-br from-gray-50 to-white'} border ${theme === 'dark' ? 'border-zinc-700/50' : 'border-gray-200/50'}`}>
-          <div className="space-y-0.5">
-            <div className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Total PnL</div>
-            <div className={`text-xl font-bold ${isPositivePnL ? 'text-green-500' : 'text-red-500'}`}>
-              ${data.totalPnL.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+        <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-gradient-to-br from-zinc-800/80 to-zinc-800/40' : 'bg-gradient-to-br from-gray-50 to-white'} border ${theme === 'dark' ? 'border-zinc-700/50' : 'border-gray-200/50'} space-y-3`}>
+          <div className="grid grid-cols-4 gap-3">
+            <div className="space-y-0.5">
+              <div className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Total PnL</div>
+              <div className={`text-xl font-bold ${isPositivePnL ? 'text-green-500' : 'text-red-500'}`}>
+                ${data.totalPnL.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </div>
+              <div className="flex items-center gap-1">
+                {isPositivePnL ? (
+                  <TrendingUp className="w-2.5 h-2.5 text-green-500" />
+                ) : (
+                  <TrendingDown className="w-2.5 h-2.5 text-red-500" />
+                )}
+                <span className={`text-[10px] font-medium ${isPositivePnL ? 'text-green-500' : 'text-red-500'}`}>
+                  {isPositiveGrowth ? '+' : ''}{data.capitalGrowth}%
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              {isPositivePnL ? (
-                <TrendingUp className="w-2.5 h-2.5 text-green-500" />
-              ) : (
-                <TrendingDown className="w-2.5 h-2.5 text-red-500" />
-              )}
-              <span className={`text-[10px] font-medium ${isPositivePnL ? 'text-green-500' : 'text-red-500'}`}>
+
+            <div className="space-y-0.5">
+              <div className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Capital Growth</div>
+              <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 {isPositiveGrowth ? '+' : ''}{data.capitalGrowth}%
-              </span>
+              </div>
+              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Period</div>
+            </div>
+
+            <div className="space-y-0.5">
+              <div className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Avg Return/Trade</div>
+              <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                ${data.avgReturnPerTrade.toFixed(2)}
+              </div>
+              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>{data.tradeCount} trades</div>
+            </div>
+
+            <div className="space-y-0.5">
+              <div className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Expectancy</div>
+              <div className={`text-xl font-bold text-blue-500`}>
+                {data.expectancy.toFixed(2)}R
+              </div>
+              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Math edge</div>
             </div>
           </div>
 
-          <div className="space-y-0.5">
-            <div className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Capital Growth</div>
-            <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {isPositiveGrowth ? '+' : ''}{data.capitalGrowth}%
+          <div className={`grid grid-cols-4 gap-3 pt-3 border-t ${theme === 'dark' ? 'border-zinc-700/50' : 'border-gray-200/50'}`}>
+            <div className="space-y-0.5">
+              <div className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Total Trades</div>
+              <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                {data.tradeCount}
+              </div>
+              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Executed</div>
             </div>
-            <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Period</div>
-          </div>
 
-          <div className="space-y-0.5">
-            <div className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Avg Return/Trade</div>
-            <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              ${data.avgReturnPerTrade.toFixed(2)}
+            <div className="space-y-0.5">
+              <div className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Per Day</div>
+              <div className={`text-xl font-bold text-blue-500`}>
+                {(data.tradeCount / 30).toFixed(1)}
+              </div>
+              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Avg trades</div>
             </div>
-            <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>{data.tradeCount} trades</div>
-          </div>
 
-          <div className="space-y-0.5">
-            <div className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Expectancy</div>
-            <div className={`text-xl font-bold text-blue-500`}>
-              {data.expectancy.toFixed(2)}R
+            <div className="space-y-0.5">
+              <div className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Efficiency</div>
+              <div className={`text-xl font-bold text-green-500`}>
+                92%
+              </div>
+              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Operational</div>
             </div>
-            <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Math edge</div>
+
+            <div className="space-y-0.5">
+              <div className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Activity</div>
+              <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                High
+              </div>
+              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Level</div>
+            </div>
           </div>
         </div>
 
@@ -206,7 +241,7 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
                 <span className={`text-xs font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.winRate}%</span>
               </div>
               <div className={`h-1 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'}`}>
-                <div className="h-full bg-green-500 rounded-full" style={{ width: `${data.winRate}%` }} />
+                <div className={`h-full rounded-full ${theme === 'dark' ? 'bg-zinc-500' : 'bg-gray-400'}`} style={{ width: `${data.winRate}%` }} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-1">
@@ -216,7 +251,7 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
               </div>
               <div>
                 <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Expectancy</div>
-                <div className="text-base font-bold text-green-500">{data.expectancy}R</div>
+                <div className={`text-base font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.expectancy}R</div>
               </div>
             </div>
           </div>
@@ -229,16 +264,16 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <span className={`text-[10px] ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>Current Drawdown</span>
-                <span className="text-xs font-bold text-red-500">{data.currentDrawdown}%</span>
+                <span className={`text-xs font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.currentDrawdown}%</span>
               </div>
               <div className={`h-1 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'}`}>
-                <div className="h-full bg-red-500 rounded-full" style={{ width: `${(data.currentDrawdown / data.maxDrawdown) * 100}%` }} />
+                <div className={`h-full rounded-full ${theme === 'dark' ? 'bg-zinc-500' : 'bg-gray-400'}`} style={{ width: `${(data.currentDrawdown / data.maxDrawdown) * 100}%` }} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-1">
               <div>
                 <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Max DD</div>
-                <div className="text-base font-bold text-red-500">{data.maxDrawdown}%</div>
+                <div className={`text-base font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.maxDrawdown}%</div>
               </div>
               <div>
                 <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Risk/Trade</div>
@@ -297,7 +332,7 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
               <h4 className={`text-xs font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Performance by Product</h4>
             </div>
 
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {data.productPerformance.map((product, index) => {
                 const profitColor = product.profit > 30 ? 'text-green-500' : product.profit > 20 ? 'text-blue-500' : 'text-amber-500';
                 const profitBg = product.profit > 30 ? 'bg-green-500' : product.profit > 20 ? 'bg-blue-500' : 'bg-amber-500';
@@ -377,44 +412,21 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'}`}>
-            <div className="flex items-center gap-1.5 mb-2">
-              <Activity className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
-              <h4 className={`text-xs font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Operational Efficiency</h4>
-            </div>
-            <div className="grid grid-cols-3 gap-2">
-              <div className="text-center">
-                <div className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.tradeCount}</div>
-                <div className={`text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Trades</div>
-              </div>
-              <div className="text-center">
-                <div className={`text-lg font-bold text-blue-500`}>{(data.tradeCount / 30).toFixed(1)}</div>
-                <div className={`text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Per Day</div>
-              </div>
-              <div className="text-center">
-                <div className={`text-lg font-bold text-green-500`}>92%</div>
-                <div className={`text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Efficiency</div>
-              </div>
+        <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'} border ${theme === 'dark' ? 'border-zinc-700/50' : 'border-gray-200/50'}`}>
+          <div className="flex items-center gap-2">
+            <RecommendationIcon className={`w-4 h-4 ${recommendation.color}`} />
+            <div className="flex-1">
+              <h4 className={`text-[9px] font-medium ${recommendation.color}`}>Recommended</h4>
+              <p className={`text-xs font-bold ${recommendation.color}`}>{recommendation.text}</p>
             </div>
           </div>
-
-          <div className={`p-3 rounded-xl ${recommendation.bg} border ${theme === 'dark' ? 'border-zinc-700/50' : 'border-gray-200/50'}`}>
-            <div className="flex items-center gap-2">
-              <RecommendationIcon className={`w-4 h-4 ${recommendation.color}`} />
-              <div className="flex-1">
-                <h4 className={`text-[9px] font-medium ${recommendation.color}`}>Recommended</h4>
-                <p className={`text-xs font-bold ${recommendation.color}`}>{recommendation.text}</p>
-              </div>
-            </div>
-            <p className={`text-[10px] mt-1.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>
-              {data.recommendation === 'maintain' && 'Strategy performing optimally. Continue and monitor.'}
-              {data.recommendation === 'optimize' && 'Review entry/exit parameters for efficiency.'}
-              {data.recommendation === 'reduce-risk' && 'Reduce position sizes or leverage.'}
-              {data.recommendation === 'pause' && 'Performance degraded. Review before continuing.'}
-              {data.recommendation === 'scale' && 'Excellent performance. Consider scaling capital.'}
-            </p>
-          </div>
+          <p className={`text-[10px] mt-1.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>
+            {data.recommendation === 'maintain' && 'Strategy performing optimally. Continue and monitor.'}
+            {data.recommendation === 'optimize' && 'Review entry/exit parameters for efficiency.'}
+            {data.recommendation === 'reduce-risk' && 'Reduce position sizes or leverage.'}
+            {data.recommendation === 'pause' && 'Performance degraded. Review before continuing.'}
+            {data.recommendation === 'scale' && 'Excellent performance. Consider scaling capital.'}
+          </p>
         </div>
       </div>
     </CardWrapper>
