@@ -346,9 +346,15 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
                   return (
                     <div
                       key={index}
-                      className={`relative overflow-hidden rounded-lg border ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-gray-200'}`}
+                      className={`relative overflow-hidden rounded-lg border ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-gray-200'} flex flex-col`}
                     >
-                      <div className="p-2 h-full flex items-end justify-center gap-1.5 pb-1">
+                      <div className="text-center pt-1.5 pb-1">
+                        <span className={`text-[9px] font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                          {product.name} <span className={profitColor}>+{product.profit}%</span>
+                        </span>
+                      </div>
+
+                      <div className="px-2 pb-1 flex-1 flex items-end justify-center gap-1.5">
                         <div className="flex flex-col items-center gap-0.5">
                           <div className={`relative rounded-t overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`} style={{ height: '60px', width: '12px' }}>
                             <div
@@ -386,30 +392,18 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
                 })}
               </div>
 
-              <div className={`h-12 flex flex-col gap-1 pt-2 text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-                <div className="flex items-center justify-center gap-2">
-                  {data.productPerformance.map((product, index) => {
-                    const profitColor = product.profit > 30 ? 'text-green-500' : product.profit > 20 ? 'text-blue-500' : 'text-amber-500';
-                    return (
-                      <span key={index} className={`text-[9px] font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                        {product.name} <span className={profitColor}>+{product.profit}%</span>
-                      </span>
-                    );
-                  })}
+              <div className={`h-12 flex items-center justify-center gap-2 pt-2 text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+                <div className="flex items-center gap-0.5">
+                  <div className="w-2 h-2 rounded-sm bg-green-500/70" />
+                  <span>P</span>
                 </div>
-                <div className="flex items-center justify-center gap-2">
-                  <div className="flex items-center gap-0.5">
-                    <div className="w-2 h-2 rounded-sm bg-green-500/70" />
-                    <span>P</span>
-                  </div>
-                  <div className="flex items-center gap-0.5">
-                    <div className="w-2 h-2 rounded-sm bg-red-500/70" />
-                    <span>R</span>
-                  </div>
-                  <div className="flex items-center gap-0.5">
-                    <div className="w-2 h-2 rounded-sm bg-blue-500/70" />
-                    <span>S</span>
-                  </div>
+                <div className="flex items-center gap-0.5">
+                  <div className="w-2 h-2 rounded-sm bg-red-500/70" />
+                  <span>R</span>
+                </div>
+                <div className="flex items-center gap-0.5">
+                  <div className="w-2 h-2 rounded-sm bg-blue-500/70" />
+                  <span>S</span>
                 </div>
               </div>
             </div>
