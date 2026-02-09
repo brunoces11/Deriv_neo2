@@ -225,9 +225,9 @@ export interface TradeSpotCardPayload {
   title?: string; // Dynamic title from LLM
   pair: string; // e.g., 'BTC/USD', 'XAU/USD'
   amount: number; // Amount in USD
-  priceMode: 'market' | 'manual';
+  priceMode: 'market' | 'target';
   price: number; // Current market price
-  manualPrice?: number; // Manual price if priceMode is 'manual'
+  targetPrice?: number; // Target price if priceMode is 'target'
   executionState: 'open' | 'bought' | 'sold';
   executionPrice?: number;
   executionTime?: string; // ISO string

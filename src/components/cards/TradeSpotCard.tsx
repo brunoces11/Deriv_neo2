@@ -11,14 +11,6 @@ interface TradeSpotCardProps {
   defaultExpanded?: boolean;
 }
 
-const PAIRS = [
-  { symbol: 'BTC/USD', name: 'Bitcoin' },
-  { symbol: 'ETH/USD', name: 'Ethereum' },
-  { symbol: 'XAU/USD', name: 'Gold' },
-  { symbol: 'EUR/USD', name: 'Euro' },
-  { symbol: 'GBP/USD', name: 'Pound' },
-];
-
 export function TradeSpotCard({ card, defaultExpanded = true }: TradeSpotCardProps) {
   const { theme } = useTheme();
   const { viewMode } = useViewMode();
@@ -35,11 +27,12 @@ export function TradeSpotCard({ card, defaultExpanded = true }: TradeSpotCardPro
   const amount = payload?.amount || 100;
   const priceMode = payload?.priceMode || 'market';
   const price = payload?.price || 42350.75;
+  const targetPrice = payload?.targetPrice || price;
   const executionPrice = payload?.executionPrice;
   const executionTime = payload?.executionTime;
 
   const handleBuy = () => {
-    const executionPrice = priceMode === 'market' ? price : payload?.manualPrice || price;
+    const executionPrice = priceMode === 'market' ? price : targetPrice;
     updateCard(card.id, {
       ...payload,
       executionState: 'bought',
@@ -49,7 +42,7 @@ export function TradeSpotCard({ card, defaultExpanded = true }: TradeSpotCardPro
   };
 
   const handleSell = () => {
-    const executionPrice = priceMode === 'market' ? price : payload?.manualPrice || price;
+    const executionPrice = priceMode === 'market' ? price : targetPrice;
     updateCard(card.id, {
       ...payload,
       executionState: 'sold',
@@ -67,18 +60,13 @@ export function TradeSpotCard({ card, defaultExpanded = true }: TradeSpotCardPro
     updateCard(card.id, { ...payload, amount: numValue });
   };
 
-  const handlePriceModeToggle = () => {
-    const newMode = priceMode === 'market' ? 'manual' : 'market';
-    updateCard(card.id, { ...payload, priceMode: newMode });
+  const handlePriceModeChange = (mode: 'market' | 'target') => {
+    updateCard(card.id, { ...payload, priceMode: mode });
   };
 
-  const handleManualPriceChange = (value: string) => {
+  const handleTargetPriceChange = (value: string) => {
     const numValue = parseFloat(value) || 0;
-    updateCard(card.id, { ...payload, manualPrice: numValue });
-  };
-
-  const handlePairChange = (newPair: string) => {
-    updateCard(card.id, { ...payload, pair: newPair });
+    updateCard(card.id, { ...payload, targetPrice: numValue });
   };
 
   const formatTime = (isoTime: string) => {
@@ -109,7 +97,7 @@ export function TradeSpotCard({ card, defaultExpanded = true }: TradeSpotCardPro
             ) : executionState === 'sold' ? (
               <TrendingDown className="w-4 h-4 text-red-500 flex-shrink-0" />
             ) : (
-              <DollarSign className="w-4 h-4 text-blue-500 flex-shrink-0" />
+              <DollarSign className={`w-4 h-4 flex-shrink-0 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`} />
             )}
             <span className={`text-sm font-medium truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               {pair}
@@ -145,106 +133,111 @@ export function TradeSpotCard({ card, defaultExpanded = true }: TradeSpotCardPro
         showChevron={viewMode === 'chat'}
         showMenu={false}
       >
-        <div className="space-y-4 py-2">
-          {/* Pair selector */}
-          <div>
-            <label className={`text-xs mb-2 block ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>
-              Trading Pair
-            </label>
-            <div className="flex gap-2 flex-wrap">
-              {PAIRS.map((p) => (
-                <button
-                  key={p.symbol}
-                  onClick={() => handlePairChange(p.symbol)}
-                  className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
-                    pair === p.symbol
-                      ? theme === 'dark'
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-blue-600 text-white'
-                      : theme === 'dark'
-                        ? 'bg-zinc-700 text-zinc-300 hover:bg-zinc-600'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                  }`}
-                >
-                  {p.symbol}
-                </button>
-              ))}
-            </div>
+        <div className="space-y-2.5 py-1">
+          {/* Pair display */}
+          <div className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+            {pair}
+          </div>
+
+          {/* Price tabs */}
+          <div className="flex gap-1">
+            <button
+              onClick={() => handlePriceModeChange('market')}
+              className={`flex-1 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                priceMode === 'market'
+                  ? theme === 'dark'
+                    ? 'bg-zinc-700 text-white'
+                    : 'bg-gray-200 text-gray-900'
+                  : theme === 'dark'
+                    ? 'bg-zinc-800/50 text-zinc-500 hover:text-zinc-400'
+                    : 'bg-gray-100 text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Market Price
+            </button>
+            <button
+              onClick={() => handlePriceModeChange('target')}
+              className={`flex-1 px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                priceMode === 'target'
+                  ? theme === 'dark'
+                    ? 'bg-zinc-700 text-white'
+                    : 'bg-gray-200 text-gray-900'
+                  : theme === 'dark'
+                    ? 'bg-zinc-800/50 text-zinc-500 hover:text-zinc-400'
+                    : 'bg-gray-100 text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              Target Price
+            </button>
           </div>
 
           {/* Current price display */}
-          <div className={`p-3 rounded ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-100'}`}>
+          <div className={`p-2 rounded ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-100'}`}>
             <div className="flex items-center justify-between">
               <span className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>
-                Current Price
+                Current
               </span>
-              <span className={`text-lg font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 ${price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
               </span>
             </div>
           </div>
 
-          {/* Price mode toggle */}
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <button
-                onClick={handlePriceModeToggle}
-                className={`text-xs font-medium ${
-                  theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'
-                }`}
-              >
-                {priceMode === 'market' ? '📍 Market Price' : '✏️ Manual Price'}
-              </button>
-            </div>
-            {priceMode === 'manual' && (
+          {/* Amount and Target Price inputs */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className={`text-xs mb-1 block ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>
+                Amount (USD)
+              </label>
               <input
                 type="number"
                 step="0.01"
-                value={payload?.manualPrice || price}
-                onChange={(e) => handleManualPriceChange(e.target.value)}
-                className={`w-full px-3 py-2 rounded text-sm ${
+                value={amount}
+                onChange={(e) => handleAmountChange(e.target.value)}
+                className={`w-full px-2 py-1.5 rounded text-sm ${
                   theme === 'dark'
                     ? 'bg-zinc-700 text-white border border-zinc-600'
                     : 'bg-white text-gray-900 border border-gray-300'
                 }`}
-                placeholder="Enter price"
               />
-            )}
-          </div>
-
-          {/* Amount input */}
-          <div>
-            <label className={`text-xs mb-2 block ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>
-              Amount (USD)
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              value={amount}
-              onChange={(e) => handleAmountChange(e.target.value)}
-              className={`w-full px-3 py-2 rounded text-sm ${
-                theme === 'dark'
-                  ? 'bg-zinc-700 text-white border border-zinc-600'
-                  : 'bg-white text-gray-900 border border-gray-300'
-              }`}
-              placeholder="Enter amount"
-            />
+            </div>
+            <div>
+              <label className={`text-xs mb-1 block ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>
+                Target Price
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={targetPrice}
+                onChange={(e) => handleTargetPriceChange(e.target.value)}
+                disabled={priceMode === 'market'}
+                className={`w-full px-2 py-1.5 rounded text-sm ${
+                  priceMode === 'market'
+                    ? theme === 'dark'
+                      ? 'bg-zinc-800 text-zinc-600 border border-zinc-700 cursor-not-allowed'
+                      : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'
+                    : theme === 'dark'
+                      ? 'bg-zinc-700 text-white border border-zinc-600'
+                      : 'bg-white text-gray-900 border border-gray-300'
+                }`}
+              />
+            </div>
           </div>
 
           {/* Buy/Sell buttons */}
-          <div className="grid grid-cols-2 gap-3 pt-2">
+          <div className="grid grid-cols-2 gap-2 pt-1">
             <button
               onClick={handleBuy}
-              className="flex items-center justify-center gap-2 px-4 py-3 rounded font-medium text-sm transition-colors bg-emerald-500 hover:bg-emerald-600 text-white"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded font-medium text-xs transition-colors bg-emerald-500 hover:bg-emerald-600 text-white"
             >
-              <TrendingUp className="w-4 h-4" />
+              <TrendingUp className="w-3.5 h-3.5" />
               Buy
             </button>
             <button
               onClick={handleSell}
-              className="flex items-center justify-center gap-2 px-4 py-3 rounded font-medium text-sm transition-colors bg-red-500 hover:bg-red-600 text-white"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 rounded font-medium text-xs transition-colors bg-red-500 hover:bg-red-600 text-white"
             >
-              <TrendingDown className="w-4 h-4" />
+              <TrendingDown className="w-3.5 h-3.5" />
               Sell
             </button>
           </div>
