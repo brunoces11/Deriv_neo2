@@ -193,14 +193,14 @@ const cardsInfo: CardInfo[] = [
     name: 'Portfolio Snapshot Card',
     type: 'portfolio-snapshot',
     icon: Wallet,
-    description: 'Visão geral do portfólio com alocação de ativos.',
+    description: 'Portfolio overview with asset allocation visualization.',
     hasLogic: true,
     logicDetails: [
-      'Calcula se variação é positiva/negativa para ícone e cor',
-      'Barra de alocação visual com cores por asset',
-      'Grid de assets com percentuais',
-      'Exibe totalValue, change24h, changePercent',
-      'Cor de destaque: red',
+      'Calculates if change is positive/negative for icon and color',
+      'Visual allocation bar with colors per asset',
+      'Asset grid with percentages',
+      'Displays totalValue, change24h, changePercent',
+      'Highlight color: red',
     ],
     component: <PortfolioSnapshotCard card={mockPortfolioCard} />,
   },
@@ -208,7 +208,7 @@ const cardsInfo: CardInfo[] = [
     name: 'Portfolio Snapshot Table (Complete)',
     type: 'portfolio-table-complete',
     icon: Table,
-    description: 'Versão completa combinando barra de alocação visual + tabela detalhada expandida.',
+    description: 'Complete version combining visual allocation bar + expanded detailed table.',
     hasLogic: true,
     logicDetails: [],
     component: <PortfolioTableCardComplete card={mockPortfolioTableCard} />,
@@ -218,17 +218,17 @@ const cardsInfo: CardInfo[] = [
     name: 'Create Trade Card',
     type: 'create-trade-card',
     icon: LineChart,
-    description: 'Card de criação de trade completo pré-preenchido pela IA. Primeiro estágio: configurar e confirmar trade.',
+    description: 'Complete trade creation card pre-filled by AI. First stage: configure and confirm trade.',
     hasLogic: true,
     logicDetails: [
-      'Header com tipo de trade (Higher/Lower) e link "Learn about"',
-      'Seção Duration: toggle Duration/End time, seletor de unidade, input numérico',
-      'Exibe range válido e data de expiração calculada',
-      'Seção Barrier: input com valor e spot price de referência',
-      'Seção Stake: toggle Stake/Payout, botões +/-, moeda USD',
-      'Botões de ação: Higher (#00d0a0) e Lower (#ff444f)',
-      'Payout e percentual exibidos em cada botão',
-      'Após confirmar, transforma em Trade Card',
+      'Header with trade type (Higher/Lower) and "Learn about" link',
+      'Duration section: Duration/End time toggle, unit selector, numeric input',
+      'Displays valid range and calculated expiry date',
+      'Barrier section: input with value and reference spot price',
+      'Stake section: Stake/Payout toggle, +/- buttons, USD currency',
+      'Action buttons: Higher (#00d0a0) and Lower (#ff444f)',
+      'Payout and percentage displayed on each button',
+      'After confirming, transforms into Trade Card',
     ],
     component: <CreateTradeCard card={mockCreateTradeCard} />,
   },
@@ -236,15 +236,15 @@ const cardsInfo: CardInfo[] = [
     name: 'Trade Card',
     type: 'trade-card',
     icon: TrendingUp,
-    description: 'Card compacto de trade ativo/executado com expand/collapse. Segundo estágio: exibe trade em andamento após confirmação.',
+    description: 'Compact active/executed trade card with expand/collapse. Second stage: displays ongoing trade after confirmation.',
     hasLogic: true,
     logicDetails: [
-      'Modo colapsado: ícone + asset/direção + stake→payout + status + botão expand',
-      'Modo expandido: header completo + grid de detalhes + spots + profit/loss',
-      'Botão de seta no canto direito para expandir/colapsar',
-      'Status: open (cyan), won (verde), lost (vermelho), sold (amber)',
-      'Botão "Sell Early" para trades abertos (modo expandido)',
-      'Derivado do Create Trade Card após confirmação',
+      'Collapsed mode: icon + asset/direction + stake→payout + status + expand button',
+      'Expanded mode: complete header + details grid + spots + profit/loss',
+      'Arrow button in top right corner to expand/collapse',
+      'Status: open (cyan), won (green), lost (red), sold (amber)',
+      '"Sell Early" button for open trades (expanded mode)',
+      'Derived from Create Trade Card after confirmation',
     ],
     component: <TradeCard card={mockTradeCard} />,
   },
@@ -252,14 +252,14 @@ const cardsInfo: CardInfo[] = [
     name: 'Actions Card',
     type: 'actions-card',
     icon: Zap,
-    description: 'Card de ação configurada com 4 botões de gerenciamento (executar, editar, deletar, agendar).',
+    description: 'Configured action card with 4 management buttons (execute, edit, delete, schedule).',
     hasLogic: true,
     logicDetails: [
-      'Layout compacto de 2 linhas: Nome + Status/Last run',
-      'Bolinha de status no ícone (verde=active, cinza=inactive)',
-      '4 botões alinhados à direita: Execute, Edit, Delete, Schedule',
-      'Botões em tom cinza/neutro com hover state',
-      'Click handlers para simulação (console.log)',
+      'Compact 2-line layout: Name + Status/Last run',
+      'Status dot on icon (green=active, gray=inactive)',
+      '4 buttons aligned to the right: Execute, Edit, Delete, Schedule',
+      'Buttons in gray/neutral tone with hover state',
+      'Click handlers for simulation (console.log)',
     ],
     component: <ActionsCard card={mockActionsCard} />,
   },
@@ -267,18 +267,18 @@ const cardsInfo: CardInfo[] = [
     name: 'Actions Card Creator',
     type: 'actions-creator',
     icon: Workflow,
-    description: 'Card visual com diagrama/flowchart mostrando a configuração de uma nova action antes do deploy.',
+    description: 'Visual card with diagram/flowchart showing the configuration of a new action before deployment.',
     hasLogic: true,
     logicDetails: [
-      'Header com ícone de raio e nome da action',
-      'Área de flowchart com boxes conectados por linhas',
-      'Trigger box (amber): tipo e valor do gatilho',
-      'Action box (verde): tipo de ação e ativo',
-      'Schedule box (cyan): frequência e horário',
-      'Condition box (laranja): condição opcional',
-      'Resumo textual do fluxo da action',
-      'Botões: Deploy Action (verde), Edit Config, Cancel',
-      'Grid pattern de fundo para efeito visual',
+      'Header with lightning icon and action name',
+      'Flowchart area with boxes connected by lines',
+      'Trigger box (amber): trigger type and value',
+      'Action box (green): action type and asset',
+      'Schedule box (cyan): frequency and time',
+      'Condition box (orange): optional condition',
+      'Textual summary of action flow',
+      'Buttons: Deploy Action (green), Edit Config, Cancel',
+      'Grid pattern background for visual effect',
     ],
     component: <ActionsCardCreator card={mockActionsCreator} />,
   },
@@ -286,18 +286,18 @@ const cardsInfo: CardInfo[] = [
     name: 'Bot Card Creator',
     type: 'bot-creator',
     icon: Workflow,
-    description: 'Card visual com diagrama/flowchart mostrando a configuração de um novo bot antes do deploy.',
+    description: 'Visual card with diagram/flowchart showing the configuration of a new bot before deployment.',
     hasLogic: true,
     logicDetails: [
-      'Header com ícone de bot e nome da estratégia',
-      'Área de flowchart com boxes conectados por linhas',
-      'Trigger box (cyan): tipo e valor do gatilho',
-      'Action box (verde): tipo de ação e ativo',
-      'Target box (amber): tipo e valor do alvo',
-      'Condition box (laranja): condição opcional',
-      'Resumo textual do fluxo do bot',
-      'Botões: Deploy Bot (verde), Edit Config, Cancel',
-      'Grid pattern de fundo para efeito visual',
+      'Header with bot icon and strategy name',
+      'Flowchart area with boxes connected by lines',
+      'Trigger box (cyan): trigger type and value',
+      'Action box (green): action type and asset',
+      'Target box (amber): target type and value',
+      'Condition box (orange): optional condition',
+      'Textual summary of bot flow',
+      'Buttons: Deploy Bot (green), Edit Config, Cancel',
+      'Grid pattern background for visual effect',
     ],
     component: <BotCardCreator card={mockBotCreator} />,
   },
@@ -305,15 +305,15 @@ const cardsInfo: CardInfo[] = [
     name: 'Bot Card',
     type: 'bot-card',
     icon: Bot,
-    description: 'Card para gerenciar bots ativos com 4 botões de ação (Play/Pause, Edit, Delete, Schedule).',
+    description: 'Card to manage active bots with 4 action buttons (Play/Pause, Edit, Delete, Schedule).',
     hasLogic: true,
     logicDetails: [
-      'Layout compacto de 2 linhas: Nome + Status/Performance',
-      'Bolinha de status no ícone (verde=active, cinza=paused/stopped)',
-      'Performance com ícone de tendência (verde/vermelho)',
-      '4 botões alinhados à direita: Play/Pause, Edit, Delete, Schedule',
-      'Botão Play/Pause alterna baseado no status atual',
-      'Botões em tom cinza/neutro com hover state',
+      'Compact 2-line layout: Name + Status/Performance',
+      'Status dot on icon (green=active, gray=paused/stopped)',
+      'Performance with trend icon (green/red)',
+      '4 buttons aligned to the right: Play/Pause, Edit, Delete, Schedule',
+      'Play/Pause button toggles based on current status',
+      'Buttons in gray/neutral tone with hover state',
     ],
     component: <BotCard card={mockBotCard} />,
   },
@@ -321,15 +321,15 @@ const cardsInfo: CardInfo[] = [
     name: 'Portfolio Sidebar Card',
     type: 'portfolio-sidebar',
     icon: Wallet,
-    description: 'Versão ultra compacta do portfólio otimizada para sidebar com botões mínimos.',
+    description: 'Ultra compact portfolio version optimized for sidebar with minimal buttons.',
     hasLogic: true,
     logicDetails: [
-      'Layout ultra compacto para caber no sidebar',
-      'Tabela sem coluna Invested para economizar espaço',
-      'Botões ultra compactos: apenas seta + cor',
-      'Texto reduzido (10px) para máxima densidade',
-      'Header compacto com valor total e variação',
-      'Footer minimalista com 24h change',
+      'Ultra compact layout to fit in sidebar',
+      'Table without Invested column to save space',
+      'Ultra compact buttons: arrow + color only',
+      'Reduced text (10px) for maximum density',
+      'Compact header with total value and change',
+      'Minimalist footer with 24h change',
     ],
     component: <PortfolioSidebarCard card={mockPortfolioTableCard} />,
   },
@@ -337,16 +337,16 @@ const cardsInfo: CardInfo[] = [
     name: 'Portfolio Performance Report',
     type: 'portfolio-performance',
     icon: BarChart3,
-    description: 'Relatório profissional de performance com métricas consolidadas, gráficos e recomendação de ação.',
+    description: 'Professional performance report with consolidated metrics, charts and action recommendation.',
     hasLogic: true,
     logicDetails: [
-      'Modo compacted: métricas principais + recomendação',
-      'Modo expanded: relatório completo tipo folha de papel',
-      '7 blocos de análise: Performance, Qualidade, Risco, Eficiência, Por Produto, Sustentabilidade, Ação',
-      'Gráficos: curva de capital, barras de progresso, heatmap de produtos',
-      'Métricas: PnL, crescimento, win rate, expectativa, drawdown, payoff',
-      'Sistema de recomendação: maintain, optimize, reduce-risk, pause, scale',
-      'Mock data realista para demonstração',
+      'Compacted mode: main metrics + recommendation',
+      'Expanded mode: complete paper-style report',
+      '7 analysis blocks: Performance, Quality, Risk, Efficiency, By Product, Sustainability, Action',
+      'Charts: equity curve, progress bars, products heatmap',
+      'Metrics: PnL, growth, win rate, expectancy, drawdown, payoff',
+      'Recommendation system: maintain, optimize, reduce-risk, pause, scale',
+      'Realistic mock data for demonstration',
       'Trigger: [[PORTFOLIO_PERFORMANCE]]',
     ],
     component: <PortfolioPerformance card={mockPortfolioPerformance} />,
@@ -404,7 +404,7 @@ function CardSection({ cardInfo, displayIndex }: { cardInfo: CardInfo; displayIn
               <XCircle className="w-4 h-4" />
             )}
             <span className="text-xs font-medium">
-              {cardInfo.hasLogic ? 'Com Lógica' : 'Apenas Marcação'}
+              {cardInfo.hasLogic ? 'With Logic' : 'Markup Only'}
             </span>
           </div>
         </div>
@@ -415,7 +415,7 @@ function CardSection({ cardInfo, displayIndex }: { cardInfo: CardInfo; displayIn
           <h4 className={`text-sm font-medium mb-3 ${
             theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
           }`}>
-            Preview do Card (Expanded)
+            Card Preview (Expanded)
           </h4>
           {cardInfo.component}
         </div>
@@ -425,7 +425,7 @@ function CardSection({ cardInfo, displayIndex }: { cardInfo: CardInfo; displayIn
             <h4 className={`text-sm font-medium mb-3 ${
               theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
             }`}>
-              Preview do Card
+              Card Preview
             </h4>
             {cardInfo.component}
           </div>
@@ -434,7 +434,7 @@ function CardSection({ cardInfo, displayIndex }: { cardInfo: CardInfo; displayIn
             <h4 className={`text-sm font-medium mb-3 ${
               theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
             }`}>
-              Lógica Implementada
+              Implemented Logic
             </h4>
             <ul className="space-y-2">
               {cardInfo.logicDetails.map((detail, i) => (
@@ -489,7 +489,7 @@ export function CardsPage() {
             <p className={`text-sm ${
               theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'
             }`}>
-              Todos os cards implementados no sistema
+              All cards implemented in the system
             </p>
           </div>
         </div>
@@ -504,13 +504,13 @@ export function CardsPage() {
           <h2 className={`text-sm font-medium mb-2 ${
             theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'
           }`}>
-            Resumo
+            Summary
           </h2>
           <p className={`text-sm ${
             theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'
           }`}>
-            Este sistema possui <span className="font-semibold text-brand-green">{cardsInfo.length} tipos de cards</span> implementados.
-            Todos possuem lógica funcional e são gerados dinamicamente pela IA através de UI Events.
+            This system has <span className="font-semibold text-brand-green">{cardsInfo.length} card types</span> implemented.
+            All have functional logic and are dynamically generated by AI through UI Events.
           </p>
         </div>
 
