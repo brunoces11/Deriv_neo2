@@ -174,7 +174,7 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
               <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 {isPositiveGrowth ? '+' : ''}{data.capitalGrowth}%
               </div>
-              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Period</div>
+              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Period</div>
             </div>
 
             <div className="space-y-0.5">
@@ -182,7 +182,7 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
               <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 ${data.avgReturnPerTrade.toFixed(2)}
               </div>
-              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>{data.tradeCount} trades</div>
+              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>{data.tradeCount} trades</div>
             </div>
 
             <div className="space-y-0.5">
@@ -190,7 +190,7 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
               <div className={`text-xl font-bold text-blue-500`}>
                 {data.expectancy.toFixed(2)}R
               </div>
-              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Math edge</div>
+              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Math edge</div>
             </div>
           </div>
 
@@ -200,7 +200,7 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
               <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 {data.tradeCount}
               </div>
-              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Executed</div>
+              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Executed</div>
             </div>
 
             <div className="space-y-0.5">
@@ -208,7 +208,7 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
               <div className={`text-xl font-bold text-blue-500`}>
                 {(data.tradeCount / 30).toFixed(1)}
               </div>
-              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Avg trades</div>
+              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Avg trades</div>
             </div>
 
             <div className="space-y-0.5">
@@ -216,7 +216,7 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
               <div className={`text-xl font-bold text-green-500`}>
                 92%
               </div>
-              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Operational</div>
+              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Operational</div>
             </div>
 
             <div className="space-y-0.5">
@@ -224,7 +224,7 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
               <div className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                 High
               </div>
-              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Level</div>
+              <div className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Level</div>
             </div>
           </div>
         </div>
@@ -237,11 +237,11 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className={`text-[10px] ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>Win Rate</span>
+                <span className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-600'}`}>Win Rate</span>
                 <span className={`text-xs font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.winRate}%</span>
               </div>
               <div className={`h-1 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'}`}>
-                <div className={`h-full rounded-full ${theme === 'dark' ? 'bg-zinc-500' : 'bg-gray-400'}`} style={{ width: `${data.winRate}%` }} />
+                <div className={`h-full rounded-full ${theme === 'dark' ? 'bg-zinc-400' : 'bg-gray-500'}`} style={{ width: `${data.winRate}%` }} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-1">
@@ -263,11 +263,11 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
             </div>
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className={`text-[10px] ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>Current Drawdown</span>
+                <span className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-600'}`}>Current Drawdown</span>
                 <span className={`text-xs font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{data.currentDrawdown}%</span>
               </div>
               <div className={`h-1 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'}`}>
-                <div className={`h-full rounded-full ${theme === 'dark' ? 'bg-zinc-500' : 'bg-gray-400'}`} style={{ width: `${(data.currentDrawdown / data.maxDrawdown) * 100}%` }} />
+                <div className={`h-full rounded-full ${theme === 'dark' ? 'bg-zinc-400' : 'bg-gray-500'}`} style={{ width: `${(data.currentDrawdown / data.maxDrawdown) * 100}%` }} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 pt-1">
@@ -289,7 +289,7 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
               <LineChart className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
               <h4 className={`text-xs font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Capital Curve</h4>
             </div>
-            <div className="h-24 flex items-end justify-center gap-0.5">
+            <div className="h-24 flex items-end justify-center gap-0.5 pb-2">
               {data.capitalCurve.map((value, index) => {
                 const maxValue = Math.max(...data.capitalCurve);
                 const minValue = Math.min(...data.capitalCurve);
@@ -312,16 +312,16 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
             </div>
             <div className="flex items-center justify-between text-[10px] pt-1.5 border-t" style={{ borderColor: theme === 'dark' ? 'rgba(63, 63, 70, 0.5)' : 'rgba(229, 231, 235, 0.8)' }}>
               <div className="flex flex-col">
-                <span className={`text-[9px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Start</span>
-                <span className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-600'}`}>${data.capitalCurve[0].toLocaleString()}</span>
+                <span className={`text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Start</span>
+                <span className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-700'}`}>${data.capitalCurve[0].toLocaleString()}</span>
               </div>
               <div className="flex flex-col text-center">
-                <span className={`text-[9px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Period</span>
-                <span className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-600'}`}>30 days</span>
+                <span className={`text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Period</span>
+                <span className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-700'}`}>30 days</span>
               </div>
               <div className="flex flex-col text-right">
-                <span className={`text-[9px] ${theme === 'dark' ? 'text-zinc-600' : 'text-gray-400'}`}>Current</span>
-                <span className={`text-[10px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-600'}`}>${data.capitalCurve[data.capitalCurve.length - 1].toLocaleString()}</span>
+                <span className={`text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Current</span>
+                <span className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-700'}`}>${data.capitalCurve[data.capitalCurve.length - 1].toLocaleString()}</span>
               </div>
             </div>
           </div>
@@ -356,7 +356,7 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
                         </div>
                       </div>
 
-                      <div className="h-20 flex items-end justify-center gap-1.5">
+                      <div className="h-24 flex items-end justify-center gap-1.5 pb-2">
                         <div className="flex flex-col items-center gap-1">
                           <div className={`relative rounded-t overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`} style={{ height: '60px', width: '12px' }}>
                             <div
@@ -421,7 +421,7 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
             </div>
           </div>
           <p className={`text-[10px] mt-1.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>
-            {data.recommendation === 'maintain' && 'Strategy performing optimally. Continue and monitor.'}
+            {data.recommendation === 'maintain' && 'Personalized portfolio guidance including risk analysis, opportunity identification, and diversification strategies for portfolio growth.'}
             {data.recommendation === 'optimize' && 'Review entry/exit parameters for efficiency.'}
             {data.recommendation === 'reduce-risk' && 'Reduce position sizes or leverage.'}
             {data.recommendation === 'pause' && 'Performance degraded. Review before continuing.'}
