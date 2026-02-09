@@ -134,9 +134,19 @@ export function TradeSpotCard({ card, defaultExpanded = true }: TradeSpotCardPro
         showMenu={false}
       >
         <div className="space-y-2.5 py-1">
-          {/* Pair display */}
-          <div className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-            {pair}
+          {/* Pair and Current Price */}
+          <div className="flex items-center justify-between">
+            <div className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              {pair}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>
+                Current:
+              </span>
+              <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                ${price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
           </div>
 
           {/* Price tabs */}
@@ -169,18 +179,6 @@ export function TradeSpotCard({ card, defaultExpanded = true }: TradeSpotCardPro
             >
               Target Price
             </button>
-          </div>
-
-          {/* Current price display */}
-          <div className={`p-2 rounded ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-100'}`}>
-            <div className="flex items-center justify-between">
-              <span className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>
-                Current
-              </span>
-              <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                ${price.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-              </span>
-            </div>
           </div>
 
           {/* Amount and Target Price inputs */}
