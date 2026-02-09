@@ -1,5 +1,5 @@
 import { useTheme } from '../../store/ThemeContext';
-import { TrendingUp, TrendingDown, AlertTriangle, Target, Clock, Activity, ChevronDown, ChevronUp, Gauge, Droplets } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, Target, Clock, Activity, ChevronDown, ChevronUp, CircleDashed, Droplets } from 'lucide-react';
 import { useState } from 'react';
 import type { BaseCard } from '../../types';
 
@@ -122,13 +122,26 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
     }
   };
 
-  const getTemperatureColor = (temp: number) => {
-    if (temp >= 70) return { bg: 'bg-green-500/10', text: 'text-green-500' };
-    if (temp >= 40) return { bg: 'bg-amber-500/10', text: 'text-amber-500' };
-    return { bg: 'bg-red-500/10', text: 'text-red-500' };
+  const getTemperatureColor = (temp: number, themeMode: string) => {
+    if (temp >= 70) {
+      return {
+        bg: themeMode === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200',
+        text: themeMode === 'dark' ? 'text-zinc-300' : 'text-gray-700'
+      };
+    }
+    if (temp >= 40) {
+      return {
+        bg: themeMode === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200',
+        text: themeMode === 'dark' ? 'text-zinc-400' : 'text-gray-600'
+      };
+    }
+    return {
+      bg: themeMode === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200',
+      text: themeMode === 'dark' ? 'text-zinc-500' : 'text-gray-500'
+    };
   };
 
-  const temperatureColors = getTemperatureColor(mockData.marketTemperature);
+  const temperatureColors = getTemperatureColor(mockData.marketTemperature, theme);
 
   const CompactedView = () => (
     <div className={`rounded-xl border overflow-hidden ${
@@ -155,13 +168,6 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg ${temperatureColors.bg}`}>
-            <Gauge className={`w-3.5 h-3.5 ${temperatureColors.text}`} />
-            <span className={`text-sm font-semibold ${temperatureColors.text}`}>
-              {mockData.marketTemperature}°
-            </span>
-          </div>
-
           <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg ${
             theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-100'
           }`}>
@@ -177,6 +183,13 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
             <Droplets className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
             <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               {mockData.regime.liquidity}%
+            </span>
+          </div>
+
+          <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg ${temperatureColors.bg}`}>
+            <CircleDashed className={`w-3.5 h-3.5 ${temperatureColors.text}`} />
+            <span className={`text-sm font-semibold ${temperatureColors.text}`}>
+              {mockData.marketTemperature}°
             </span>
           </div>
 
