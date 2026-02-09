@@ -1,5 +1,5 @@
 import { useTheme } from '../../store/ThemeContext';
-import { TrendingUp, TrendingDown, AlertTriangle, Target, Clock, Activity, ChevronDown, ChevronUp } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle, Target, Clock, Activity, ChevronDown, ChevronUp, Gauge, Droplets } from 'lucide-react';
 import { useState } from 'react';
 import type { BaseCard } from '../../types';
 
@@ -122,85 +122,74 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
     }
   };
 
+  const getTemperatureColor = (temp: number) => {
+    if (temp >= 70) return { bg: 'bg-green-500/10', text: 'text-green-500' };
+    if (temp >= 40) return { bg: 'bg-amber-500/10', text: 'text-amber-500' };
+    return { bg: 'bg-red-500/10', text: 'text-red-500' };
+  };
+
+  const temperatureColors = getTemperatureColor(mockData.marketTemperature);
+
   const CompactedView = () => (
     <div className={`rounded-xl border overflow-hidden ${
       theme === 'dark'
         ? 'bg-zinc-900 border-zinc-800'
         : 'bg-white border-gray-200'
     }`}>
-      <div className={`px-4 py-3 border-b flex items-center justify-between ${
+      <div className={`px-4 py-3 flex items-center justify-between ${
         theme === 'dark' ? 'border-zinc-800' : 'border-gray-200'
       }`}>
-        <div className="flex items-center gap-3">
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-            theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-100'
+        <div className="flex items-center gap-3 flex-1">
+          <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+            theme === 'dark' ? 'bg-zinc-700/50' : 'bg-gray-200/70'
           }`}>
-            <Activity className="w-4 h-4 text-brand-green" />
+            <Activity className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
           </div>
-          <div>
-            <h3 className={`text-sm font-semibold ${
-              theme === 'dark' ? 'text-white' : 'text-gray-900'
-            }`}>
-              Market Analyses
-            </h3>
-            <p className={`text-xs ${
+          <div className="flex-1">
+            <h3 className={`text-xs font-medium uppercase tracking-wide leading-tight ${
               theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'
             }`}>
-              {mockData.scope}
-            </p>
+              Market<br />Analyses
+            </h3>
           </div>
         </div>
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className={`p-1 rounded transition-colors ${
-            theme === 'dark'
-              ? 'hover:bg-zinc-800 text-zinc-400'
-              : 'hover:bg-gray-100 text-gray-600'
-          }`}
-        >
-          {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-        </button>
-      </div>
 
-      <div className="px-4 py-3 space-y-3">
-        <div className="flex items-center justify-between">
-          <span className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>
-            Market Regime
-          </span>
-          <div className="flex items-center gap-2">
-            <TrendingUp className="w-3 h-3 text-green-500" />
-            <span className={`text-xs font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              {mockData.regime.current}
+        <div className="flex items-center gap-2">
+          <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg ${temperatureColors.bg}`}>
+            <Gauge className={`w-3.5 h-3.5 ${temperatureColors.text}`} />
+            <span className={`text-sm font-semibold ${temperatureColors.text}`}>
+              {mockData.marketTemperature}°
             </span>
           </div>
-        </div>
 
-        <div className="flex items-center justify-between">
-          <span className={`text-xs ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>
-            General Signal
-          </span>
-          <span className={`text-xs font-semibold px-2 py-1 rounded ${getSignalColor(mockData.generalSignal)}`}>
-            {mockData.generalSignal.toUpperCase()}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-2 gap-2">
-          <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'}`}>
-            <div className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-              Volatility
-            </div>
-            <div className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+          <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg ${
+            theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-100'
+          }`}>
+            <Activity className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
+            <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               {mockData.regime.volatility}%
-            </div>
+            </span>
           </div>
-          <div className={`p-2 rounded-lg ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'}`}>
-            <div className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-              Liquidity
-            </div>
-            <div className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+
+          <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg ${
+            theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-100'
+          }`}>
+            <Droplets className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
+            <span className={`text-sm font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
               {mockData.regime.liquidity}%
-            </div>
+            </span>
           </div>
+
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className={`p-2 rounded-lg transition-colors ${
+              theme === 'dark'
+                ? 'hover:bg-zinc-800 text-zinc-400'
+                : 'hover:bg-gray-100 text-gray-600'
+            }`}
+          >
+            <ChevronDown className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>
