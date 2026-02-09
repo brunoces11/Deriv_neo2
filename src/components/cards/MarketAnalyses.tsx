@@ -9,50 +9,48 @@ interface MarketAnalysesProps {
 
 const CircularGauge = ({ value, theme }: { value: number; theme: string }) => {
   const size = 160;
-  const strokeWidth = 20;
+  const strokeWidth = 16;
   const radius = (size - strokeWidth) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const progress = (value / 100) * circumference;
+  const cx = size / 2;
+  const cy = size / 2;
+  const totalSegments = 36;
+  const gapDeg = 4;
+  const segmentDeg = (360 / totalSegments) - gapDeg;
+  const progressAngle = (value / 100) * 360;
 
-  const getColor = (val: number) => {
-    if (val >= 70) return '#10b981';
-    if (val >= 40) return '#f59e0b';
-    return '#ef4444';
-  };
+  const activeColor = theme === 'dark' ? '#a1a1aa' : '#6b7280';
+  const inactiveColor = theme === 'dark' ? '#27272a' : '#e5e7eb';
 
-  const color = getColor(value);
+  const segments = Array.from({ length: totalSegments }, (_, i) => {
+    const startAngle = i * (360 / totalSegments) - 90;
+    const endAngle = startAngle + segmentDeg;
+    const isActive = (i * (360 / totalSegments)) < progressAngle;
+    const startRad = (startAngle * Math.PI) / 180;
+    const endRad = (endAngle * Math.PI) / 180;
+    const x1 = cx + radius * Math.cos(startRad);
+    const y1 = cy + radius * Math.sin(startRad);
+    const x2 = cx + radius * Math.cos(endRad);
+    const y2 = cy + radius * Math.sin(endRad);
+    return { x1, y1, x2, y2, isActive };
+  });
 
   return (
     <div className="relative" style={{ width: size, height: size }}>
-      <svg
-        width={size}
-        height={size}
-        style={{ transform: 'rotate(-90deg)' }}
-      >
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={theme === 'dark' ? '#27272a' : '#e5e7eb'}
-          strokeWidth={strokeWidth}
-          fill="none"
-        />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={radius}
-          stroke={color}
-          strokeWidth={strokeWidth}
-          fill="none"
-          strokeDasharray={circumference}
-          strokeDashoffset={circumference - progress}
-          strokeLinecap="round"
-          style={{ transition: 'stroke-dashoffset 1s ease' }}
-        />
+      <svg width={size} height={size}>
+        {segments.map((seg, i) => (
+          <path
+            key={i}
+            d={`M ${seg.x1} ${seg.y1} A ${radius} ${radius} 0 0 1 ${seg.x2} ${seg.y2}`}
+            stroke={seg.isActive ? activeColor : inactiveColor}
+            strokeWidth={strokeWidth}
+            fill="none"
+            strokeLinecap="butt"
+          />
+        ))}
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className={`text-4xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-          {value}
+          {value}<span className="text-lg relative -top-3">°</span>
         </span>
         <span className={`text-xs font-medium mt-1 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`}>
           TEMPERATURE
@@ -106,19 +104,19 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'favorable': return 'text-green-500 bg-green-500/10';
-      case 'neutral': return 'text-amber-500 bg-amber-500/10';
-      case 'desfavorable': return 'text-red-500 bg-red-500/10';
-      default: return 'text-gray-500 bg-gray-500/10';
+      case 'favorable': return theme === 'dark' ? 'text-zinc-300 bg-zinc-700/40' : 'text-gray-600 bg-gray-200/70';
+      case 'neutral': return theme === 'dark' ? 'text-zinc-400 bg-zinc-700/30' : 'text-gray-500 bg-gray-200/50';
+      case 'desfavorable': return theme === 'dark' ? 'text-zinc-500 bg-zinc-700/20' : 'text-gray-400 bg-gray-200/40';
+      default: return theme === 'dark' ? 'text-zinc-500 bg-zinc-700/20' : 'text-gray-500 bg-gray-200/40';
     }
   };
 
   const getSignalColor = (signal: string) => {
     switch (signal) {
-      case 'offensive': return 'bg-green-500 text-white';
-      case 'neutral': return 'bg-amber-500 text-white';
-      case 'defensive': return 'bg-red-500 text-white';
-      default: return 'bg-gray-500 text-white';
+      case 'offensive': return theme === 'dark' ? 'bg-zinc-600 text-zinc-100' : 'bg-gray-700 text-white';
+      case 'neutral': return theme === 'dark' ? 'bg-zinc-700 text-zinc-200' : 'bg-gray-500 text-white';
+      case 'defensive': return theme === 'dark' ? 'bg-zinc-700 text-zinc-300' : 'bg-gray-400 text-white';
+      default: return theme === 'dark' ? 'bg-zinc-700 text-zinc-300' : 'bg-gray-500 text-white';
     }
   };
 
@@ -275,9 +273,6 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
             Market Regime & Condition
           </h4>
           <div className="flex items-center gap-6">
-            <div className="flex-shrink-0">
-              <CircularGauge value={mockData.marketTemperature} theme={theme} />
-            </div>
             <div className="flex-1 space-y-4">
               <div>
                 <div className={`text-xs mb-1 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
@@ -326,6 +321,9 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
                   </span>
                 </div>
               </div>
+            </div>
+            <div className="flex-shrink-0">
+              <CircularGauge value={mockData.marketTemperature} theme={theme} />
             </div>
           </div>
         </div>
@@ -490,11 +488,7 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
                 }`}>
                   <div
                     className={`h-full rounded-full transition-all ${
-                      op.status === 'favorable'
-                        ? 'bg-green-500'
-                        : op.status === 'neutral'
-                        ? 'bg-amber-500'
-                        : 'bg-red-500'
+                      theme === 'dark' ? 'bg-zinc-500' : 'bg-gray-400'
                     }`}
                     style={{ width: `${op.score}%` }}
                   />
@@ -513,7 +507,7 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
             <h4 className={`text-sm font-semibold mb-3 flex items-center gap-2 ${
               theme === 'dark' ? 'text-white' : 'text-gray-900'
             }`}>
-              <Clock className="w-3.5 h-3.5 text-cyan-500" />
+              <Clock className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
               Operational Timing
             </h4>
             <div className="space-y-2">
@@ -522,11 +516,7 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
                   Current Status
                 </span>
                 <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                  mockData.timing.status === 'entry'
-                    ? 'bg-green-500/10 text-green-500'
-                    : mockData.timing.status === 'caution'
-                    ? 'bg-amber-500/10 text-amber-500'
-                    : 'bg-red-500/10 text-red-500'
+                  theme === 'dark' ? 'bg-zinc-700/50 text-zinc-300' : 'bg-gray-200 text-gray-600'
                 }`}>
                   {mockData.timing.status.toUpperCase()}
                 </span>
@@ -544,7 +534,7 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
                   theme === 'dark' ? 'bg-zinc-700' : 'bg-gray-200'
                 }`}>
                   <div
-                    className="h-full bg-green-500 rounded-full transition-all"
+                    className={`h-full rounded-full transition-all ${theme === 'dark' ? 'bg-zinc-500' : 'bg-gray-400'}`}
                     style={{ width: `${mockData.timing.confidence}%` }}
                   />
                 </div>
@@ -560,7 +550,7 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
             <h4 className={`text-sm font-semibold mb-3 flex items-center gap-2 ${
               theme === 'dark' ? 'text-white' : 'text-gray-900'
             }`}>
-              <TrendingUp className="w-3.5 h-3.5 text-brand-green" />
+              <TrendingUp className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
               General Market Signal
             </h4>
             <div className="flex items-center justify-center h-16">
