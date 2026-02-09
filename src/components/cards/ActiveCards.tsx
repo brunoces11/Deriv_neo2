@@ -4,6 +4,7 @@ import { PortfolioSnapshotCard } from './PortfolioSnapshotCard';
 import { PortfolioSidebarCard } from './PortfolioSidebarCard';
 import { PortfolioTableCardComplete } from './PortfolioTableCardComplete';
 import { PortfolioPerformance } from './PortfolioPerformance';
+import { MarketAnalyses } from './MarketAnalyses';
 import { CreateTradeCard } from './CreateTradeCard';
 import { TradeCard } from './TradeCard';
 import { ActionsCard } from './ActionsCard';
@@ -17,6 +18,7 @@ const cardComponents = {
   'portfolio-sidebar': PortfolioSidebarCard,
   'portfolio-table-complete': PortfolioTableCardComplete,
   'portfolio-performance': PortfolioPerformance,
+  'market-analyses': MarketAnalyses,
   'create-trade-card': CreateTradeCard,
   'trade-card': TradeCard,
   'actions-card': ActionsCard,

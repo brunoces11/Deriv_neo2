@@ -24,6 +24,7 @@ import { BotCard } from '../cards/BotCard';
 import { PortfolioSnapshotCard } from '../cards/PortfolioSnapshotCard';
 import { PortfolioTableCardComplete } from '../cards/PortfolioTableCardComplete';
 import { PortfolioPerformance } from '../cards/PortfolioPerformance';
+import { MarketAnalyses } from '../cards/MarketAnalyses';
 import { CreateTradeCard } from '../cards/CreateTradeCard';
 import { TradeCard } from '../cards/TradeCard';
 import { ActionsCard } from '../cards/ActionsCard';
@@ -76,6 +77,7 @@ const cardComponents: Record<RenderCardType, React.ComponentType<{ card: BaseCar
   'portfolio-sidebar': PortfolioSnapshotCard, // Fallback to snapshot
   'portfolio-table-complete': PortfolioTableCardComplete,
   'portfolio-performance': PortfolioPerformance,
+  'market-analyses': MarketAnalyses,
   'create-trade-card': CreateTradeCard,
   'trade-card': TradeCard,
   'actions-card': ActionsCard,

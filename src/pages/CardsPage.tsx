@@ -1,5 +1,5 @@
 import { useTheme } from '../store/ThemeContext';
-import { ArrowLeft, Zap, Bot, Wallet, Table, CheckCircle, XCircle, TrendingUp, LineChart, Workflow, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Zap, Bot, Wallet, Table, CheckCircle, XCircle, TrendingUp, LineChart, Workflow, BarChart3, Activity } from 'lucide-react';
 import { BotCard } from '../components/cards/BotCard';
 import { PortfolioSnapshotCard } from '../components/cards/PortfolioSnapshotCard';
 import { PortfolioTableCardComplete } from '../components/cards/PortfolioTableCardComplete';
@@ -10,6 +10,7 @@ import { TradeCard } from '../components/cards/TradeCard';
 import { ActionsCard } from '../components/cards/ActionsCard';
 import { ActionsCardCreator } from '../components/cards/ActionsCardCreator';
 import { BotCardCreator } from '../components/cards/BotCardCreator';
+import { MarketAnalyses } from '../components/cards/MarketAnalyses';
 import { UserProfile } from '../components/layout/UserProfile';
 import derivNeoDark from '../assets/deriv_neo_dark_mode.svg';
 import derivNeoLight from '../assets/deriv_neo_light_mode.svg';
@@ -171,6 +172,15 @@ const mockActionsCreator: BaseCard = {
 const mockPortfolioPerformance: BaseCard = {
   id: 'demo-portfolio-performance-1',
   type: 'card_portfolio_performance',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {},
+};
+
+const mockMarketAnalyses: BaseCard = {
+  id: 'demo-market-analyses-1',
+  type: 'card_market_analyses',
   status: 'active',
   isFavorite: false,
   createdAt: new Date(),
@@ -350,6 +360,26 @@ const cardsInfo: CardInfo[] = [
       'Trigger: [[PORTFOLIO_PERFORMANCE]]',
     ],
     component: <PortfolioPerformance card={mockPortfolioPerformance} />,
+    expanded: true,
+  },
+  {
+    name: 'Market Analyses',
+    type: 'market-analyses',
+    icon: Activity,
+    description: 'Professional market analysis report with regime detection, sentiment analysis, opportunities and timing recommendations.',
+    hasLogic: true,
+    logicDetails: [
+      'Compacted mode: key metrics + general signal',
+      'Expanded mode: complete market analysis report',
+      '7 analysis blocks: Market Regime, Sentiment & Flow, Opportunities, Risks, Operation Conditions, Timing, General Signal',
+      'Visual indicators: volatility bars, liquidity gauges, pressure charts',
+      'Metrics: regime type, buy/sell pressure, risk appetite, timing confidence',
+      'Operation types: Binary, Digital, CFDs, Synthetics with status',
+      'Timing signals: entry, caution, reduce exposure',
+      'General signal: offensive, neutral, defensive',
+      'Trigger: [[MARKET_ANALYSES]]',
+    ],
+    component: <MarketAnalyses card={mockMarketAnalyses} />,
     expanded: true,
   },
 ];

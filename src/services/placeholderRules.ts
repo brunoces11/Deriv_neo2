@@ -19,6 +19,7 @@ export type RenderCardType =
   | 'portfolio-snapshot'
   | 'portfolio-sidebar'
   | 'portfolio-performance'
+  | 'market-analyses'
   | 'create-trade-card'
   | 'trade-card'
   | 'bot-creator'
@@ -96,6 +97,16 @@ export const PLACEHOLDER_RULES: Record<string, PlaceholderRule> = {
     otherModes: {
       inline: { cardType: 'portfolio-performance', location: 'inline', visualState: 'compacted' },
       panel: { cardType: 'portfolio-performance', location: 'panel', panel: 'cards', visualState: 'compacted' }
+    }
+  },
+  '[[MARKET_ANALYSES]]': {
+    chatmode: {
+      inline: { cardType: 'market-analyses', location: 'inline', visualState: 'expanded' },
+      panel: { cardType: 'market-analyses', location: 'panel', panel: 'cards', visualState: 'compacted' }
+    },
+    otherModes: {
+      inline: { cardType: 'market-analyses', location: 'inline', visualState: 'compacted' },
+      panel: { cardType: 'market-analyses', location: 'panel', panel: 'cards', visualState: 'compacted' }
     }
   }
 };
