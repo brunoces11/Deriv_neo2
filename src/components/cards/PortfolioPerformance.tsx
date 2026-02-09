@@ -284,129 +284,137 @@ export function PortfolioPerformance({ card, defaultExpanded = true }: Portfolio
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'} space-y-2`}>
-            <div className="flex items-center gap-1.5">
+          <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'} flex flex-col`}>
+            <div className="flex items-center gap-1.5 mb-2">
               <LineChart className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
               <h4 className={`text-xs font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Capital Curve</h4>
             </div>
-            <div className="h-24 flex items-end justify-center gap-0.5 pb-2">
-              {data.capitalCurve.map((value, index) => {
-                const maxValue = Math.max(...data.capitalCurve);
-                const minValue = Math.min(...data.capitalCurve);
-                const height = ((value - minValue) / (maxValue - minValue)) * 100;
-                const isProfit = index === 0 ? false : value > data.capitalCurve[index - 1];
 
-                return (
-                  <div
-                    key={index}
-                    className={`rounded-t transition-all ${isProfit ? 'bg-green-500/80' : 'bg-red-500/80'}`}
-                    style={{
-                      height: `${Math.max(height, 2)}%`,
-                      minHeight: '2px',
-                      width: '12px'
-                    }}
-                    title={`$${value.toLocaleString()}`}
-                  />
-                );
-              })}
-            </div>
-            <div className="flex items-center justify-between text-[10px] pt-1.5 border-t" style={{ borderColor: theme === 'dark' ? 'rgba(63, 63, 70, 0.5)' : 'rgba(229, 231, 235, 0.8)' }}>
-              <div className="flex flex-col">
-                <span className={`text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Start</span>
-                <span className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-700'}`}>${data.capitalCurve[0].toLocaleString()}</span>
+            <div className="flex-1 flex flex-col justify-end">
+              <div className="h-24 flex items-end justify-center gap-0.5">
+                {data.capitalCurve.map((value, index) => {
+                  const maxValue = Math.max(...data.capitalCurve);
+                  const minValue = Math.min(...data.capitalCurve);
+                  const height = ((value - minValue) / (maxValue - minValue)) * 100;
+                  const isProfit = index === 0 ? false : value > data.capitalCurve[index - 1];
+
+                  return (
+                    <div
+                      key={index}
+                      className={`rounded-t transition-all ${isProfit ? 'bg-green-500/80' : 'bg-red-500/80'}`}
+                      style={{
+                        height: `${Math.max(height, 2)}%`,
+                        minHeight: '2px',
+                        width: '12px'
+                      }}
+                      title={`$${value.toLocaleString()}`}
+                    />
+                  );
+                })}
               </div>
-              <div className="flex flex-col text-center">
-                <span className={`text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Period</span>
-                <span className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-700'}`}>30 days</span>
-              </div>
-              <div className="flex flex-col text-right">
-                <span className={`text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Current</span>
-                <span className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-700'}`}>${data.capitalCurve[data.capitalCurve.length - 1].toLocaleString()}</span>
+
+              <div className="h-12 flex items-center justify-between text-[10px] pt-2 border-t mt-2" style={{ borderColor: theme === 'dark' ? 'rgba(63, 63, 70, 0.5)' : 'rgba(229, 231, 235, 0.8)' }}>
+                <div className="flex flex-col">
+                  <span className={`text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Start</span>
+                  <span className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-700'}`}>${data.capitalCurve[0].toLocaleString()}</span>
+                </div>
+                <div className="flex flex-col text-center">
+                  <span className={`text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Period</span>
+                  <span className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-700'}`}>30 days</span>
+                </div>
+                <div className="flex flex-col text-right">
+                  <span className={`text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Current</span>
+                  <span className={`text-[10px] font-medium ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-700'}`}>${data.capitalCurve[data.capitalCurve.length - 1].toLocaleString()}</span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'} space-y-2`}>
-            <div className="flex items-center gap-1.5">
+          <div className={`p-3 rounded-xl ${theme === 'dark' ? 'bg-zinc-800/50' : 'bg-gray-50'} flex flex-col`}>
+            <div className="flex items-center gap-1.5 mb-2">
               <PieChart className={`w-3.5 h-3.5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-500'}`} />
               <h4 className={`text-xs font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Performance by Product</h4>
             </div>
 
-            <div className="grid grid-cols-3 gap-2">
-              {data.productPerformance.map((product, index) => {
-                const profitColor = product.profit > 30 ? 'text-green-500' : product.profit > 20 ? 'text-blue-500' : 'text-amber-500';
-                const profitBg = product.profit > 30 ? 'bg-green-500' : product.profit > 20 ? 'bg-blue-500' : 'bg-amber-500';
-                const profitBgLight = product.profit > 30 ? 'bg-green-500/10' : product.profit > 20 ? 'bg-blue-500/10' : 'bg-amber-500/10';
-                const maxValue = 100;
+            <div className="flex-1 flex flex-col justify-end">
+              <div className="grid grid-cols-3 gap-2">
+                {data.productPerformance.map((product, index) => {
+                  const profitColor = product.profit > 30 ? 'text-green-500' : product.profit > 20 ? 'text-blue-500' : 'text-amber-500';
+                  const profitBg = product.profit > 30 ? 'bg-green-500' : product.profit > 20 ? 'bg-blue-500' : 'bg-amber-500';
+                  const profitBgLight = product.profit > 30 ? 'bg-green-500/10' : product.profit > 20 ? 'bg-blue-500/10' : 'bg-amber-500/10';
+                  const maxValue = 100;
 
-                return (
-                  <div
-                    key={index}
-                    className={`relative overflow-hidden rounded-lg border ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-gray-200'}`}
-                  >
-                    <div className="p-2 space-y-2">
-                      <div className="text-center space-y-0.5">
-                        <span className={`text-[10px] font-semibold block ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                          {product.name}
-                        </span>
-                        <div className={`inline-flex px-1.5 py-0.5 rounded ${profitBgLight}`}>
-                          <span className={`text-xs font-bold ${profitColor}`}>
-                            +{product.profit}%
+                  return (
+                    <div
+                      key={index}
+                      className={`relative overflow-hidden rounded-lg border ${theme === 'dark' ? 'bg-zinc-900/50 border-zinc-800' : 'bg-white border-gray-200'} flex flex-col`}
+                    >
+                      <div className="p-2 flex flex-col flex-1">
+                        <div className="text-center space-y-0.5 mb-2">
+                          <span className={`text-[10px] font-semibold block ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                            {product.name}
                           </span>
+                          <div className={`inline-flex px-1.5 py-0.5 rounded ${profitBgLight}`}>
+                            <span className={`text-xs font-bold ${profitColor}`}>
+                              +{product.profit}%
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex-1 flex flex-col justify-end">
+                          <div className="h-24 flex items-end justify-center gap-1.5">
+                            <div className="flex flex-col items-center gap-1">
+                              <div className={`relative rounded-t overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`} style={{ height: '60px', width: '12px' }}>
+                                <div
+                                  className={`${profitBg} absolute bottom-0 left-0 right-0 transition-all rounded-t`}
+                                  style={{ height: `${(product.profit / maxValue) * 100}%` }}
+                                />
+                              </div>
+                              <span className={`text-[8px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>P</span>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-1">
+                              <div className={`relative rounded-t overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`} style={{ height: '60px', width: '12px' }}>
+                                <div
+                                  className="bg-red-500/70 absolute bottom-0 left-0 right-0 transition-all rounded-t"
+                                  style={{ height: `${(product.risk / maxValue) * 100}%` }}
+                                />
+                              </div>
+                              <span className={`text-[8px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>R</span>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-1">
+                              <div className={`relative rounded-t overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`} style={{ height: '60px', width: '12px' }}>
+                                <div
+                                  className="bg-blue-500/70 absolute bottom-0 left-0 right-0 transition-all rounded-t"
+                                  style={{ height: `${(product.consistency / maxValue) * 100}%` }}
+                                />
+                              </div>
+                              <span className={`text-[8px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>S</span>
+                            </div>
+                          </div>
                         </div>
                       </div>
 
-                      <div className="h-24 flex items-end justify-center gap-1.5 pb-2">
-                        <div className="flex flex-col items-center gap-1">
-                          <div className={`relative rounded-t overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`} style={{ height: '60px', width: '12px' }}>
-                            <div
-                              className={`${profitBg} absolute bottom-0 left-0 right-0 transition-all rounded-t`}
-                              style={{ height: `${(product.profit / maxValue) * 100}%` }}
-                            />
-                          </div>
-                          <span className={`text-[8px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>P</span>
-                        </div>
-
-                        <div className="flex flex-col items-center gap-1">
-                          <div className={`relative rounded-t overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`} style={{ height: '60px', width: '12px' }}>
-                            <div
-                              className="bg-red-500/70 absolute bottom-0 left-0 right-0 transition-all rounded-t"
-                              style={{ height: `${(product.risk / maxValue) * 100}%` }}
-                            />
-                          </div>
-                          <span className={`text-[8px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>R</span>
-                        </div>
-
-                        <div className="flex flex-col items-center gap-1">
-                          <div className={`relative rounded-t overflow-hidden ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-200'}`} style={{ height: '60px', width: '12px' }}>
-                            <div
-                              className="bg-blue-500/70 absolute bottom-0 left-0 right-0 transition-all rounded-t"
-                              style={{ height: `${(product.consistency / maxValue) * 100}%` }}
-                            />
-                          </div>
-                          <span className={`text-[8px] font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>S</span>
-                        </div>
-                      </div>
+                      <div className={`absolute top-0 left-0 right-0 h-0.5 ${profitBg} opacity-30`} />
                     </div>
-
-                    <div className={`absolute top-0 left-0 right-0 h-0.5 ${profitBg} opacity-30`} />
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className={`flex items-center justify-center gap-3 pt-1 text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-sm bg-green-500/70" />
-                <span>Profit</span>
+                  );
+                })}
               </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-sm bg-red-500/70" />
-                <span>Risk</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 rounded-sm bg-blue-500/70" />
-                <span>Stability</span>
+
+              <div className={`h-12 flex items-center justify-center gap-3 pt-2 text-[9px] ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-sm bg-green-500/70" />
+                  <span>Profit</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-sm bg-red-500/70" />
+                  <span>Risk</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-sm bg-blue-500/70" />
+                  <span>Stability</span>
+                </div>
               </div>
             </div>
           </div>
