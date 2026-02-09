@@ -328,10 +328,10 @@ export function MarketAnalyses({ card }: MarketAnalysesProps) {
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <span className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
-                    Buy vs Sell Pressure
+                    Buy: {mockData.sentiment.buyPressure}%
                   </span>
-                  <span className={`text-xs font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                    {mockData.sentiment.buyPressure}% / {mockData.sentiment.sellPressure}%
+                  <span className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+                    Sell: {mockData.sentiment.sellPressure}%
                   </span>
                 </div>
                 <div className={`h-2 rounded-full overflow-hidden flex ${
