@@ -1,5 +1,5 @@
 import { useTheme } from '../store/ThemeContext';
-import { ArrowLeft, Zap, Bot, Wallet, Table, CheckCircle, XCircle, TrendingUp, LineChart, Workflow, BarChart3, Activity } from 'lucide-react';
+import { ArrowLeft, Zap, Bot, Wallet, Table, CheckCircle, XCircle, TrendingUp, LineChart, Workflow, BarChart3, Activity, DollarSign } from 'lucide-react';
 import { BotCard } from '../components/cards/BotCard';
 import { PortfolioSnapshotCard } from '../components/cards/PortfolioSnapshotCard';
 import { PortfolioTableCardComplete } from '../components/cards/PortfolioTableCardComplete';
@@ -7,6 +7,7 @@ import { PortfolioSidebarCard } from '../components/cards/PortfolioSidebarCard';
 import { PortfolioPerformance } from '../components/cards/PortfolioPerformance';
 import { CreateTradeCard } from '../components/cards/CreateTradeCard';
 import { TradeCard } from '../components/cards/TradeCard';
+import { TradeSpotCard } from '../components/cards/TradeSpotCard';
 import { ActionsCard } from '../components/cards/ActionsCard';
 import { ActionsCardCreator } from '../components/cards/ActionsCardCreator';
 import { BotCardCreator } from '../components/cards/BotCardCreator';
@@ -185,6 +186,21 @@ const mockMarketAnalyses: BaseCard = {
   isFavorite: false,
   createdAt: new Date(),
   payload: {},
+};
+
+const mockTradeSpotCard: BaseCard = {
+  id: 'demo-trade-spot-1',
+  type: 'trade-spot-card',
+  status: 'active',
+  isFavorite: false,
+  createdAt: new Date(),
+  payload: {
+    pair: 'BTC/USD',
+    amount: 500,
+    priceMode: 'market',
+    price: 42350.75,
+    executionState: 'open',
+  },
 };
 
 interface CardInfo {
@@ -381,6 +397,26 @@ const cardsInfo: CardInfo[] = [
     ],
     component: <MarketAnalyses card={mockMarketAnalyses} />,
     expanded: true,
+  },
+  {
+    name: 'Trade Spot Card',
+    type: 'trade-spot-card',
+    icon: DollarSign,
+    description: 'Simplified spot trading card for buying/selling crypto pairs at market or manual price.',
+    hasLogic: true,
+    logicDetails: [
+      'Three visual states: open, bought, sold',
+      'Pair selector with popular pairs (BTC/USD, ETH/USD, XAU/USD, etc)',
+      'Market price or manual price mode toggle',
+      'Amount input in USD',
+      'Buy/Sell action buttons',
+      'Compact mode: single line with pair, amount, and status',
+      'Expanded mode (open): trading interface',
+      'Expanded mode (executed): confirmation with execution details',
+      'Appears in positions panel in sidebar',
+      'Trigger: [[TRADE_SPOT_CARD]]',
+    ],
+    component: <TradeSpotCard card={mockTradeSpotCard} />,
   },
 ];
 

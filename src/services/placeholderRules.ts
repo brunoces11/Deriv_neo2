@@ -22,6 +22,7 @@ export type RenderCardType =
   | 'market-analyses'
   | 'create-trade-card'
   | 'trade-card'
+  | 'trade-spot-card'
   | 'bot-creator'
   | 'bot-card'
   | 'actions-creator'
@@ -107,6 +108,16 @@ export const PLACEHOLDER_RULES: Record<string, PlaceholderRule> = {
     otherModes: {
       inline: { cardType: 'market-analyses', location: 'inline', visualState: 'compacted' },
       panel: { cardType: 'market-analyses', location: 'panel', panel: 'cards', visualState: 'compacted' }
+    }
+  },
+  '[[TRADE_SPOT_CARD]]': {
+    chatmode: {
+      inline: { cardType: 'trade-spot-card', location: 'inline', visualState: 'expanded' },
+      panel: { cardType: 'trade-spot-card', location: 'panel', panel: 'positions', visualState: 'compacted' }
+    },
+    otherModes: {
+      inline: { cardType: 'trade-spot-card', location: 'inline', visualState: 'compacted' },
+      panel: { cardType: 'trade-spot-card', location: 'panel', panel: 'positions', visualState: 'compacted' }
     }
   }
 };

@@ -7,6 +7,7 @@ import { PortfolioPerformance } from './PortfolioPerformance';
 import { MarketAnalyses } from './MarketAnalyses';
 import { CreateTradeCard } from './CreateTradeCard';
 import { TradeCard } from './TradeCard';
+import { TradeSpotCard } from './TradeSpotCard';
 import { ActionsCard } from './ActionsCard';
 import { ActionsCardCreator } from './ActionsCardCreator';
 import { BotCardCreator } from './BotCardCreator';
@@ -21,6 +22,7 @@ const cardComponents = {
   'market-analyses': MarketAnalyses,
   'create-trade-card': CreateTradeCard,
   'trade-card': TradeCard,
+  'trade-spot-card': TradeSpotCard,
   'actions-card': ActionsCard,
   'actions-creator': ActionsCardCreator,
   'bot-creator': BotCardCreator,

@@ -3,6 +3,7 @@ import type { BaseCard, CardType } from '../../types';
 // Import all card components
 import { TradeCard } from '../cards/TradeCard';
 import { CreateTradeCard } from '../cards/CreateTradeCard';
+import { TradeSpotCard } from '../cards/TradeSpotCard';
 import { BotCard } from '../cards/BotCard';
 import { BotCardCreator } from '../cards/BotCardCreator';
 import { ActionsCard } from '../cards/ActionsCard';
@@ -42,10 +43,13 @@ export function renderCardByType(card: BaseCard, defaultExpanded: boolean): JSX.
     case 'trade-card':
     case 'card_trade':
       return <TradeCard card={card} defaultExpanded={defaultExpanded} />;
-    
+
     case 'create-trade-card':
     case 'card_trade_creator':
       return <CreateTradeCard card={card} defaultExpanded={defaultExpanded} />;
+
+    case 'trade-spot-card':
+      return <TradeSpotCard card={card} defaultExpanded={defaultExpanded} />;
 
     // Bot cards
     case 'bot-card':
@@ -96,6 +100,7 @@ export type PanelTab = 'cards' | 'actions' | 'bots' | 'positions';
 export function getCardPanelTab(cardType: CardType): PanelTab {
   // Trade cards go to 'positions' panel (left sidebar only)
   if (cardType === 'create-trade-card' || cardType === 'trade-card' ||
+      cardType === 'trade-spot-card' ||
       cardType === 'card_trade' || cardType === 'card_trade_creator') {
     return 'positions';
   }

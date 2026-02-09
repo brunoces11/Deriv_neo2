@@ -19,6 +19,7 @@ export type CardType =
   | 'market-analyses'
   | 'create-trade-card'
   | 'trade-card'
+  | 'trade-spot-card'
   | 'actions-card'
   | 'actions-creator'
   | 'bot-creator'
@@ -220,6 +221,18 @@ export interface BotCardPayload {
   };
 }
 
+export interface TradeSpotCardPayload {
+  title?: string; // Dynamic title from LLM
+  pair: string; // e.g., 'BTC/USD', 'XAU/USD'
+  amount: number; // Amount in USD
+  priceMode: 'market' | 'manual';
+  price: number; // Current market price
+  manualPrice?: number; // Manual price if priceMode is 'manual'
+  executionState: 'open' | 'bought' | 'sold';
+  executionPrice?: number;
+  executionTime?: string; // ISO string
+}
+
 export type CardPayload =
   | CreateTradeCardPayload
   | TradeCardPayload
@@ -228,7 +241,8 @@ export type CardPayload =
   | PortfolioTablePayload
   | ActionsCardPayload
   | BotCreatorPayload
-  | BotCardPayload;
+  | BotCardPayload
+  | TradeSpotCardPayload;
 
 export interface ChatMessage {
   id: string;
