@@ -125,6 +125,7 @@ export function CardsSidebar({
 
   // Helper: verifica se é QUALQUER tipo de card de portfolio (singleton - não pode duplicar no painel)
   // Inclui TODOS os tipos possíveis: snapshot, table-complete, e variantes legacy
+  // NOTA: portfolio-performance e market-analyses NÃO são singleton - podem coexistir
   const isAnyPortfolioCard = (cardType: CardType) => 
     cardType === 'portfolio-snapshot' ||
     cardType === 'portfolio-table-complete' ||

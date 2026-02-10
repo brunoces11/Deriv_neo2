@@ -521,9 +521,11 @@ export function ChatMessages({ displayMode = 'center' }: ChatMessagesProps) {
     panelTab: PanelTab,
     payload: Record<string, unknown>
   ) => {
-    // REGRA ESPECIAL: Portfolio table cards são singleton no painel
+    // REGRA ESPECIAL: Singleton cards - só podem aparecer uma vez no painel por sessão
     // Podem aparecer múltiplas vezes inline, mas só uma vez no painel
-    const isSingletonCard = cardType === 'portfolio-table-complete';
+    const isSingletonCard = cardType === 'portfolio-table-complete' ||
+                            cardType === 'portfolio-performance' ||
+                            cardType === 'market-analyses';
 
     // Para singleton cards, usar o tipo como chave (garante única instância)
     // Para outros cards, usar cardId (permite múltiplas instâncias diferentes)

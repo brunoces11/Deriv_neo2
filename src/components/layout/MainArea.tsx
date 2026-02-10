@@ -135,10 +135,10 @@ function WelcomeScreen() {
           I'll create actionable cards based on your requests.
         </p>
         <div className="grid grid-cols-2 gap-3 text-left">
-          <SuggestionCard text="Show my portfolio" onClick={() => handleIcebreaker('Show my portfolio')} />
-          <SuggestionCard text="Buy 0.1 BTC" onClick={() => handleIcebreaker('Buy 0.1 BTC')} />
-          <SuggestionCard text="Set up a DCA bot" onClick={() => handleIcebreaker('Set up a DCA bot')} />
-          <SuggestionCard text="Swap ETH to USDC" onClick={() => handleIcebreaker('Swap ETH to USDC')} />
+          <SuggestionCard text="Create new Trade" onClick={() => handleIcebreaker('Create new Trade')} />
+          <SuggestionCard text="Create new Bot" onClick={() => handleIcebreaker('Create new Bot')} />
+          <SuggestionCard text="Create new Action" onClick={() => handleIcebreaker('Create new Action')} />
+          <SuggestionCard text="Check my portfolio performance" onClick={() => handleIcebreaker('Check my portfolio performance')} />
         </div>
       </div>
     </div>

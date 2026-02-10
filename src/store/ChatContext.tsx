@@ -523,19 +523,30 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     });
     
     if (event.type === 'ADD_CARD' && event.cardType && event.payload) {
-      // REGRA: Cards de portfolio-table são singleton no painel
+      // REGRA: Singleton cards - só podem aparecer uma vez no painel por sessão
       // Podem aparecer múltiplas vezes inline, mas só uma vez no painel
-      const isPortfolioTableCard = event.cardType === 'portfolio-table-complete' || 
-                                    event.cardType === 'card_portfolio';
+      const singletonTypes: CardType[] = [
+        'portfolio-table-complete', 'card_portfolio',
+        'portfolio-performance', 'card_portfolio_performance',
+        'market-analyses', 'card_market_analyses',
+      ];
       
-      if (isPortfolioTableCard) {
-        // Verificar se já existe um card de portfolio-table no activeCards
-        const existingPortfolioTable = state.activeCards.find(
-          c => c.type === 'portfolio-table-complete' || c.type === 'card_portfolio'
+      const isSingletonCard = singletonTypes.includes(event.cardType as CardType);
+      
+      if (isSingletonCard) {
+        // Verificar se já existe um card do mesmo grupo no activeCards
+        // Agrupar por "família" para evitar duplicatas entre variantes kebab/underscore
+        const sameFamily = (a: string, b: string) => {
+          const normalize = (t: string) => t.replace(/^card_/, '').replace(/_/g, '-');
+          return normalize(a) === normalize(b);
+        };
+        
+        const existingSingleton = state.activeCards.find(
+          c => sameFamily(c.type, event.cardType!)
         );
         
-        if (existingPortfolioTable) {
-          console.log('Portfolio table card already exists, skipping duplicate:', existingPortfolioTable.id);
+        if (existingSingleton) {
+          console.log('Singleton card already exists, skipping duplicate:', existingSingleton.id, existingSingleton.type);
           return; // Não adicionar duplicata
         }
       }

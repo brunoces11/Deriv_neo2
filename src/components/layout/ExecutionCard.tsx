@@ -11,6 +11,8 @@ import { ActionsCardCreator } from '../cards/ActionsCardCreator';
 import { PortfolioSnapshotCard } from '../cards/PortfolioSnapshotCard';
 import { PortfolioTableCardComplete } from '../cards/PortfolioTableCardComplete';
 import { PortfolioSidebarCard } from '../cards/PortfolioSidebarCard';
+import { PortfolioPerformance } from '../cards/PortfolioPerformance';
+import { MarketAnalyses } from '../cards/MarketAnalyses';
 
 interface ExecutionCardProps {
   card: BaseCard;
@@ -81,6 +83,14 @@ export function renderCardByType(card: BaseCard, defaultExpanded: boolean): JSX.
     case 'portfolio-sidebar':
     case 'card_portfolio_sidebar':
       return <PortfolioSidebarCard card={card} />;
+    
+    case 'card_portfolio_performance':
+    case 'portfolio-performance':
+      return <PortfolioPerformance card={card} defaultExpanded={defaultExpanded} />;
+    
+    case 'card_market_analyses':
+    case 'market-analyses':
+      return <MarketAnalyses card={card} defaultExpanded={defaultExpanded} />;
 
     default:
       console.warn(`[ExecutionCard] Unknown card type: ${cardType}`);

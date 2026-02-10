@@ -59,20 +59,20 @@ export function WelcomeMessageCompact() {
         {/* Ice Breaker Buttons - Grid 2x2 */}
         <div className="grid grid-cols-2 gap-2">
           <IceBreakerButton 
-            text="Show portfolio" 
-            onClick={() => handleIcebreaker('Show my portfolio')} 
+            text="Create new Trade" 
+            onClick={() => handleIcebreaker('Create new Trade')} 
           />
           <IceBreakerButton 
-            text="Buy 0.1 BTC" 
-            onClick={() => handleIcebreaker('Buy 0.1 BTC')} 
+            text="Create new Bot" 
+            onClick={() => handleIcebreaker('Create new Bot')} 
           />
           <IceBreakerButton 
-            text="Set up DCA bot" 
-            onClick={() => handleIcebreaker('Set up a DCA bot')} 
+            text="Create new Action" 
+            onClick={() => handleIcebreaker('Create new Action')} 
           />
           <IceBreakerButton 
-            text="Swap ETH" 
-            onClick={() => handleIcebreaker('Swap ETH to USDC')} 
+            text="Check my portfolio performance" 
+            onClick={() => handleIcebreaker('Check my portfolio performance')} 
           />
         </div>
       </div>

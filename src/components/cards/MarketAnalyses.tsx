@@ -5,6 +5,7 @@ import type { BaseCard } from '../../types';
 
 interface MarketAnalysesProps {
   card: BaseCard;
+  defaultExpanded?: boolean;
 }
 
 const CircularGauge = ({ value, theme }: { value: number; theme: string }) => {
@@ -60,9 +61,9 @@ const CircularGauge = ({ value, theme }: { value: number; theme: string }) => {
   );
 };
 
-export function MarketAnalyses({ card }: MarketAnalysesProps) {
+export function MarketAnalyses({ card, defaultExpanded = false }: MarketAnalysesProps) {
   const { theme } = useTheme();
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
 
   const mockData = {
     timestamp: '2026-02-09 14:30:00 UTC',

@@ -54,7 +54,7 @@ const mockData: PerformanceMetrics = {
   ],
 };
 
-export function PortfolioPerformance({ card, defaultExpanded = true }: PortfolioPerformanceProps) {
+export function PortfolioPerformance({ card, defaultExpanded = false }: PortfolioPerformanceProps) {
   const { theme } = useTheme();
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [isMenuDropdownOpen, setIsMenuDropdownOpen] = useState(false);
