@@ -68,6 +68,7 @@ export function Sidebar({ isCollapsed = false, onToggleCollapse }: SidebarProps)
   const isTradeCard = (cardType: CardType) => 
     cardType === 'create-trade-card' || 
     cardType === 'trade-card' ||
+    cardType === 'trade-spot-card' ||
     cardType === 'card_trade' ||
     cardType === 'card_trade_creator';
 

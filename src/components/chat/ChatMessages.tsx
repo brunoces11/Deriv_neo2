@@ -27,6 +27,7 @@ import { PortfolioPerformance } from '../cards/PortfolioPerformance';
 import { MarketAnalyses } from '../cards/MarketAnalyses';
 import { CreateTradeCard } from '../cards/CreateTradeCard';
 import { TradeCard } from '../cards/TradeCard';
+import { TradeSpotCard } from '../cards/TradeSpotCard';
 import { ActionsCard } from '../cards/ActionsCard';
 import { ActionsCardCreator } from '../cards/ActionsCardCreator';
 import { BotCardCreator } from '../cards/BotCardCreator';
@@ -80,6 +81,7 @@ const cardComponents: Record<RenderCardType, React.ComponentType<{ card: BaseCar
   'market-analyses': MarketAnalyses,
   'create-trade-card': CreateTradeCard,
   'trade-card': TradeCard,
+  'trade-spot-card': TradeSpotCard,
   'actions-card': ActionsCard,
   'actions-creator': ActionsCardCreator,
   'bot-creator': BotCardCreator,
@@ -268,6 +270,15 @@ function getDefaultPayloadForCard(cardType: RenderCardType, title?: string): Rec
     case 'portfolio-performance':
       return {
         ...basePayload,
+      };
+    case 'trade-spot-card':
+      return {
+        ...basePayload,
+        pair: 'BTC/USD',
+        amount: 100,
+        priceMode: 'market',
+        price: 42350.75,
+        executionState: 'open',
       };
     default:
       return basePayload;

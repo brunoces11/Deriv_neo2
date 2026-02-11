@@ -9,6 +9,7 @@ import { markCardAsDeleted } from '../services/deletedCardsStorage';
 function getCardTargetPanel(cardType: CardType): { sidebar: 'left' | 'right'; panel: string } {
   // Trade cards go to left sidebar 'positions' panel
   if (cardType === 'create-trade-card' || cardType === 'trade-card' ||
+      cardType === 'trade-spot-card' ||
       cardType === 'card_trade' || cardType === 'card_trade_creator') {
     return { sidebar: 'left', panel: 'positions' };
   }
