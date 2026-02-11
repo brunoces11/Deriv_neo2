@@ -86,14 +86,15 @@ export function ChatInput({ displayMode = 'center' }: ChatInputProps) {
       await addMessage(userMessage, sessionId);
 
       // Add BTC price tag to message before sending to Langflow
-      const messageWithBtcPrice = btcPrice 
-        ? `${userMessage.content} [[PRICE_BTC_NOW:${btcPrice.toFixed(2)}]]`
-        : userMessage.content;
+      // COMMENTED OUT: BTC price is no longer sent in the payload
+      // const messageWithBtcPrice = btcPrice 
+      //   ? `${userMessage.content} [[PRICE_BTC_NOW:${btcPrice.toFixed(2)}]]`
+      //   : userMessage.content;
 
       // Try Langflow API first, fallback to mock simulation
       let response;
       try {
-        response = await callLangflow(messageWithBtcPrice, sessionId);
+        response = await callLangflow(userMessage.content, sessionId);
         console.log('[ChatInput] Langflow response received');
       } catch (langflowError) {
         console.warn('[ChatInput] Langflow failed, using mock simulation:', langflowError);

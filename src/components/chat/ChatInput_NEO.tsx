@@ -639,9 +639,10 @@ export function ChatInput_NEO({ displayMode = 'center' }: ChatInput_NEOProps) {
       let messageWithMetadata = userMessage.content;
       
       // Add BTC price tag if available
-      if (btcPrice) {
-        messageWithMetadata += ` [[PRICE_BTC_NOW:${btcPrice.toFixed(2)}]]`;
-      }
+      // COMMENTED OUT: BTC price is no longer sent in the payload
+      // if (btcPrice) {
+      //   messageWithMetadata += ` [[PRICE_BTC_NOW:${btcPrice.toFixed(2)}]]`;
+      // }
       
       // Add auto mode tag (always present)
       messageWithMetadata += autoMode ? ' [[AUTO_MODE_ON]]' : ' [[AUTO_MODE_OFF]]';
